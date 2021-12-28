@@ -7,10 +7,12 @@ consistency between environments.
 ---
 # Prerequisites
 
-## Needed software
+## Needed software and useful docs
 
 - [Terraform](https://www.terraform.io/downloads) >= 1.0.5
 - [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
+- [Azure Terraform provider](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs)
+- [Azure Terraform backend](https://www.terraform.io/language/settings/backends/azurerm)
 
 **Note**
 
@@ -20,13 +22,15 @@ All CDC Azure infrastructure operations must be done behind the environment-spec
 
 ## Terraform
 
-For production deploys, always deploy from the `main` branch.
+Always deploy from the `main` branch. Currently our only environment is "test"
+(more below) but syncing with `main` ensures you've got everyone else's
+changes.
 
-Our Terraform code is broken down into two main folders, vars and modules. The
-vars direcory will contain all the variables needed for the stage you want to
-deploy to. All variables required to deploy that specific stage should be
-contained in its respective folder. This makes it easy to determine where
-variables need to be changed.
+Our Terraform code is broken down into two main folders, `app/terraform/vars/` and
+`app/terraform/modules/`. The `vars/` direcory will contain all the variables
+needed for the stage you want to deploy to. All variables required to deploy
+that specific stage should be contained in its respective folder. This makes it
+easy to determine where variables need to be changed.
 
 ## Common commands
 

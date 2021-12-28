@@ -4,8 +4,9 @@ variable "terraform_object_id" {
   description = "Object id of user running TF"
   default = ""
 }
+
 variable "tf_secrets_vault" {
-  default = "mla-tf-secrets"
+  default = "pitest-tf-secrets"
 }
 
 variable "environment"{
