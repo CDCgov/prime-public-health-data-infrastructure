@@ -1,8 +1,9 @@
 data "azurerm_client_config" "current" {}
 
+# NOTE: Default "account_kind" is "StorageV2", which is what we want
 resource "azurerm_storage_account" "storage_account" {
   resource_group_name       = var.resource_group
-  name                      = "${var.resource_prefix}sasb"
+  name                      = "${var.resource_prefix}datastorage"
   location                  = var.location
   account_tier              = "Standard"
   account_replication_type  = "GRS"

@@ -2,38 +2,40 @@
 variable "terraform_object_id" {
   type = string
   description = "Object id of user running TF"
-  default = ""
+  # NOTE: set to object ID of CT-DMZ-PRIME-INGESTION-TST-AZ-Contributor
+  default = "9ff42a69-beb8-4b4a-9406-e7fbcbf847ee"
 }
 
 variable "tf_secrets_vault" {
   default = "pitest-tf-secrets"
 }
 
-variable "environment"{
-    default = "test"
+variable "environment" {
+  default = "test"
 }
-variable "resource_group"{
-    default = "prime-ingestion-test"
+variable "resource_group" {
+  default = "prime-ingestion-test"
 }
 
-variable "resource_prefix"{
-    default = "pitest"
+variable "resource_prefix" {
+  default = "pitest"
 }
-variable "location"{
-    default = "eastus"
+variable "location" {
+  default = "eastus"
 }
-variable "rsa_key_2048"{
-    default = null 
+variable "rsa_key_2048" {
+  default = null 
 }              
-variable "rsa_key_4096"{
-    default = null
+variable "rsa_key_4096" {
+  default = null
 }            
-variable "https_cert_names"{
-    default = []
+variable "https_cert_names" {
+  default = []
 }         
 
-variable "aad_object_keyvault_admin"{
-    default = "f94409a9-12b1-4820-a1b6-e3e0a4fa282d"
+variable "aad_object_keyvault_admin" {
+  # NOTE: set to object ID of CT-DMZ-PRIME-INGESTION-TST-AZ-Contributor
+  default = "9ff42a69-beb8-4b4a-9406-e7fbcbf847ee"
 }  # Group or individual user id
 
 ##################

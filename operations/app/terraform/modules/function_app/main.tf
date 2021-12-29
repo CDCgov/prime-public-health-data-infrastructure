@@ -1,31 +1,9 @@
 locals {
-  all_app_settings = {
-    "POSTGRES_USER"     = "${var.postgres_user}@${var.resource_prefix}-pgsql"
-    "POSTGRES_PASSWORD" = var.postgres_pass
-
-    "PRIME_ENVIRONMENT" = (var.environment == "prod" ? "prod" : "test")
-
-    "OKTA_baseUrl"  = "hhs-prime.okta.com"
-    "OKTA_redirect" = var.okta_redirect_url
-
-    # Manage client secrets via a Key Vault
-    "CREDENTIAL_STORAGE_METHOD" = "AZURE"
-    "CREDENTIAL_KEY_VAULT_NAME" = "${var.resource_prefix}-clientconfig"
-
-    # Manage app secrets via a Key Vault
-    "SECRET_STORAGE_METHOD" = "AZURE"
-    "SECRET_KEY_VAULT_NAME" = "${var.resource_prefix}-appconfig"
-
-    # Route outbound traffic through the VNET
-    "WEBSITE_VNET_ROUTE_ALL" = 1
-
-    # Route storage account access through the VNET
-    "WEBSITE_CONTENTOVERVNET" = 1
-
+  app_settings = {
     # Use the CDC DNS for everything; they have mappings for all our internal
     # resources, so if we add a new resource we'll have to contact them (see
     # prime-router/docs/dns.md)
-    "WEBSITE_DNS_SERVER" = "172.17.0.135"
+    # "WEBSITE_DNS_SERVER" = "172.17.0.135"
 
     "DOCKER_REGISTRY_SERVER_URL"      = var.container_registry_login_server
     "DOCKER_REGISTRY_SERVER_USERNAME" = var.container_registry_admin_username
@@ -34,12 +12,6 @@ locals {
     # With this variable set, clients can only see (and pull) signed images from the registry
     # First make signing work, then enable this
     # "DOCKER_CONTENT_TRUST" = 1
-
-    "WEBSITES_ENABLE_APP_SERVICE_STORAGE" = false
-
-    # Cron-like schedule for running the function app that reaches out to remote
-    # sites and verifies they're up
-    "REMOTE_CONNECTION_CHECK_SCHEDULE" = "15 */2 * * *"
 
     # App Insights
     "APPINSIGHTS_INSTRUMENTATIONKEY"                  = var.ai_instrumentation_key
@@ -59,8 +31,6 @@ locals {
   }
 
   functionapp_slot_prod_settings_names      = keys(azurerm_function_app.function_app.app_settings)
-  functionapp_slot_candidate_settings_names = keys(azurerm_function_app_slot.candidate.app_settings)
-
   functionapp_slot_settings_names = distinct(concat(local.functionapp_slot_prod_settings_names, local.functionapp_slot_candidate_settings_names))
 
   # Any settings provided implicitly by Azure that we don't want to swap
@@ -69,20 +39,7 @@ locals {
   ])
 
   # Any setting not in the common list is therefore unique
-  sticky_slot_unique_settings_names = tolist(setsubtract(local.functionapp_slot_settings_names, keys(local.all_app_settings)))
-
-  # Origin records
-  cors_all = [
-    "https://hhs-prime.okta.com",
-  ]
-  cors_prod = [
-    "https://prime.cdc.gov",
-    "https://reportstream.cdc.gov",
-  ]
-  cors_lower = [
-    "https://${var.environment}.reportstream.cdc.gov",
-    "https://${var.environment}.prime.cdc.gov",
-  ]
+  sticky_slot_unique_settings_names = tolist(setsubtract(local.functionapp_slot_settings_names, keys(local.app_settings)))
 }
 
 resource "azurerm_function_app" "function_app" {
@@ -125,18 +82,7 @@ resource "azurerm_function_app" "function_app" {
     always_on                 = true
     use_32_bit_worker_process = false
     linux_fx_version          = "DOCKER|${var.container_registry_login_server}/${var.resource_prefix}:latest"
-
-    cors {
-      allowed_origins = concat(local.cors_all, var.environment == "prod" ? local.cors_prod : local.cors_lower)
-    }
   }
-
-  app_settings = merge(local.all_app_settings, {
-    "POSTGRES_URL" = "jdbc:postgresql://${var.resource_prefix}-pgsql.postgres.database.azure.com:5432/prime_data_hub?sslmode=require"
-
-    # HHS Protect Storage Account
-    "PartnerStorage" = var.primary_connection_string
-  })
 
   identity {
     type = "SystemAssigned"
