@@ -1,6 +1,9 @@
 data "azurerm_client_config" "current" {}
 
 # NOTE: Default "account_kind" is "StorageV2", which is what we want
+#
+# Also, the standard "{prefix}storage" was already taken, which is why this was
+# changed to "{prefix}datastorage"
 resource "azurerm_storage_account" "storage_account" {
   resource_group_name       = var.resource_group
   name                      = "${var.resource_prefix}datastorage"
@@ -38,6 +41,28 @@ resource "azurerm_storage_account" "storage_account" {
     environment = var.environment
   }
 }
+
+# Turns out that creating containers in storage accounts doesn't work like you'd expect; may be able
+# to inline a template for it.
+#
+# See: https://github.com/hashicorp/terraform-provider-azurerm/issues/2977
+# resource "azurerm_storage_container" "data_bronze" {
+#   name                  = "bronze"
+#   storage_account_name  = azurerm_storage_account.storage_account.name
+#   container_access_type = "private"
+# }
+# 
+# resource "azurerm_storage_container" "data_silver" {
+#   name                  = "silver"
+#   storage_account_name  = azurerm_storage_account.storage_account.name
+#   container_access_type = "private"
+# }
+# 
+# resource "azurerm_storage_container" "data_gold" {
+#   name                  = "gold"
+#   storage_account_name  = azurerm_storage_account.storage_account.name
+#   container_access_type = "private"
+# }
 
 module "storageaccount_blob_private_endpoint" {
   source         = "../common/private_endpoint"
