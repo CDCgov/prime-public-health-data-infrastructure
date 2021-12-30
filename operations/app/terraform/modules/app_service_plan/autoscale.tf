@@ -3,21 +3,21 @@ resource "azurerm_monitor_autoscale_setting" "app_autoscale" {
   name                = "${var.resource_prefix}-appautoscale"
   resource_group_name = var.resource_group
   location            = var.location
-  target_resource_id  = var.app_service_plan
+  target_resource_id  = azurerm_app_service_plan.service_plan.id
 
   profile {
     name = "ScaleOnHighLoad"
 
     capacity {
-      default = 2
-      minimum = 2
+      default = 1
+      minimum = 1
       maximum = 10
     }
 
     rule {
       metric_trigger {
         metric_name        = "CpuPercentage"
-        metric_resource_id = var.app_service_plan
+        metric_resource_id = azurerm_app_service_plan.service_plan.id
         time_grain         = "PT1M"
         statistic          = "Average"
         time_window        = "PT5M"
@@ -37,7 +37,7 @@ resource "azurerm_monitor_autoscale_setting" "app_autoscale" {
     rule {
       metric_trigger {
         metric_name        = "CpuPercentage"
-        metric_resource_id = var.app_service_plan
+        metric_resource_id = azurerm_app_service_plan.service_plan.id
         time_grain         = "PT1M"
         statistic          = "Average"
         time_window        = "PT5M"
@@ -57,7 +57,7 @@ resource "azurerm_monitor_autoscale_setting" "app_autoscale" {
     rule {
       metric_trigger {
         metric_name        = "MemoryPercentage"
-        metric_resource_id = var.app_service_plan
+        metric_resource_id = azurerm_app_service_plan.service_plan.id
         time_grain         = "PT1M"
         statistic          = "Average"
         time_window        = "PT5M"
@@ -77,7 +77,7 @@ resource "azurerm_monitor_autoscale_setting" "app_autoscale" {
     rule {
       metric_trigger {
         metric_name        = "MemoryPercentage"
-        metric_resource_id = var.app_service_plan
+        metric_resource_id = azurerm_app_service_plan.service_plan.id
         time_grain         = "PT1M"
         statistic          = "Average"
         time_window        = "PT5M"
@@ -95,9 +95,9 @@ resource "azurerm_monitor_autoscale_setting" "app_autoscale" {
     }
   }
 
-  notification {
-    webhook {
-      service_uri = var.pagerduty_url
-    }
-  }
+  # notification {
+  #   webhook {
+  #     service_uri = var.pagerduty_url
+  #   }
+  # }
 }

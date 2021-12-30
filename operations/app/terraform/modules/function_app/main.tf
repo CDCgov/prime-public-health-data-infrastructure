@@ -5,9 +5,9 @@ locals {
     # prime-router/docs/dns.md)
     # "WEBSITE_DNS_SERVER" = "172.17.0.135"
 
-    "DOCKER_REGISTRY_SERVER_URL"      = var.container_registry_login_server
-    "DOCKER_REGISTRY_SERVER_USERNAME" = var.container_registry_admin_username
-    "DOCKER_REGISTRY_SERVER_PASSWORD" = var.container_registry_admin_password
+    # "DOCKER_REGISTRY_SERVER_URL"      = var.container_registry_login_server
+    # "DOCKER_REGISTRY_SERVER_USERNAME" = var.container_registry_admin_username
+    # "DOCKER_REGISTRY_SERVER_PASSWORD" = var.container_registry_admin_password
 
     # With this variable set, clients can only see (and pull) signed images from the registry
     # First make signing work, then enable this
@@ -30,16 +30,10 @@ locals {
     "FEATURE_FLAG_SETTINGS_ENABLED" = true
   }
 
-  functionapp_slot_prod_settings_names      = keys(azurerm_function_app.function_app.app_settings)
-  functionapp_slot_settings_names = distinct(concat(local.functionapp_slot_prod_settings_names, local.functionapp_slot_candidate_settings_names))
-
   # Any settings provided implicitly by Azure that we don't want to swap
   sticky_slot_implicit_settings_names = tolist([
     "AzureWebJobsStorage",
   ])
-
-  # Any setting not in the common list is therefore unique
-  sticky_slot_unique_settings_names = tolist(setsubtract(local.functionapp_slot_settings_names, keys(local.app_settings)))
 }
 
 resource "azurerm_function_app" "function_app" {
@@ -79,9 +73,9 @@ resource "azurerm_function_app" "function_app" {
     scm_use_main_ip_restriction = true
 
     http2_enabled             = true
-    always_on                 = true
+    always_on                 = false
     use_32_bit_worker_process = false
-    linux_fx_version          = "DOCKER|${var.container_registry_login_server}/${var.resource_prefix}:latest"
+    # linux_fx_version          = "DOCKER|${var.container_registry_login_server}/${var.resource_prefix}:latest"
   }
 
   identity {
@@ -123,51 +117,4 @@ resource "azurerm_key_vault_access_policy" "functionapp_client_config_access_pol
 resource "azurerm_app_service_virtual_network_swift_connection" "function_app_vnet_integration" {
   app_service_id = azurerm_function_app.function_app.id
   subnet_id      = var.use_cdc_managed_vnet ? "" : var.public_subnet[0]
-}
-
-// Enable sticky slot settings
-// Done via a template due to a missing Terraform feature:
-// https://github.com/terraform-providers/terraform-provider-azurerm/issues/1440
-resource "azurerm_template_deployment" "functionapp_sticky_settings" {
-  name                = "functionapp_sticky_settings"
-  resource_group_name = var.resource_group
-  deployment_mode     = "Incremental"
-
-  template_body = <<DEPLOY
-{
-  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-  "contentVersion": "1.0.0.0",
-  "parameters": {
-      "stickyAppSettingNames": {
-        "type": "String"
-      },
-      "webAppName": {
-        "type": "String"
-      }
-  },
-  "variables": {
-    "appSettingNames": "[split(parameters('stickyAppSettingNames'),',')]"
-  },
-  "resources": [
-      {
-        "type": "Microsoft.Web/sites/config",
-        "name": "[concat(parameters('webAppName'), '/slotconfignames')]",
-        "apiVersion": "2015-08-01",
-        "properties": {
-          "appSettingNames": "[variables('appSettingNames')]"
-        }
-      }
-  ]
-}
-DEPLOY
-
-  parameters = {
-    webAppName            = azurerm_function_app.function_app.name
-    stickyAppSettingNames = join(",", concat(local.sticky_slot_implicit_settings_names, local.sticky_slot_unique_settings_names))
-  }
-
-  depends_on = [
-    azurerm_function_app.function_app,
-    azurerm_function_app_slot.candidate,
-  ]
 }
