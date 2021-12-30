@@ -72,28 +72,26 @@ module "storage" {
 # # ##########
 # # ## 03-App
 # # ##########
-#
-# 
-# module "app_service_plan" {
-#   source          = "../../modules/app_service_plan"
-#   environment     = var.environment
-#   resource_group  = var.resource_group
-#   resource_prefix = var.resource_prefix
-#   location        = var.location
-#   app_tier        = var.app_tier
-#   app_size        = var.app_size
-# }
-# 
-# 
-# module "application_insights" {
-#   source          = "../../modules/application_insights"
-#   environment     = var.environment
-#   resource_group  = var.resource_group
-#   resource_prefix = var.resource_prefix
-#   location        = var.location
-#   service_plan_id = module.app_service_plan.service_plan_id
-# }
-# 
+
+module "app_service_plan" {
+  source          = "../../modules/app_service_plan"
+  environment     = var.environment
+  resource_group  = var.resource_group
+  resource_prefix = var.resource_prefix
+  location        = var.location
+  app_tier        = var.app_tier
+  app_size        = var.app_size
+}
+
+module "application_insights" {
+  source          = "../../modules/application_insights"
+  environment     = var.environment
+  resource_group  = var.resource_group
+  resource_prefix = var.resource_prefix
+  location        = var.location
+  service_plan_id = module.app_service_plan.service_plan_id
+}
+
 # module "function_app" {
 #   source                      = "../../modules/function_app"
 #   environment                 = var.environment
@@ -102,7 +100,6 @@ module "storage" {
 #   location                    = var.location
 #   ai_instrumentation_key      = module.application_insights.instrumentation_key
 #   ai_connection_string        = module.application_insights.connection_string
-#   okta_redirect_url           = var.okta_redirect_url
 #   terraform_caller_ip_address = var.terraform_caller_ip_address
 #   use_cdc_managed_vnet        = var.use_cdc_managed_vnet
 #   primary_access_key          = module.storage.sa_primary_access_key
