@@ -3,6 +3,11 @@ variable "environment" {
   description = "Target Environment"
 }
 
+variable "location" {
+  type        = string
+  description = "Function App Location"
+}
+
 variable "resource_group" {
   type        = string
   description = "Resource Group Name"
@@ -11,11 +16,6 @@ variable "resource_group" {
 variable "resource_prefix" {
   type        = string
   description = "Resource Prefix"
-}
-
-variable "location" {
-  type        = string
-  description = "Function App Location"
 }
 
 variable "app_size" {}
