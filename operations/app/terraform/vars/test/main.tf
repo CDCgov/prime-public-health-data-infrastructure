@@ -30,18 +30,18 @@ module "key_vault" {
   terraform_object_id         = var.terraform_object_id
 }
 
-# module "storage" {
-#   source                      = "../../modules/storage"
-#   environment                 = var.environment
-#   resource_group              = var.resource_group
-#   resource_prefix             = var.resource_prefix
-#   location                    = var.location
-#   rsa_key_4096                = var.rsa_key_4096
-#   terraform_caller_ip_address = var.terraform_caller_ip_address
-#   use_cdc_managed_vnet        = var.use_cdc_managed_vnet
-#   private_subnet_ids          = module.network.private_subnet_ids
-#   application_key_vault_id    = module.key_vault.application_key_vault_id
-# }
+module "storage" {
+  source                      = "../../modules/storage"
+  environment                 = var.environment
+  resource_group              = var.resource_group
+  resource_prefix             = var.resource_prefix
+  location                    = var.location
+  rsa_key_4096                = var.rsa_key_4096
+  terraform_caller_ip_address = var.terraform_caller_ip_address
+  use_cdc_managed_vnet        = var.use_cdc_managed_vnet
+  private_subnet_ids          = module.network.private_subnet_ids
+  application_key_vault_id    = module.key_vault.application_key_vault_id
+}
 
 
 # # ##########

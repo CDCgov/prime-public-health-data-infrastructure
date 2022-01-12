@@ -9,10 +9,6 @@ locals {
       cnames_private    = ["privatelink.vaultcore.azure.net"]
       subresource_names = ["Vault"]
     },
-    "postgres_server" : {
-      cnames_private    = ["privatelink.postgres.database.azure.com"]
-      subresource_names = ["postgresqlServer"]
-    },
     "storage_account_blob" : {
       cnames_private    = ["privatelink.blob.core.windows.net"]
       subresource_names = ["blob"]
@@ -47,7 +43,7 @@ locals {
 }
 
 resource "azurerm_private_endpoint" "endpoint" {
-  count = length(var.endpoint_subnet_ids)
+  count               = length(var.endpoint_subnet_ids)
 
   name                = "${var.name}-${var.type}-${substr(sha1(var.endpoint_subnet_ids[count.index]), 0, 9)}"
   location            = var.location

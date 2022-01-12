@@ -24,21 +24,22 @@ resource "azurerm_subnet" "dev_private_subnet" {
   resource_group_name  = var.resource_group
   virtual_network_name = azurerm_virtual_network.dev.name
   address_prefixes     = ["10.0.1.0/24"]
+  enforce_private_link_endpoint_network_policies = true  # true = disable, false = enable; see: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet
   service_endpoints    = [
     "Microsoft.Storage",
     "Microsoft.KeyVault",
     "Microsoft.ContainerRegistry",
   ]
 
-  delegation {
-    name = "server_farms"
-    service_delegation {
-      name    = "Microsoft.Web/serverFarms"
-      actions = [
-        "Microsoft.Network/virtualNetworks/subnets/action",
-      ]
-    }
-  }
+  # delegation {
+  #   name = "server_farms"
+  #   service_delegation {
+  #     name    = "Microsoft.Web/serverFarms"
+  #     actions = [
+  #       "Microsoft.Network/virtualNetworks/subnets/action",
+  #     ]
+  #   }
+  # }
 
   lifecycle {
     ignore_changes = [

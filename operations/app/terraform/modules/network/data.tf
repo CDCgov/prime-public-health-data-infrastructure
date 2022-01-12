@@ -38,9 +38,13 @@ data "azurerm_subnet" "cdc_subnet" {
   virtual_network_name = var.cdc_vnet_name
 }
 
-# Note that I manually added to this subnet the equivalent of:
+# Note that I manually added to this subnet the equivalent of the following
+#   # via the UI
 #   service_endpoints    = [
 #     "Microsoft.Storage",
 #     "Microsoft.KeyVault",
 #     "Microsoft.ContainerRegistry",
 #   ]
+#
+#   # via the CLI, see: https://docs.microsoft.com/en-us/azure/private-link/disable-private-endpoint-network-policy#azure-cli
+#   enforce_private_link_endpoint_network_policies = true  # true = disable, false = enable

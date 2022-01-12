@@ -5,3 +5,7 @@ output "sa_primary_access_key" {
 output "sa_primary_connection_string" {
   value = azurerm_storage_account.storage_account.primary_connection_string
 }
+
+output "sa_primary_name" {
+  value = azurerm_storage_account.storage_account.name
+}
