@@ -10,6 +10,14 @@ variable "tf_secrets_vault" {
   default = "pitest-tf-secrets"
 }
 
+variable "cdc_vnet_name" {
+  default = "prime-ingestion-test-VNET"
+}
+
+variable "cdc_subnet_name" {
+  default = "Default"
+}
+
 variable "environment" {
   default = "test"
 }
@@ -43,11 +51,11 @@ variable "aad_object_keyvault_admin" {
 ##################
 
 variable "app_tier" {
-  default = "Standard"
+  default = "PremiumV2"
 }
 
 variable "app_size" {
-  default = "S1"
+  default = "P3v2"
 }
 
 ##################
@@ -55,7 +63,7 @@ variable "app_size" {
 ##################
 
 variable "use_cdc_managed_vnet" {
-  default = false
+  default = true
 }
 
 variable "terraform_caller_ip_address" {

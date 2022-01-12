@@ -1,6 +1,21 @@
+variable "cdc_vnet_name" {
+  type = string
+  description = "Name of CDC vnet"
+}
+
+variable "cdc_subnet_name" {
+  type = string
+  description = "Name of subnet within CDC vnet"
+}
+
 variable "environment" {
   type        = string
   description = "Target Environment"
+}
+
+variable "location" {
+  type        = string
+  description = "Network Location"
 }
 
 variable "resource_group" {
@@ -11,25 +26,4 @@ variable "resource_group" {
 variable "resource_prefix" {
   type        = string
   description = "Resource Prefix"
-}
-
-variable "location" {
-  type        = string
-  description = "Network Location"
-}
-
-variable "vnet_ids" {
-  description = "Vnet IDs"
-}
-
-variable "vnet_names" {
-  description = "Vnet Names"
-}
-
-variable "vnet_address_space" {
-  description = "The address space of the newly created vNet"
-}
-
-variable "vnets" {
-  description = "List of vnet objects"
 }

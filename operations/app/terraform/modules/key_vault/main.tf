@@ -1,7 +1,13 @@
+# this empty call gives us the current client_id, tenant_id, subscription_id, and object_id (?)
 data "azurerm_client_config" "current" {}
 
+# Note that the CDC created their own key vault called "prime-ingestion-test-ts" that's not managed by Terraform
+
+
 resource "azurerm_key_vault" "application" {
-  name                            = "${var.resource_prefix}-keyvault"
+  # NOTE: if this key vault gets deleted (via terraform destroy) you'll have to rename the keyvault, as
+  # Azure issues a soft delete so you can recover when you accidentally delete your secrets.
+  name                            = "${var.resource_prefix}-application-kv"
   location                        = var.location
   resource_group_name             = var.resource_group
   sku_name                        = "premium"
@@ -19,7 +25,7 @@ resource "azurerm_key_vault" "application" {
       [var.terraform_caller_ip_address],
     ))
 
-    virtual_network_subnet_ids = concat(var.public_subnet, var.container_subnet, var.endpoint_subnet)
+    virtual_network_subnet_ids = var.private_subnet_ids
   }
 
   lifecycle {
@@ -104,15 +110,14 @@ resource "azurerm_key_vault_access_policy" "terraform_access_policy" {
   ]
 }
 
-module "application_private_endpoint" {
-  source         = "../common/private_endpoint"
-  resource_id    = azurerm_key_vault.application.id
-  name           = azurerm_key_vault.application.name
-  type           = "key_vault"
-  resource_group = var.resource_group
-  location       = var.location
-
-  endpoint_subnet_ids = [var.endpoint_subnet[0]]
-
-  endpoint_subnet_id_for_dns = var.endpoint_subnet[0]
-}
+# module "application_private_endpoint" {
+#   source         = "../common/private_endpoint"
+#   resource_id    = azurerm_key_vault.application.id
+#   name           = azurerm_key_vault.application.name
+#   type           = "key_vault"
+#   resource_group = var.resource_group
+#   location       = var.location
+# 
+#   endpoint_subnet_ids = var.endpoint_subnet_ids
+#   endpoint_subnet_id_for_dns = var.endpoint_subnet_ids[0]
+# }
