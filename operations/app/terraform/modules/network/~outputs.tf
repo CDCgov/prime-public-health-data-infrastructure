@@ -2,7 +2,7 @@ output "cdc_subnet_id" {
   value = data.azurerm_subnet.cdc_subnet.id
 }
 
-output "dev_subnet_id" {
+output "dev_private_subnet_id" {
   value = azurerm_subnet.dev_private_subnet.id
 }
 

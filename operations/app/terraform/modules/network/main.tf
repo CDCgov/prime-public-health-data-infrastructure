@@ -30,22 +30,6 @@ resource "azurerm_subnet" "dev_private_subnet" {
     "Microsoft.KeyVault",
     "Microsoft.ContainerRegistry",
   ]
-
-  # delegation {
-  #   name = "server_farms"
-  #   service_delegation {
-  #     name    = "Microsoft.Web/serverFarms"
-  #     actions = [
-  #       "Microsoft.Network/virtualNetworks/subnets/action",
-  #     ]
-  #   }
-  # }
-
-  lifecycle {
-    ignore_changes = [
-      delegation[0].name, # FW team renamed this, and if we change it, a new resource will be created
-    ]
-  }
 }
 
 /* Private network security group */

@@ -39,12 +39,24 @@ data "azurerm_subnet" "cdc_subnet" {
 }
 
 # Note that I manually added to this subnet the equivalent of the following
+#
 #   # via the UI
 #   service_endpoints    = [
 #     "Microsoft.Storage",
 #     "Microsoft.KeyVault",
 #     "Microsoft.ContainerRegistry",
-#   ]
+#   ],
+#
+#   # via the UI: this is required to put a functionapp in the subnet
+#   delegation {
+#     name = "server_farms"
+#     service_delegation {
+#       name    = "Microsoft.Web/serverFarms"
+#       actions = [
+#         "Microsoft.Network/virtualNetworks/subnets/action",
+#       ]
+#     }
+#   }
 #
 #   # via the CLI, see: https://docs.microsoft.com/en-us/azure/private-link/disable-private-endpoint-network-policy#azure-cli
 #   enforce_private_link_endpoint_network_policies = true  # true = disable, false = enable

@@ -15,9 +15,6 @@ locals {
 
     # App Insights
     "APPINSIGHTS_INSTRUMENTATIONKEY"                  = var.ai_instrumentation_key
-    "APPINSIGHTS_PROFILERFEATURE_VERSION"             = "1.0.0"
-    "APPINSIGHTS_SNAPSHOTFEATURE_VERSION"             = "1.0.0"
-    "APPLICATIONINSIGHTS_CONFIGURATION_CONTENT"       = ""
     "APPLICATIONINSIGHTS_CONNECTION_STRING"           = var.ai_connection_string
     "ApplicationInsightsAgent_EXTENSION_VERSION"      = "~3"
     "DiagnosticServices_EXTENSION_VERSION"            = "~3"
@@ -27,13 +24,8 @@ locals {
     "XDT_MicrosoftApplicationInsights_Mode"           = "recommended"
     "XDT_MicrosoftApplicationInsights_PreemptSdk"     = "disabled"
 
-    "FEATURE_FLAG_SETTINGS_ENABLED" = true
+    "FEATURE_FLAG_SETTINGS_ENABLED"                   = true
   }
-
-  # Any settings provided implicitly by Azure that we don't want to swap
-  sticky_slot_implicit_settings_names = tolist([
-    "AzureWebJobsStorage",
-  ])
 }
 
 resource "azurerm_function_app" "function_app" {
@@ -41,42 +33,37 @@ resource "azurerm_function_app" "function_app" {
   location                   = var.location
   resource_group_name        = var.resource_group
   app_service_plan_id        = var.app_service_plan
-  storage_account_name       = "${var.resource_prefix}storageaccount"
+  storage_account_name       = "${var.resource_prefix}datastorage"
   storage_account_access_key = var.primary_access_key
   https_only                 = true
   os_type                    = "linux"
   version                    = "~3"
   enable_builtin_logging     = false
 
-  site_config {
-    ip_restriction {
-      action                    = "Allow"
-      name                      = "AllowVNetTraffic"
-      priority                  = 100
-      virtual_network_subnet_id = var.public_subnet[0]
-    }
+  # TODO: if we have to allow inbound HTTP we'll need to revisit these
 
-    ip_restriction {
-      action                    = "Allow"
-      name                      = "AllowVNetEastTraffic"
-      priority                  = 100
-      virtual_network_subnet_id = var.public_subnet[0]
-    }
+  # site_config {
+  #   ip_restriction {
+  #     action                    = "Allow"
+  #     name                      = "AllowVNetTraffic"
+  #     priority                  = 100
+  #     virtual_network_subnet_id = var.public_subnet[0]
+  #   }
 
-    ip_restriction {
-      action      = "Allow"
-      name        = "AllowFrontDoorTraffic"
-      priority    = 110
-      service_tag = "AzureFrontDoor.Backend"
-    }
+  #   ip_restriction {
+  #     action                    = "Allow"
+  #     name                      = "AllowVNetEastTraffic"
+  #     priority                  = 100
+  #     virtual_network_subnet_id = var.public_subnet[0]
+  #   }
 
-    scm_use_main_ip_restriction = true
+  #   scm_use_main_ip_restriction = true
 
-    http2_enabled             = true
-    always_on                 = false
-    use_32_bit_worker_process = false
-    # linux_fx_version          = "DOCKER|${var.container_registry_login_server}/${var.resource_prefix}:latest"
-  }
+  #   http2_enabled             = true
+  #   always_on                 = false
+  #   use_32_bit_worker_process = false
+  #   # linux_fx_version          = "DOCKER|${var.container_registry_login_server}/${var.resource_prefix}:latest"
+  # }
 
   identity {
     type = "SystemAssigned"
@@ -104,17 +91,7 @@ resource "azurerm_key_vault_access_policy" "functionapp_app_config_access_policy
   ]
 }
 
-resource "azurerm_key_vault_access_policy" "functionapp_client_config_access_policy" {
-  key_vault_id = var.application_key_vault_id
-  tenant_id    = azurerm_function_app.function_app.identity.0.tenant_id
-  object_id    = azurerm_function_app.function_app.identity.0.principal_id
-
-  secret_permissions = [
-    "Get",
-  ]
-}
-
 resource "azurerm_app_service_virtual_network_swift_connection" "function_app_vnet_integration" {
   app_service_id = azurerm_function_app.function_app.id
-  subnet_id      = var.use_cdc_managed_vnet ? "" : var.public_subnet[0]
+  subnet_id      = var.cdc_subnet_id
 }
