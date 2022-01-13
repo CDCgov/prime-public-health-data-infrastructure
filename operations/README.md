@@ -41,6 +41,21 @@ Below are the following most common terraform commands:
 - `terraform apply` - This will actually deploy and changes you have made.
 
 
+### Interacting with CDC-managed infrastructure
+
+When creating a new environment you'll need to contact the CDC Active Directory helpdesk and ask them to create:
+
+* A virtual network that routes through the Palo Alto Firewall. This will be managed by CDC.
+    * This will be in `vars/{env}/variables.tf` @ `cdc_vnet_name`
+* A subnet within the vnet 
+    * This will be in `vars/{env}/variables.tf` @ `cdc_subnet`
+
+Since these resources aren't managed by terraform they won't be directly
+represented but are instead resolved using data lookups -- see
+`modules/network/data.tf` for the lookup, and `modules/network/~outputs.tf`
+where we expose the IDs to the rest of the process.
+
+
 ### Directory Structure
 
 ```
@@ -65,21 +80,16 @@ terraform
 
 We utilize several custom modules that are as follows
 
-* app_service_plan -  
-* application_insights - 
-* common  
-  * private_endpoint - 
-  * vnet_dns_zones - 
-* container_registry - 
-* database - 
-* front-door - 
-* function_app -
-* key_vault -
-* metabase -
-* nat_gateway -
-* sftp_container -
-* storage - 
-* vnet - 
+* `app_service_plan` -
+* `application_insights`
+* `common`
+  * `private_endpoint` -
+  * `vnet_dns_zones` -
+* `container_registry` -
+* `function_app` -
+* `key_vault` -
+* `network` - vnet, subnet, and security group definitions
+* `storage` -
 
 
 ### Important vars files

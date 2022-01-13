@@ -95,7 +95,7 @@ resource "azurerm_function_app" "infrastructure_app" {
     "APPINSIGHTS_INSTRUMENTATIONKEY"         = var.ai_instrumentation_key
     "APPLICATIONINSIGHTS_CONNECTION_STRING"  = var.ai_connection_string
     "FUNCTIONS_WORKER_RUNTIME"               = "python"
-    "SCM_DO_BUILD_DURING_DEPLOYMENT"         = 0
+    "SCM_DO_BUILD_DURING_DEPLOYMENT"         = 1
     "WEBSITE_DNS_SERVER"                     = "172.17.0.135"
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE"    = false
   }
