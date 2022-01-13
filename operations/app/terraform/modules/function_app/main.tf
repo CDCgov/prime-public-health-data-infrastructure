@@ -1,33 +1,3 @@
-locals {
-  app_settings = {
-    # Use the CDC DNS for everything; they have mappings for all our internal
-    # resources, so if we add a new resource we'll have to contact them (see
-    # prime-router/docs/dns.md)
-    "WEBSITE_DNS_SERVER" = "172.17.0.135"
-
-    # "DOCKER_REGISTRY_SERVER_URL"      = var.container_registry_login_server
-    # "DOCKER_REGISTRY_SERVER_USERNAME" = var.container_registry_admin_username
-    # "DOCKER_REGISTRY_SERVER_PASSWORD" = var.container_registry_admin_password
-
-    # With this variable set, clients can only see (and pull) signed images from the registry
-    # First make signing work, then enable this
-    # "DOCKER_CONTENT_TRUST" = 1
-
-    # App Insights
-    "APPINSIGHTS_INSTRUMENTATIONKEY"                  = var.ai_instrumentation_key
-    "APPLICATIONINSIGHTS_CONNECTION_STRING"           = var.ai_connection_string
-    "ApplicationInsightsAgent_EXTENSION_VERSION"      = "~3"
-    "DiagnosticServices_EXTENSION_VERSION"            = "~3"
-    "InstrumentationEngine_EXTENSION_VERSION"         = "disabled"
-    "SnapshotDebugger_EXTENSION_VERSION"              = "disabled"
-    "XDT_MicrosoftApplicationInsights_BaseExtensions" = "disabled"
-    "XDT_MicrosoftApplicationInsights_Mode"           = "recommended"
-    "XDT_MicrosoftApplicationInsights_PreemptSdk"     = "disabled"
-    "WEBSITES_ENABLE_APP_SERVICE_STORAGE"             = false
-    "FEATURE_FLAG_SETTINGS_ENABLED"                   = true
-  }
-}
-
 resource "azurerm_function_app" "function_app" {
   name                       = "${var.resource_prefix}-functionapp"
   location                   = var.location
@@ -122,10 +92,12 @@ resource "azurerm_function_app" "infrastructure_app" {
   enable_builtin_logging     = false
 
   app_settings = {
-    "FUNCTIONS_WORKER_RUNTIME"            = "python"
-    "SCM_DO_BUILD_DURING_DEPLOYMENT"      = 0
-    "WEBSITE_DNS_SERVER"                  = "172.17.0.135"
-    "WEBSITES_ENABLE_APP_SERVICE_STORAGE" = false
+    "APPINSIGHTS_INSTRUMENTATIONKEY"         = var.ai_instrumentation_key
+    "APPLICATIONINSIGHTS_CONNECTION_STRING"  = var.ai_connection_string
+    "FUNCTIONS_WORKER_RUNTIME"               = "python"
+    "SCM_DO_BUILD_DURING_DEPLOYMENT"         = 0
+    "WEBSITE_DNS_SERVER"                     = "172.17.0.135"
+    "WEBSITES_ENABLE_APP_SERVICE_STORAGE"    = false
   }
 
   identity {
