@@ -122,6 +122,8 @@ resource "azurerm_function_app" "infrastructure_app" {
   enable_builtin_logging     = false
 
   app_settings = {
+    "FUNCTIONS_WORKER_RUNTIME"            = "python"
+    "SCM_DO_BUILD_DURING_DEPLOYMENT"      = 0
     "WEBSITE_DNS_SERVER"                  = "172.17.0.135"
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE" = false
   }
