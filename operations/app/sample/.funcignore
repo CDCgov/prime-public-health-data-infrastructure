@@ -1,6 +1,9 @@
+.flake8
 .git*
-.vscode
-local.settings.json
-test
 .venv
+.vscode
+
+data/
+local.settings.json
 Makefile
+test
