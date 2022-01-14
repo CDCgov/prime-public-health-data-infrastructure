@@ -25,17 +25,12 @@ resource "azurerm_function_app" "function_app" {
     # "DOCKER_CONTENT_TRUST" = 1
 
     # App Insights
-    "APPINSIGHTS_INSTRUMENTATIONKEY"                  = var.ai_instrumentation_key
-    "APPLICATIONINSIGHTS_CONNECTION_STRING"           = var.ai_connection_string
-    "ApplicationInsightsAgent_EXTENSION_VERSION"      = "~3"
-    "DiagnosticServices_EXTENSION_VERSION"            = "~3"
-    "InstrumentationEngine_EXTENSION_VERSION"         = "disabled"
-    "SnapshotDebugger_EXTENSION_VERSION"              = "disabled"
-    "XDT_MicrosoftApplicationInsights_BaseExtensions" = "disabled"
-    "XDT_MicrosoftApplicationInsights_Mode"           = "recommended"
-    "XDT_MicrosoftApplicationInsights_PreemptSdk"     = "disabled"
-    "WEBSITES_ENABLE_APP_SERVICE_STORAGE"             = false
-    "FEATURE_FLAG_SETTINGS_ENABLED"                   = true 
+    "APPINSIGHTS_INSTRUMENTATIONKEY"         = var.ai_instrumentation_key
+    "APPLICATIONINSIGHTS_CONNECTION_STRING"  = var.ai_connection_string
+    "FUNCTIONS_WORKER_RUNTIME"               = "python"
+    "SCM_DO_BUILD_DURING_DEPLOYMENT"         = 1
+    "WEBSITE_DNS_SERVER"                     = "172.17.0.135"
+    "WEBSITES_ENABLE_APP_SERVICE_STORAGE"    = false
   }
 
   # TODO: if we have to allow inbound HTTP we'll need to revisit these
