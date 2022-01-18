@@ -7,7 +7,7 @@ data "azurerm_client_config" "current" {}
 resource "azurerm_key_vault" "application" {
   # NOTE: if this key vault gets deleted (via terraform destroy) you'll have to rename the keyvault, as
   # Azure issues a soft delete so you can recover when you accidentally delete your secrets.
-  name                            = "${var.resource_prefix}-application-kv"
+  name                            = "${var.resource_prefix}-app-kv"
   location                        = var.location
   resource_group_name             = var.resource_group
   sku_name                        = "premium"
@@ -37,51 +37,51 @@ resource "azurerm_key_vault" "application" {
   }
 }
 
-# resource "azurerm_key_vault_access_policy" "dev_access_policy" {
-#   key_vault_id = azurerm_key_vault.application.id
-#   tenant_id    = data.azurerm_client_config.current.tenant_id
-#   object_id    = var.aad_object_keyvault_admin
+resource "azurerm_key_vault_access_policy" "dev_access_policy" {
+  key_vault_id = azurerm_key_vault.application.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = var.aad_object_keyvault_admin
 
-#   key_permissions = [
-#     "Get",
-#     "List",
-#     "Update",
-#     "Create",
-#     "Import",
-#     "Delete",
-#     "Recover",
-#     "Backup",
-#     "Restore",
-#   ]
+  key_permissions = [
+    "Get",
+    "List",
+    "Update",
+    "Create",
+    "Import",
+    "Delete",
+    "Recover",
+    "Backup",
+    "Restore",
+  ]
 
-#   secret_permissions = [
-#     "Get",
-#     "List",
-#     "Set",
-#     "Delete",
-#     "Recover",
-#     "Backup",
-#     "Restore",
-#   ]
+  secret_permissions = [
+    "Get",
+    "List",
+    "Set",
+    "Delete",
+    "Recover",
+    "Backup",
+    "Restore",
+  ]
 
-#   certificate_permissions = [
-#     "Get",
-#     "List",
-#     "Update",
-#     "Create",
-#     "Import",
-#     "Delete",
-#     "Recover",
-#     "Backup",
-#     "Restore",
-#     "ManageContacts",
-#     "ManageIssuers",
-#     "GetIssuers",
-#     "ListIssuers",
-#     "SetIssuers",
-#     "DeleteIssuers",
-#   ]
-# }
+  certificate_permissions = [
+    "Get",
+    "List",
+    "Update",
+    "Create",
+    "Import",
+    "Delete",
+    "Recover",
+    "Backup",
+    "Restore",
+    "ManageContacts",
+    "ManageIssuers",
+    "GetIssuers",
+    "ListIssuers",
+    "SetIssuers",
+    "DeleteIssuers",
+  ]
+}
 
 # resource "azurerm_key_vault_access_policy" "frontdoor_access_policy" {
 #   key_vault_id = azurerm_key_vault.application.id
