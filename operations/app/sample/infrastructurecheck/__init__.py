@@ -6,14 +6,20 @@ import re
 import socket
 
 import azure.functions as func
+import azure.identity
+import azure.keyvault.secrets
 import requests
 from azure.storage.blob import BlobServiceClient
 
 
 logger = logging.getLogger(__name__)
 
-URL_IP_CHECK = 'https://api.ipify.org/?format=json'
+KEY_VAULT_NAME = 'pitest-app-kv'
+SECRET_NAME = 'test-secret'
+SECRET_VALUE_EXPECTED = 'BurritoTown'
 STORAGE_ACCOUNT_CONNECTION = os.environ.get('APPSETTING_AzureWebJobsStorage')
+STORAGE_FILENAME = '_test.txt'
+URL_IP_CHECK = 'https://api.ipify.org/?format=json'
 
 Check = collections.namedtuple('Check', ['name', 'status', 'message'])
 
@@ -30,21 +36,19 @@ def verify_blob_storage():
     except Exception as e:
         return [Check('Storage client', 'error', f'Failed to create BlobServiceClient: {e}')]
 
-    blob_by_container = {}
     containers = ["bronze", "silver", "gold"]
 
     for container_name in containers:
         try:
             container_client = service_client.get_container_client(container_name)
-            checks.append(Check(f'Container client: {container_name}', 'ok', ''))
         except Exception as e:
             checks.append(
                 Check(f'Container client: {container_name}', 'error', f'Failed to create container client: {e}')
             )
             continue
+
         try:
-            blob_client = container_client.get_blob_client('_test.txt')
-            checks.append(Check(f'Blob client: {container_name}', 'ok', ''))
+            blob_client = container_client.get_blob_client(STORAGE_FILENAME)
         except Exception as e:
             checks.append(
                 Check(f'Blob client: {container_name}', 'error', f'Failed to create blob client: {e}')
@@ -53,17 +57,29 @@ def verify_blob_storage():
 
         try:
             blob = blob_client.download_blob()
+            blob_value = blob.content_as_text()
             checks.append(Check(f'Blob download: {container_name}', 'ok', ''))
-            checks.append(
-                Check(f'Blob read: {container_name}', 'ok', f'Read {len(blob)} into type {type(blob)}')
-            )
-            blob_by_container[container_name] = blob.content_as_text()
         except Exception as e:
             checks.append(
                 Check(f'Blob read: {container_name}', 'error', f'Failed to get blob: {e}')
             )
             continue
 
+        # Contents look like this -- we'll increment the number after 'Count: ':
+        # # This test is to ensure we can read/write to blob storage
+        # Count: 0
+        try:
+            lines = blob_value.split("\n")
+            _, count = lines[1].strip().split(" ")
+            new_count = int(count.strip()) + 1
+            new_value = "\n".join([lines[0], f"Count: {new_count}"])
+            blob_client.upload_blob(new_value, overwrite=True)
+            checks.append(Check(f'Blob upload: {container_name}', 'ok', ''))
+        except Exception as e:
+            checks.append(
+                Check(f'Blob upload: {container_name}', 'error', f'Failed to uploadblob: {e}')
+            )
+        
     return checks
 
 
@@ -73,6 +89,23 @@ def verify_dns():
         return Check('DNS lookup', 'ok', f'Found IP "{google_ip}" for google.com')
     except Exception as e:
         return Check('DNS lookup', 'error', str(e))
+
+
+def verify_key_vault_read():
+    url = f"https://{KEY_VAULT_NAME}.vault.azure.net"
+    try:
+        credential = azure.identity.DefaultAzureCredential()
+        client = azure.keyvault.secrets.SecretClient(vault_url=url, credential=credential)
+        secret = client.get_secret(SECRET_NAME).value
+        if secret == SECRET_VALUE_EXPECTED:
+            return Check('Key vault', 'ok', 'Fetched secret and verified contents')
+        else:
+            return Check(
+                'Key vault', 'error',
+                f'Fetched secret ok but value mismatch (expected {SECRET_VALUE_EXPECTED}, got {secret}')
+
+    except Exception as e:
+        return Check('Key vault', 'error', f'Failed to create client or fetch secret: {e}')
 
 
 def verify_my_ip():
@@ -94,18 +127,18 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     # task 2: can I reach the internet? if so, what is my IP?
     checks.append(verify_my_ip())
 
+    # task 3: can I read/write to blob storage?
     if is_blank(STORAGE_ACCOUNT_CONNECTION):
         checks.append(Check('Blob *', 'error', 'No connection string defined'))
     else:
         checks.extend(verify_blob_storage())
 
-    # task 4: can I write to blob storage?
-
-    # task 5: can I read from key vault?
+    # task 4: can I read from key vault?
+    checks.append(verify_key_vault_read())
 
     accept_header = re.split(r'\s+,\s+', req.headers.get('Accept', ''))
 
-    # just check the first one
+    # just check the first one rather than dealing with q-weights
     is_text = len(accept_header) > 0 and 'text' in accept_header[0]
 
     if is_text:
