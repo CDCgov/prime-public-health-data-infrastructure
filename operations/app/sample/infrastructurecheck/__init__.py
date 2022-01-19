@@ -1,3 +1,14 @@
+"""
+Function to exercise infrastructure from the inside.
+
+Query parameters:
+
+* `run_azure` (default: true) - if 'false' we won't try to interact with the storage account or key vault
+
+Headers:
+
+* `Accept` if 'text/plain' we'll return a plaintext response, otherwise it'll be JSON
+"""
 import collections
 import json
 import logging
@@ -19,6 +30,7 @@ SECRET_NAME = 'test-secret'
 SECRET_VALUE_EXPECTED = 'BurritoTown'
 STORAGE_ACCOUNT_CONNECTION = os.environ.get('APPSETTING_AzureWebJobsStorage')
 STORAGE_FILENAME = '_test.txt'
+STORAGE_HOST = 'pitestdatastorage.blob.core.windows.net'
 URL_IP_CHECK = 'https://api.ipify.org/?format=json'
 
 Check = collections.namedtuple('Check', ['name', 'status', 'message'])
@@ -84,11 +96,20 @@ def verify_blob_storage():
 
 
 def verify_dns():
+    checks = []
     try:
         google_ip = socket.gethostbyname('google.com')
-        return Check('DNS lookup', 'ok', f'Found IP "{google_ip}" for google.com')
+        checks.append(Check('DNS lookup - external', 'ok', f'Found IP "{google_ip}" for google.com'))
     except Exception as e:
-        return Check('DNS lookup', 'error', str(e))
+        checks.append(Check('DNS lookup - external', 'error', str(e)))
+
+    try:
+        storage_ip = socket.gethostbyname(STORAGE_HOST)
+        checks.append(Check('DNS lookup - internal', 'ok', f'Found IP "{storage_ip}" for pitestdatastorage'))
+    except Exception as e:
+        checks.append(Check('DNS lookup - internal', 'error', str(e)))
+
+    return checks
 
 
 def verify_key_vault_read():
@@ -121,24 +142,24 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     logger.info('APP: Python HTTP trigger function processing a request.')
     checks = []
 
-    # task 1: can I lookup IPs? checks whether the DNS from CDC is working
-    checks.append(verify_dns())
+    checks.extend(verify_dns())    # task 1: can I lookup IPs? checks whether the DNS from CDC (or Azure) is working
+    checks.append(verify_my_ip())  # task 2: can I reach the internet? if so, what is my IP?
 
-    # task 2: can I reach the internet? if so, what is my IP?
-    checks.append(verify_my_ip())
+    # ?run_azure=false will skip the storage account and key vault actions
+    run_azure = req.params.get('run_azure', 'true').strip().lower() == 'true'
 
-    # task 3: can I read/write to blob storage?
-    if is_blank(STORAGE_ACCOUNT_CONNECTION):
-        checks.append(Check('Blob *', 'error', 'No connection string defined'))
+    if run_azure:
+        if is_blank(STORAGE_ACCOUNT_CONNECTION):
+            checks.append(Check('Blob *', 'error', 'No connection string defined'))
+        else:
+            checks.extend(verify_blob_storage())  # task 3: can I read/write to blob storage?
+        checks.append(verify_key_vault_read())    # task 4: can I read from key vault?
     else:
-        checks.extend(verify_blob_storage())
-
-    # task 4: can I read from key vault?
-    checks.append(verify_key_vault_read())
-
-    accept_header = re.split(r'\s+,\s+', req.headers.get('Accept', ''))
+        checks.append(Check('Blob *', 'skip', 'Instructed to not run azure tasks'))
+        checks.append(Check('Key vault', 'skip', 'Instructed to not run azure tasks'))
 
     # just check the first one rather than dealing with q-weights
+    accept_header = re.split(r'\s+,\s+', req.headers.get('Accept', ''))
     is_text = len(accept_header) > 0 and 'text' in accept_header[0]
 
     if is_text:
@@ -162,8 +183,4 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         body = json.dumps(response, indent=4, sort_keys=True)
         headers = {'Content-Type': 'application/json'}
 
-    return func.HttpResponse(
-        body=body,
-        headers=headers,
-        status_code=200,
-    )
+    return func.HttpResponse(body=body, headers=headers, status_code=200)

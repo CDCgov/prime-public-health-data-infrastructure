@@ -11,7 +11,7 @@ resource "azurerm_function_app" "function_app" {
   enable_builtin_logging     = false
 
   app_settings = {
-     # Use the CDC DNS for everything; they have mappings for all our internal
+    # Use the CDC DNS for everything; they have mappings for all our internal
     # resources, so if we add a new resource we'll have to contact them (see
     # prime-router/docs/dns.md)
     "WEBSITE_DNS_SERVER" = "172.17.0.135"
@@ -29,7 +29,6 @@ resource "azurerm_function_app" "function_app" {
     "APPLICATIONINSIGHTS_CONNECTION_STRING"  = var.ai_connection_string
     "FUNCTIONS_WORKER_RUNTIME"               = "python"
     "SCM_DO_BUILD_DURING_DEPLOYMENT"         = 1
-    "WEBSITE_DNS_SERVER"                     = "172.17.0.135"
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE"    = false
   }
 
@@ -91,7 +90,7 @@ resource "azurerm_function_app" "infrastructure_app" {
     "APPLICATIONINSIGHTS_CONNECTION_STRING"  = var.ai_connection_string
     "FUNCTIONS_WORKER_RUNTIME"               = "python"
     "SCM_DO_BUILD_DURING_DEPLOYMENT"         = 1
-    # "WEBSITE_DNS_SERVER"                     = "172.17.0.135"
+    #"WEBSITE_DNS_SERVER"                     = "172.17.0.135"
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE"    = false
   }
 
