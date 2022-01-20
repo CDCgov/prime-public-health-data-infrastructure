@@ -44,7 +44,7 @@ def verify_blob_storage():
     checks = []
     try:
         service_client = BlobServiceClient.from_connection_string(STORAGE_ACCOUNT_CONNECTION)
-        checks.append(Check('Storage client', 'ok', ''))
+        checks.append(Check('Storage client', 'ok', 'Created from connection string'))
     except Exception as e:
         return [Check('Storage client', 'error', f'Failed to create BlobServiceClient: {e}')]
 
@@ -143,7 +143,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     checks = []
 
     checks.extend(verify_dns())    # task 1: can I lookup IPs? checks whether the DNS from CDC (or Azure) is working
-    checks.append(verify_my_ip())  # task 2: can I reach the internet? if so, what is my IP?
+    # checks.append(verify_my_ip())  # task 2: can I reach the internet? if so, what is my IP?
 
     # ?run_azure=false will skip the storage account and key vault actions
     run_azure = req.params.get('run_azure', 'true').strip().lower() == 'true'
