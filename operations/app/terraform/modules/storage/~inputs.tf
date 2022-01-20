@@ -4,6 +4,10 @@ variable "cdc_subnet_ids" {
   description = "IDs of subnets in the CDC vnet"
 }
 
+variable "cdc_service_subnet_id" {
+  description = "ID of service subnet in the CDC vnet"
+}
+
 variable "environment" {
   type        = string
   description = "Target Environment"
