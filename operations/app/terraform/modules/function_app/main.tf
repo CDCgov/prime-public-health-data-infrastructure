@@ -98,6 +98,11 @@ resource "azurerm_function_app" "infrastructure_app" {
     type = "SystemAssigned"
   }
 
+  site_config {
+    use_32_bit_worker_process = false
+    vnet_route_all_enabled = true
+  }
+
   tags = {
     environment = var.environment
   }
