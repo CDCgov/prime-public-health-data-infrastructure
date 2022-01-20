@@ -91,7 +91,7 @@ def verify_blob_storage():
             checks.append(
                 Check(f'Blob upload: {container_name}', 'error', f'Failed to uploadblob: {e}')
             )
-        
+
     return checks
 
 
@@ -142,19 +142,24 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     logger.info('APP: Python HTTP trigger function processing a request.')
     checks = []
 
+    logger.info('Task 1: Verifying DNS')
     checks.extend(verify_dns())    # task 1: can I lookup IPs? checks whether the DNS from CDC (or Azure) is working
-    # checks.append(verify_my_ip())  # task 2: can I reach the internet? if so, what is my IP?
+    logger.info('Task 2: Verifying my IP')
+    checks.append(verify_my_ip())  # task 2: can I reach the internet? if so, what is my IP?
 
     # ?run_azure=false will skip the storage account and key vault actions
     run_azure = req.params.get('run_azure', 'true').strip().lower() == 'true'
 
     if run_azure:
+        logger.info('Task 3: Verifying blob storage')
         if is_blank(STORAGE_ACCOUNT_CONNECTION):
             checks.append(Check('Blob *', 'error', 'No connection string defined'))
         else:
             checks.extend(verify_blob_storage())  # task 3: can I read/write to blob storage?
+        logger.info('Task 4: Verifying key vault')
         checks.append(verify_key_vault_read())    # task 4: can I read from key vault?
     else:
+        logger.info('Task 3+4: Skipping on request')
         checks.append(Check('Blob *', 'skip', 'Instructed to not run azure tasks'))
         checks.append(Check('Key vault', 'skip', 'Instructed to not run azure tasks'))
 
