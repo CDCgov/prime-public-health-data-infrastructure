@@ -1,36 +1,92 @@
 /*
  * Creates/associates a vnet, subnet(s), and security group(s). Subnets are:
  * 
- * - Private: Exists in the CDC-managed VNet as name "Default"; all services exist here
- * - Endpoint: Will exist in the application VNet, contains endpoints to the services in the Private subnet
+ * - app: holds the function app and is delegated to it
+ * - service: holds the service account, key vault, etc
  */
 
-
-# vnet with endpoints, local DNS server, and VPN for devs to connect
-resource "azurerm_virtual_network" "dev" {
-  name                = "${var.resource_prefix}-dev-vnet"
-  location            = var.location
-  resource_group_name = var.resource_group
-  address_space       = ["10.0.0.0/16"]
-
-  tags = {
-      environment = var.environment
-  }
-}
-
-/* Private subnet */
-resource "azurerm_subnet" "dev_private_subnet" {
-  name                 = var.cdc_subnet_name  # keep this the same as the CDC vnet for consistency
+resource "azurerm_subnet" "cdc_app_subnet" {
+  name                 = var.app_subnet_name
   resource_group_name  = var.resource_group
-  virtual_network_name = azurerm_virtual_network.dev.name
-  address_prefixes     = ["10.0.1.0/24"]
+  virtual_network_name = var.cdc_vnet_name
+  address_prefixes     = ["172.17.9.64/28"]
   enforce_private_link_endpoint_network_policies = true  # true = disable, false = enable; see: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet
   service_endpoints    = [
     "Microsoft.Storage",
     "Microsoft.KeyVault",
     "Microsoft.ContainerRegistry",
   ]
+
+  # this is required to put a functionapp in the subnet
+  delegation {
+    name = "server_farms"
+    service_delegation {
+      name    = "Microsoft.Web/serverFarms"
+      actions = [
+        "Microsoft.Network/virtualNetworks/subnets/action",
+      ]
+    }
+  }
 }
+
+resource "azurerm_subnet" "cdc_service_subnet" {
+  name                 = var.service_subnet_name
+  resource_group_name  = var.resource_group
+  virtual_network_name = var.cdc_vnet_name
+  address_prefixes     = ["172.17.9.80/28"]
+  enforce_private_link_endpoint_network_policies = true  # true = disable, false = enable; see: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet
+
+  # don't think we need these for this subnet...
+  # service_endpoints    = [
+  #   "Microsoft.Storage",
+  #   "Microsoft.KeyVault",
+  #   "Microsoft.ContainerRegistry",
+  # ]
+}
+
+
+# TODO: leaving this out for now
+
+# vnet with endpoints, local DNS server, and VPN for devs to connect
+# resource "azurerm_virtual_network" "dev" {
+#   name                = "${var.resource_prefix}-dev-vnet"
+#   location            = var.location
+#   resource_group_name = var.resource_group
+#   address_space       = ["10.0.0.0/16"]
+# 
+#   tags = {
+#       environment = var.environment
+#   }
+# }
+# 
+# /* dev app subnet */
+# resource "azurerm_subnet" "dev_app_subnet" {
+#   name                 = var.app_subnet_name  # keep this the same as the CDC vnet for consistency
+#   resource_group_name  = var.resource_group
+#   virtual_network_name = azurerm_virtual_network.dev.name
+#   address_prefixes     = ["10.0.1.0/24"]
+#   enforce_private_link_endpoint_network_policies = true  # true = disable, false = enable; see: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet
+#   service_endpoints    = [
+#     "Microsoft.Storage",
+#     "Microsoft.KeyVault",
+#     "Microsoft.ContainerRegistry",
+#   ]
+# }
+# 
+# /* service app subnet */
+# resource "azurerm_subnet" "dev_service_subnet" {
+#   name                 = var.service_subnet_name  # keep this the same as the CDC vnet for consistency
+#   resource_group_name  = var.resource_group
+#   virtual_network_name = azurerm_virtual_network.dev.name
+#   address_prefixes     = ["10.0.1.0/24"]
+#   enforce_private_link_endpoint_network_policies = true  # true = disable, false = enable; see: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet
+#   service_endpoints    = [
+#     "Microsoft.Storage",
+#     "Microsoft.KeyVault",
+#     "Microsoft.ContainerRegistry",
+#   ]
+# }
+
 
 /* Private network security group */
 resource "azurerm_network_security_group" "vnet_nsg_private" {
@@ -39,15 +95,14 @@ resource "azurerm_network_security_group" "vnet_nsg_private" {
   resource_group_name = var.resource_group
 }
 
-/* ...+ association to CDC "Default" subnet */
-resource "azurerm_subnet_network_security_group_association" "cdc_private_to_nsg_private" {
-  subnet_id                 = data.azurerm_subnet.cdc_subnet.id
+/* ...+ association to all the subnets -- just the CDC ones for now */
+resource "azurerm_subnet_network_security_group_association" "cdc_app_to_nsg_private" {
+  subnet_id                 = azurerm_subnet.cdc_app_subnet.id
   network_security_group_id = azurerm_network_security_group.vnet_nsg_private.id
 }
 
-/* ...+ association to dev private subnet */
-resource "azurerm_subnet_network_security_group_association" "dev_private_to_nsg_private" {
-  subnet_id                 = azurerm_subnet.dev_private_subnet.id
+resource "azurerm_subnet_network_security_group_association" "cdc_service_to_nsg_private" {
+  subnet_id                 = azurerm_subnet.cdc_service_subnet.id
   network_security_group_id = azurerm_network_security_group.vnet_nsg_private.id
 }
 

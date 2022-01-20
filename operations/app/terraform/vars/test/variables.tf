@@ -1,3 +1,8 @@
+# TODO: not currently used
+variable "tf_secrets_vault" {
+  default = "pitest-tf-secrets"
+}
+
 ## Set basic variables
 variable "terraform_object_id" {
   type = string
@@ -6,21 +11,26 @@ variable "terraform_object_id" {
   default = "9ff42a69-beb8-4b4a-9406-e7fbcbf847ee"
 }
 
-variable "tf_secrets_vault" {
-  default = "pitest-tf-secrets"
+variable "app_subnet_name" {
+  default = "app"
 }
 
 variable "cdc_vnet_name" {
   default = "prime-ingestion-test-VNET"
 }
 
-variable "cdc_subnet_name" {
-  default = "Default"
-}
-
 variable "environment" {
   default = "test"
 }
+
+variable "https_cert_names" {
+  default = []
+}         
+
+variable "location" {
+  default = "eastus"
+}
+
 variable "resource_group" {
   default = "prime-ingestion-test"
 }
@@ -28,18 +38,19 @@ variable "resource_group" {
 variable "resource_prefix" {
   default = "pitest"
 }
-variable "location" {
-  default = "eastus"
-}
+
 variable "rsa_key_2048" {
   default = null 
 }              
+
 variable "rsa_key_4096" {
   default = null
-}            
-variable "https_cert_names" {
-  default = []
-}         
+}
+
+variable "service_subnet_name" {
+  default = "service"
+}
+
 
 variable "aad_object_keyvault_admin" {
   # NOTE: set to object ID of CT-DMZ-PRIME-INGESTION-TST-AZ-Contributor

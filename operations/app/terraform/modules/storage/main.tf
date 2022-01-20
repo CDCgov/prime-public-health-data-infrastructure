@@ -65,38 +65,38 @@ resource "azurerm_storage_account" "storage_account" {
 #   container_access_type = "private"
 # }
 
-module "storageaccount_blob_private_endpoint" {
-  source              = "../common/private_endpoint"
-  resource_id         = azurerm_storage_account.storage_account.id
-  name                = azurerm_storage_account.storage_account.name
-  type                = "storage_account_blob"
-  resource_group      = var.resource_group
-  location            = var.location
-
-  endpoint_subnet_ids = var.private_subnet_ids
-}
-
-module "storageaccount_file_private_endpoint" {
-  source              = "../common/private_endpoint"
-  resource_id         = azurerm_storage_account.storage_account.id
-  name                = azurerm_storage_account.storage_account.name
-  type                = "storage_account_file"
-  resource_group      = var.resource_group
-  location            = var.location
-
-  endpoint_subnet_ids = var.private_subnet_ids
-}
-
-module "storageaccount_queue_private_endpoint" {
-  source              = "../common/private_endpoint"
-  resource_id         = azurerm_storage_account.storage_account.id
-  name                = azurerm_storage_account.storage_account.name
-  type                = "storage_account_queue"
-  resource_group      = var.resource_group
-  location            = var.location
-
-  endpoint_subnet_ids = var.private_subnet_ids
-}
+# module "storageaccount_blob_private_endpoint" {
+#   source              = "../common/private_endpoint"
+#   resource_id         = azurerm_storage_account.storage_account.id
+#   name                = azurerm_storage_account.storage_account.name
+#   type                = "storage_account_blob"
+#   resource_group      = var.resource_group
+#   location            = var.location
+# 
+#   endpoint_subnet_ids = var.cdc_subnet_ids
+# }
+# 
+# module "storageaccount_file_private_endpoint" {
+#   source              = "../common/private_endpoint"
+#   resource_id         = azurerm_storage_account.storage_account.id
+#   name                = azurerm_storage_account.storage_account.name
+#   type                = "storage_account_file"
+#   resource_group      = var.resource_group
+#   location            = var.location
+# 
+#   endpoint_subnet_ids = var.cdc_subnet_ids
+# }
+# 
+# module "storageaccount_queue_private_endpoint" {
+#   source              = "../common/private_endpoint"
+#   resource_id         = azurerm_storage_account.storage_account.id
+#   name                = azurerm_storage_account.storage_account.name
+#   type                = "storage_account_queue"
+#   resource_group      = var.resource_group
+#   location            = var.location
+# 
+#   endpoint_subnet_ids = var.cdc_subnet_ids
+# }
 
 # Point-in-time restore, soft delete, versioning, and change feed were
 # enabled in the portal as terraform does not currently support this.

@@ -26,16 +26,10 @@ locals {
 }
 
 # we need this data lookup because we need to reference/manipulate
-# the CDC-managed VNet and subnet
+# the CDC-managed VNet
 data "azurerm_virtual_network" "cdc_vnet" {
   name                 = var.cdc_vnet_name
   resource_group_name  = var.resource_group
-}
-
-data "azurerm_subnet" "cdc_subnet" {
-  name                 = var.cdc_subnet_name
-  resource_group_name  = var.resource_group
-  virtual_network_name = var.cdc_vnet_name
 }
 
 # Note that I manually added to this subnet the equivalent of the following

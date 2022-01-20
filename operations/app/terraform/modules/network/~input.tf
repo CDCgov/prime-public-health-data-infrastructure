@@ -3,9 +3,9 @@ variable "cdc_vnet_name" {
   description = "Name of CDC vnet"
 }
 
-variable "cdc_subnet_name" {
+variable "app_subnet_name" {
   type = string
-  description = "Name of subnet within CDC vnet"
+  description = "Name of app subnet within CDC vnet"
 }
 
 variable "environment" {
@@ -26,4 +26,9 @@ variable "resource_group" {
 variable "resource_prefix" {
   type        = string
   description = "Resource Prefix"
+}
+
+variable "service_subnet_name" {
+  type = string
+  description = "Name of service subnet within CDC vnet"
 }

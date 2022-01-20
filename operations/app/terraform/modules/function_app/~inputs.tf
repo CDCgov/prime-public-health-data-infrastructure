@@ -14,7 +14,7 @@ variable "app_service_plan" {}
 
 variable "application_key_vault_id" {}
 
-variable "cdc_subnet_id" {}
+variable "cdc_app_subnet_id" {}
 
 variable "environment" {
   type        = string

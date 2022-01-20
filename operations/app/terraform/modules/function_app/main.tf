@@ -125,10 +125,10 @@ resource "azurerm_key_vault_access_policy" "infrastructure_app_config_access_pol
 
 resource "azurerm_app_service_virtual_network_swift_connection" "function_app_vnet_integration" {
   app_service_id = azurerm_function_app.function_app.id
-  subnet_id      = var.cdc_subnet_id
+  subnet_id      = var.cdc_app_subnet_id
 }
 
 resource "azurerm_app_service_virtual_network_swift_connection" "infrastructure_app_vnet_integration" {
   app_service_id = azurerm_function_app.infrastructure_app.id
-  subnet_id      = var.cdc_subnet_id
+  subnet_id      = var.cdc_app_subnet_id
 }

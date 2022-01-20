@@ -1,5 +1,9 @@
 variable "application_key_vault_id" {}
 
+variable "cdc_subnet_ids" {
+  description = "IDs of subnets in the CDC vnet"
+}
+
 variable "environment" {
   type        = string
   description = "Target Environment"
@@ -9,8 +13,6 @@ variable "location" {
   type        = string
   description = "Storage Account Location"
 }
-
-variable "private_subnet_ids" {}
 
 variable "resource_group" {
   type        = string

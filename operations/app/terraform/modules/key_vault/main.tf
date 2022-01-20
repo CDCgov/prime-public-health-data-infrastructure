@@ -25,7 +25,7 @@ resource "azurerm_key_vault" "application" {
       [var.terraform_caller_ip_address],
     ))
 
-    virtual_network_subnet_ids = var.private_subnet_ids
+    virtual_network_subnet_ids = toset([var.cdc_app_subnet_id])
   }
 
   lifecycle {
@@ -95,20 +95,6 @@ resource "azurerm_key_vault_access_policy" "dev_access_policy" {
 #     "Get",
 #   ]
 # }
-
-resource "azurerm_key_vault_access_policy" "terraform_access_policy" {
-  count        = var.environment == "dev" ?  0 : 1
-  key_vault_id = azurerm_key_vault.application.id
-  tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = var.terraform_object_id
-
-  secret_permissions = [
-    "Get",
-  ]
-  key_permissions = [
-    "Get",
-  ]
-}
 
 # module "application_private_endpoint" {
 #   source         = "../common/private_endpoint"

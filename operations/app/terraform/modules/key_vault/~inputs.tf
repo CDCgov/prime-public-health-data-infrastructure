@@ -3,6 +3,9 @@ variable "aad_object_keyvault_admin" {
   description = "Azure Active Directory ID for a user or group who will be given write access to Key Vaults"
 }
 
+variable "cdc_app_subnet_id" {}
+variable "cdc_subnet_ids" {}
+
 variable "cyberark_ip_ingress" {}
 
 variable "environment" {
@@ -14,8 +17,6 @@ variable "location" {
   type        = string
   description = "Network Location"
 }
-
-variable "private_subnet_ids" {}
 
 variable "resource_group" {
   type        = string

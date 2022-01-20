@@ -3,13 +3,14 @@
 ##########
 
 module "network" {
-  source          = "../../modules/network"
-  cdc_vnet_name   = var.cdc_vnet_name
-  cdc_subnet_name = var.cdc_subnet_name
-  environment     = var.environment
-  location        = var.location
-  resource_group  = var.resource_group
-  resource_prefix = var.resource_prefix
+  source              = "../../modules/network"
+  app_subnet_name     = var.app_subnet_name
+  cdc_vnet_name       = var.cdc_vnet_name
+  environment         = var.environment
+  location            = var.location
+  resource_group      = var.resource_group
+  resource_prefix     = var.resource_prefix
+  service_subnet_name = var.service_subnet_name
 }
 
 # ##########
@@ -23,11 +24,12 @@ module "key_vault" {
   resource_prefix             = var.resource_prefix
   location                    = var.location
   aad_object_keyvault_admin   = var.aad_object_keyvault_admin
-  terraform_caller_ip_address = var.terraform_caller_ip_address
-  use_cdc_managed_vnet        = var.use_cdc_managed_vnet
-  private_subnet_ids          = module.network.private_subnet_ids
+  cdc_app_subnet_id           = module.network.cdc_app_subnet_id
+  cdc_subnet_ids              = module.network.cdc_subnet_ids
   cyberark_ip_ingress         = ""
+  terraform_caller_ip_address = var.terraform_caller_ip_address
   terraform_object_id         = var.terraform_object_id
+  use_cdc_managed_vnet        = var.use_cdc_managed_vnet
 }
 
 module "storage" {
@@ -37,7 +39,7 @@ module "storage" {
   resource_group              = var.resource_group
   resource_prefix             = var.resource_prefix
   application_key_vault_id    = module.key_vault.application_key_vault_id
-  private_subnet_ids          = toset([module.network.dev_private_subnet_id])
+  cdc_subnet_ids              = module.network.cdc_subnet_ids
   rsa_key_4096                = var.rsa_key_4096
   terraform_caller_ip_address = var.terraform_caller_ip_address
   use_cdc_managed_vnet        = var.use_cdc_managed_vnet
@@ -77,7 +79,7 @@ module "function_app" {
   ai_connection_string        = module.application_insights.connection_string
   app_service_plan            = module.app_service_plan.service_plan_id
   application_key_vault_id    = module.key_vault.application_key_vault_id
-  cdc_subnet_id               = module.network.cdc_subnet_id
+  cdc_app_subnet_id           = module.network.cdc_app_subnet_id
   primary_access_key          = module.storage.sa_primary_access_key
   primary_connection_string   = module.storage.sa_primary_connection_string
   primary_name                = module.storage.sa_primary_name
