@@ -10,10 +10,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info(f"Settings: {settings}")
 
     try:
+        cnopts = pysftp.CnOpts()
+        cnopts.hostkeys = None   
         sftp = pysftp.Connection(
             settings["hostname"],
             username=settings["username"],
             password=settings["password"],
+            cnopts=cnopts
         )
         for filename in sftp.listdir("/"):
             logging.info(f"filename: {filename}")
