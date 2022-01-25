@@ -30,7 +30,7 @@ SECRET_NAME = 'test-secret'
 SECRET_VALUE_EXPECTED = 'BurritoTown'
 STORAGE_ACCOUNT_CONNECTION = os.environ.get('APPSETTING_AzureWebJobsStorage')
 STORAGE_FILENAME = '_test.txt'
-STORAGE_HOST = 'pitestdatastorage.blob.core.windows.net'
+STORAGE_HOST = 'pitestdatastorage.privatelink.blob.core.windows.net'
 URL_IP_CHECK = 'https://api.ipify.org/?format=json'
 
 Check = collections.namedtuple('Check', ['name', 'status', 'message'])
@@ -105,7 +105,7 @@ def verify_dns():
 
     try:
         storage_ip = socket.gethostbyname(STORAGE_HOST)
-        checks.append(Check('DNS lookup - internal', 'ok', f'Found IP "{storage_ip}" for pitestdatastorage'))
+        checks.append(Check('DNS lookup - internal', 'ok', f'Found IP "{storage_ip}" for "{STORAGE_HOST}"'))
     except Exception as e:
         checks.append(Check('DNS lookup - internal', 'error', str(e)))
 
