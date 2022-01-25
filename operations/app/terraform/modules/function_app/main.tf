@@ -14,7 +14,7 @@ resource "azurerm_function_app" "function_app" {
     # Use the CDC DNS for everything; they have mappings for all our internal
     # resources, so if we add a new resource we'll have to contact them (see
     # prime-router/docs/dns.md)
-    "WEBSITE_DNS_SERVER" = "172.17.0.135"
+    "WEBSITE_DNS_SERVER" = "168.63.129.16"
 
     # "DOCKER_REGISTRY_SERVER_URL"      = var.container_registry_login_server
     # "DOCKER_REGISTRY_SERVER_USERNAME" = var.container_registry_admin_username
@@ -90,7 +90,7 @@ resource "azurerm_function_app" "infrastructure_app" {
     "APPLICATIONINSIGHTS_CONNECTION_STRING"  = var.ai_connection_string
     "FUNCTIONS_WORKER_RUNTIME"               = "python"
     "SCM_DO_BUILD_DURING_DEPLOYMENT"         = 1
-    #"WEBSITE_DNS_SERVER"                     = "172.17.0.135"
+    "WEBSITE_DNS_SERVER"                     = "168.63.129.16"
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE"    = false
   }
 
