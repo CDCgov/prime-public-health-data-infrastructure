@@ -1,0 +1,11 @@
+{
+    "folders": [
+		{
+			"path": "src/FunctionApps/GeocodeAddress"
+		},
+		{
+			"path": "src/FunctionApps/PITest_FunctionApp"
+		}
+	],
+    "settings": {}
+}
