@@ -13,21 +13,19 @@ resource "azurerm_storage_account" "storage_account" {
   allow_blob_public_access  = false
   enable_https_traffic_only = true
 
-  # TODO: Re-enable these when we get an Azure VPN (or whatever) solution in place for viewing PII/PHI files
-  #
-  # network_rules {
-  #   default_action = "Deny"
-  #   bypass         = ["None"]
+  network_rules {
+    default_action = "Deny"
+    bypass         = ["AzureServices"]
 
-  #   # ip_rules = sensitive(concat(
-  #   #   split(",", data.azurerm_key_vault_secret.cyberark_ip_ingress.value),
-  #   #   [split("/", var.terraform_caller_ip_address)[0]], # Storage accounts only allow CIDR-notation for /[0-30]
-  #   # ))
+    # ip_rules = sensitive(concat(
+    #   split(",", data.azurerm_key_vault_secret.cyberark_ip_ingress.value),
+    #   [split("/", var.terraform_caller_ip_address)[0]], # Storage accounts only allow CIDR-notation for /[0-30]
+    # ))
 
-  #   ip_rules = [var.terraform_caller_ip_address]
+    #ip_rules = [var.terraform_caller_ip_address]
 
-  #   virtual_network_subnet_ids = concat(var.public_subnet, var.container_subnet, var.private_subnet)
-  # }
+    virtual_network_subnet_ids = var.app_subnet_ids
+  }
 
   # Required for customer-managed encryption
   identity {
@@ -66,36 +64,78 @@ resource "azurerm_storage_account" "storage_account" {
 # }
 
 module "storageaccount_blob_private_endpoint" {
-  source              = "../common/private_endpoint"
-  resource_id         = azurerm_storage_account.storage_account.id
-  name                = azurerm_storage_account.storage_account.name
-  type                = "storage_account_blob"
-  resource_group      = var.resource_group
-  location            = var.location
+  source = "../common/private_sa_endpoint"
+  primary = {
+    name           = "pitestdatastorage-blob-privateendpoint"
+    type           = "storage_account_blob"
+    location       = "eastus"
+    resource_group = var.resource_group
+  }
 
   endpoint_subnet_ids = [var.cdc_service_subnet_id]
+
+  private_dns_zone_group = {
+    id                   = "/subscriptions/7d1e3999-6577-4cd5-b296-f518e5c8e677/resourceGroups/prime-ingestion-test/providers/Microsoft.Network/privateEndpoints/pitestdatastorage-blob-privateendpoint/privateDnsZoneGroups/default"
+    name                 = "default"
+    private_dns_zone_ids = "/subscriptions/7d1e3999-6577-4cd5-b296-f518e5c8e677/resourceGroups/prime-ingestion-test/providers/Microsoft.Network/privateDnsZones/privatelink.blob.core.windows.net"
+  }
+
+  private_service_connection = {
+    is_manual_connection           = false
+    name                           = "pitestdatastorage-blob-privateendpoint"
+    private_connection_resource_id = "/subscriptions/7d1e3999-6577-4cd5-b296-f518e5c8e677/resourceGroups/prime-ingestion-test/providers/Microsoft.Storage/storageAccounts/pitestdatastorage"
+    subresource_names              = "blob"
+  }
 }
 
 module "storageaccount_file_private_endpoint" {
-  source              = "../common/private_endpoint"
-  resource_id         = azurerm_storage_account.storage_account.id
-  name                = azurerm_storage_account.storage_account.name
-  type                = "storage_account_file"
-  resource_group      = var.resource_group
-  location            = var.location
+  source = "../common/private_sa_endpoint"
+  primary = {
+    name           = "pitestdatastorage-file-privateendpoint"
+    type           = "storage_account_file"
+    location       = "eastus"
+    resource_group = var.resource_group
+  }
 
   endpoint_subnet_ids = [var.cdc_service_subnet_id]
+
+  private_dns_zone_group = {
+    id                   = "/subscriptions/7d1e3999-6577-4cd5-b296-f518e5c8e677/resourceGroups/prime-ingestion-test/providers/Microsoft.Network/privateEndpoints/pitestdatastorage-file-privateendpoint/privateDnsZoneGroups/default"
+    name                 = "default"
+    private_dns_zone_ids = "/subscriptions/7d1e3999-6577-4cd5-b296-f518e5c8e677/resourceGroups/prime-ingestion-test/providers/Microsoft.Network/privateDnsZones/privatelink.file.core.windows.net"
+  }
+
+  private_service_connection = {
+    is_manual_connection           = false
+    name                           = "pitestdatastorage-file-privateendpoint"
+    private_connection_resource_id = "/subscriptions/7d1e3999-6577-4cd5-b296-f518e5c8e677/resourceGroups/prime-ingestion-test/providers/Microsoft.Storage/storageAccounts/pitestdatastorage"
+    subresource_names              = "file"
+  }
 }
 
 module "storageaccount_queue_private_endpoint" {
-  source              = "../common/private_endpoint"
-  resource_id         = azurerm_storage_account.storage_account.id
-  name                = azurerm_storage_account.storage_account.name
-  type                = "storage_account_queue"
-  resource_group      = var.resource_group
-  location            = var.location
+  source = "../common/private_sa_endpoint"
+  primary = {
+    name           = "pitestdatastorage-queue-privateendpoint"
+    type           = "storage_account_queue"
+    location       = "eastus"
+    resource_group = var.resource_group
+  }
 
   endpoint_subnet_ids = [var.cdc_service_subnet_id]
+
+  private_dns_zone_group = {
+    id                   = "/subscriptions/7d1e3999-6577-4cd5-b296-f518e5c8e677/resourceGroups/prime-ingestion-test/providers/Microsoft.Network/privateEndpoints/pitestdatastorage-queue-privateendpoint/privateDnsZoneGroups/default"
+    name                 = "default"
+    private_dns_zone_ids = "/subscriptions/7d1e3999-6577-4cd5-b296-f518e5c8e677/resourceGroups/prime-ingestion-test/providers/Microsoft.Network/privateDnsZones/privatelink.queue.core.windows.net"
+  }
+
+  private_service_connection = {
+    is_manual_connection           = false
+    name                           = "pitestdatastorage-queue-privateendpoint"
+    private_connection_resource_id = "/subscriptions/7d1e3999-6577-4cd5-b296-f518e5c8e677/resourceGroups/prime-ingestion-test/providers/Microsoft.Storage/storageAccounts/pitestdatastorage"
+    subresource_names              = "queue"
+  }
 }
 
 # Point-in-time restore, soft delete, versioning, and change feed were

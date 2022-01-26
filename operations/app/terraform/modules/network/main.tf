@@ -6,12 +6,12 @@
  */
 
 resource "azurerm_subnet" "cdc_app_subnet" {
-  name                 = var.app_subnet_name
-  resource_group_name  = var.resource_group
-  virtual_network_name = var.cdc_vnet_name
-  address_prefixes     = ["172.17.9.64/28"]
-  enforce_private_link_endpoint_network_policies = true  # true = disable, false = enable; see: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet
-  service_endpoints    = [
+  name                                           = var.app_subnet_name
+  resource_group_name                            = var.resource_group
+  virtual_network_name                           = var.cdc_vnet_name
+  address_prefixes                               = ["172.17.9.64/28"]
+  enforce_private_link_endpoint_network_policies = true # true = disable, false = enable; see: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet
+  service_endpoints = [
     "Microsoft.Storage",
     "Microsoft.KeyVault",
     "Microsoft.ContainerRegistry",
@@ -19,9 +19,9 @@ resource "azurerm_subnet" "cdc_app_subnet" {
 
   # this is required to put a functionapp in the subnet
   delegation {
-    name = "server_farms"
+    name = "Microsoft.Web.serverFarms"
     service_delegation {
-      name    = "Microsoft.Web/serverFarms"
+      name = "Microsoft.Web/serverFarms"
       actions = [
         "Microsoft.Network/virtualNetworks/subnets/action",
       ]
@@ -30,18 +30,12 @@ resource "azurerm_subnet" "cdc_app_subnet" {
 }
 
 resource "azurerm_subnet" "cdc_service_subnet" {
-  name                 = var.service_subnet_name
-  resource_group_name  = var.resource_group
-  virtual_network_name = var.cdc_vnet_name
-  address_prefixes     = ["172.17.9.80/28"]
-  enforce_private_link_endpoint_network_policies = true  # true = disable, false = enable; see: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet
+  name                                           = var.service_subnet_name
+  resource_group_name                            = var.resource_group
+  virtual_network_name                           = var.cdc_vnet_name
+  address_prefixes                               = ["172.17.9.80/28"]
+  enforce_private_link_endpoint_network_policies = true # true = disable, false = enable; see: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet
 
-  # don't think we need these for this subnet...
-  # service_endpoints    = [
-  #   "Microsoft.Storage",
-  #   "Microsoft.KeyVault",
-  #   "Microsoft.ContainerRegistry",
-  # ]
 }
 
 
@@ -274,3 +268,84 @@ resource "azurerm_subnet_network_security_group_association" "cdc_service_to_nsg
 #   network_security_group_id = azurerm_network_security_group.vnet_nsg_public[count.index].id
 # }
 # 
+
+resource "azurerm_private_dns_zone" "blob_dns_zone" {
+  name                = "privatelink.blob.core.windows.net"
+  resource_group_name = var.resource_group
+
+  soa_record {
+    email = "azureprivatedns-host.microsoft.com"
+  }
+}
+
+resource "azurerm_private_dns_a_record" "blob_dns" {
+  name                = "pitestdatastorage"
+  zone_name           = azurerm_private_dns_zone.blob_dns_zone.name
+  resource_group_name = var.resource_group
+  ttl                 = 10
+  records             = ["172.17.9.88"]
+  tags = {
+    "creator" = "created by private endpoint pitestdatastorage-blob-privateendpoint with resource guid 81980b71-8fc6-4e39-a291-1b42d5f4fe3b"
+  }
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "blob_dns" {
+  name                  = "cys343525l454"
+  resource_group_name   = var.resource_group
+  private_dns_zone_name = azurerm_private_dns_zone.blob_dns_zone.name
+  virtual_network_id    = data.azurerm_virtual_network.cdc_vnet.id
+}
+
+resource "azurerm_private_dns_zone" "file_dns_zone" {
+  name                = "privatelink.file.core.windows.net"
+  resource_group_name = var.resource_group
+
+  soa_record {
+    email = "azureprivatedns-host.microsoft.com"
+  }
+}
+
+resource "azurerm_private_dns_a_record" "file_dns" {
+  name                = "pitestdatastorage"
+  zone_name           = azurerm_private_dns_zone.file_dns_zone.name
+  resource_group_name = var.resource_group
+  ttl                 = 10
+  records             = ["172.17.9.87"]
+  tags = {
+    "creator" = "created by private endpoint pitestdatastorage-file-privateendpoint with resource guid e68a9884-1f0d-497b-b52c-90bffc665851"
+  }
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "file_dns" {
+  name                  = "cys343525l454"
+  resource_group_name   = var.resource_group
+  private_dns_zone_name = azurerm_private_dns_zone.file_dns_zone.name
+  virtual_network_id    = data.azurerm_virtual_network.cdc_vnet.id
+}
+
+resource "azurerm_private_dns_zone" "queue_dns_zone" {
+  name                = "privatelink.queue.core.windows.net"
+  resource_group_name = var.resource_group
+
+  soa_record {
+    email = "azureprivatedns-host.microsoft.com"
+  }
+}
+
+resource "azurerm_private_dns_a_record" "queue_dns" {
+  name                = "pitestdatastorage"
+  zone_name           = azurerm_private_dns_zone.queue_dns_zone.name
+  resource_group_name = var.resource_group
+  ttl                 = 10
+  records             = ["172.17.9.84"]
+  tags = {
+    "creator" = "created by private endpoint pitestdatastorage-queue-privateendpoint with resource guid 68f761fe-1e84-4f55-82dc-39e7e50b54cc"
+  }
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "queue_dns" {
+  name                  = "cys343525l454"
+  resource_group_name   = var.resource_group
+  private_dns_zone_name = azurerm_private_dns_zone.queue_dns_zone.name
+  virtual_network_id    = data.azurerm_virtual_network.cdc_vnet.id
+}

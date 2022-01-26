@@ -44,6 +44,7 @@ module "storage" {
   rsa_key_4096                = var.rsa_key_4096
   terraform_caller_ip_address = var.terraform_caller_ip_address
   use_cdc_managed_vnet        = var.use_cdc_managed_vnet
+  app_subnet_ids              = module.network.app_subnet_ids
 }
 
 
