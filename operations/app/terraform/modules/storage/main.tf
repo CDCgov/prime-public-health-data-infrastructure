@@ -63,78 +63,30 @@ resource "azurerm_storage_account" "storage_account" {
 #   container_access_type = "private"
 # }
 
-module "storageaccount_blob_private_endpoint" {
+/* Generate multiple storage private endpoints via for_each */
+module "storageaccount_private_endpoint" {
+  for_each = toset(["blob", "file", "queue"])
   source = "../common/private_sa_endpoint"
   primary = {
-    name           = "pitestdatastorage-blob-privateendpoint"
-    type           = "storage_account_blob"
-    location       = "eastus"
-    resource_group = var.resource_group
+    name              = "${azurerm_storage_account.storage_account.name}-${each.key}-privateendpoint"
+    type              = "storage_account_blob"
+    location          = "eastus"
+    resource_group    = var.resource_group
   }
 
   endpoint_subnet_ids = [var.cdc_service_subnet_id]
 
   private_dns_zone_group = {
-    id                   = "/subscriptions/7d1e3999-6577-4cd5-b296-f518e5c8e677/resourceGroups/prime-ingestion-test/providers/Microsoft.Network/privateEndpoints/pitestdatastorage-blob-privateendpoint/privateDnsZoneGroups/default"
+    id                   = "${var.resource_group_id}/providers/Microsoft.Network/privateEndpoints/${azurerm_storage_account.storage_account.name}-${each.key}-privateendpoint/privateDnsZoneGroups/default"
     name                 = "default"
-    private_dns_zone_ids = "/subscriptions/7d1e3999-6577-4cd5-b296-f518e5c8e677/resourceGroups/prime-ingestion-test/providers/Microsoft.Network/privateDnsZones/privatelink.blob.core.windows.net"
+    private_dns_zone_ids = "${var.resource_group_id}/providers/Microsoft.Network/privateDnsZones/privatelink.${each.key}.core.windows.net"
   }
 
   private_service_connection = {
     is_manual_connection           = false
-    name                           = "pitestdatastorage-blob-privateendpoint"
-    private_connection_resource_id = "/subscriptions/7d1e3999-6577-4cd5-b296-f518e5c8e677/resourceGroups/prime-ingestion-test/providers/Microsoft.Storage/storageAccounts/pitestdatastorage"
-    subresource_names              = "blob"
-  }
-}
-
-module "storageaccount_file_private_endpoint" {
-  source = "../common/private_sa_endpoint"
-  primary = {
-    name           = "pitestdatastorage-file-privateendpoint"
-    type           = "storage_account_file"
-    location       = "eastus"
-    resource_group = var.resource_group
-  }
-
-  endpoint_subnet_ids = [var.cdc_service_subnet_id]
-
-  private_dns_zone_group = {
-    id                   = "/subscriptions/7d1e3999-6577-4cd5-b296-f518e5c8e677/resourceGroups/prime-ingestion-test/providers/Microsoft.Network/privateEndpoints/pitestdatastorage-file-privateendpoint/privateDnsZoneGroups/default"
-    name                 = "default"
-    private_dns_zone_ids = "/subscriptions/7d1e3999-6577-4cd5-b296-f518e5c8e677/resourceGroups/prime-ingestion-test/providers/Microsoft.Network/privateDnsZones/privatelink.file.core.windows.net"
-  }
-
-  private_service_connection = {
-    is_manual_connection           = false
-    name                           = "pitestdatastorage-file-privateendpoint"
-    private_connection_resource_id = "/subscriptions/7d1e3999-6577-4cd5-b296-f518e5c8e677/resourceGroups/prime-ingestion-test/providers/Microsoft.Storage/storageAccounts/pitestdatastorage"
-    subresource_names              = "file"
-  }
-}
-
-module "storageaccount_queue_private_endpoint" {
-  source = "../common/private_sa_endpoint"
-  primary = {
-    name           = "pitestdatastorage-queue-privateendpoint"
-    type           = "storage_account_queue"
-    location       = "eastus"
-    resource_group = var.resource_group
-  }
-
-  endpoint_subnet_ids = [var.cdc_service_subnet_id]
-
-  private_dns_zone_group = {
-    id                   = "/subscriptions/7d1e3999-6577-4cd5-b296-f518e5c8e677/resourceGroups/prime-ingestion-test/providers/Microsoft.Network/privateEndpoints/pitestdatastorage-queue-privateendpoint/privateDnsZoneGroups/default"
-    name                 = "default"
-    private_dns_zone_ids = "/subscriptions/7d1e3999-6577-4cd5-b296-f518e5c8e677/resourceGroups/prime-ingestion-test/providers/Microsoft.Network/privateDnsZones/privatelink.queue.core.windows.net"
-  }
-
-  private_service_connection = {
-    is_manual_connection           = false
-    name                           = "pitestdatastorage-queue-privateendpoint"
-    private_connection_resource_id = "/subscriptions/7d1e3999-6577-4cd5-b296-f518e5c8e677/resourceGroups/prime-ingestion-test/providers/Microsoft.Storage/storageAccounts/pitestdatastorage"
-    subresource_names              = "queue"
+    name                           = "pitestdatastorage-${each.key}-privateendpoint"
+    private_connection_resource_id = azurerm_storage_account.storage_account.id
+    subresource_names              = "${each.key}"
   }
 }
 

@@ -45,6 +45,7 @@ module "storage" {
   terraform_caller_ip_address = var.terraform_caller_ip_address
   use_cdc_managed_vnet        = var.use_cdc_managed_vnet
   app_subnet_ids              = module.network.app_subnet_ids
+  resource_group_id           = data.azurerm_resource_group.prime_ingestion_test.id
 }
 
 

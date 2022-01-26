@@ -47,3 +47,8 @@ variable "use_cdc_managed_vnet" {
   type        = bool
   description = "If the environment should be deployed to the CDC managed VNET"
 }
+
+variable "resource_group_id" {
+  type        = string
+  description = "Resource Group resource id"
+}

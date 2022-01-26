@@ -269,8 +269,30 @@ resource "azurerm_subnet_network_security_group_association" "cdc_service_to_nsg
 # }
 # 
 
-resource "azurerm_private_dns_zone" "blob_dns_zone" {
-  name                = "privatelink.blob.core.windows.net"
+/* Variables to generate multiple dns records for private endpoint via for_each */
+variable "dns_vars" {
+    default = {
+        "blob" = {
+          type = "blob"
+          record       = "172.17.9.88"
+          guid = "81980b71-8fc6-4e39-a291-1b42d5f4fe3b"
+        },
+        "file" = {
+          type = "file"
+          record       = "172.17.9.87"
+          guid = "e68a9884-1f0d-497b-b52c-90bffc665851"
+        },
+        "queue" = {
+          type = "queue"
+          record       = "172.17.9.84"
+          guid = "68f761fe-1e84-4f55-82dc-39e7e50b54cc"
+        }
+    }
+}
+
+resource "azurerm_private_dns_zone" "pdi" {
+  for_each = var.dns_vars
+  name                = "privatelink.${each.value.type}.core.windows.net"
   resource_group_name = var.resource_group
 
   soa_record {
@@ -278,74 +300,22 @@ resource "azurerm_private_dns_zone" "blob_dns_zone" {
   }
 }
 
-resource "azurerm_private_dns_a_record" "blob_dns" {
+resource "azurerm_private_dns_a_record" "pdi" {
+  for_each = var.dns_vars
   name                = "pitestdatastorage"
-  zone_name           = azurerm_private_dns_zone.blob_dns_zone.name
+  zone_name           = azurerm_private_dns_zone.pdi[each.key].name
   resource_group_name = var.resource_group
   ttl                 = 10
-  records             = ["172.17.9.88"]
+  records             = [each.value.record]
   tags = {
-    "creator" = "created by private endpoint pitestdatastorage-blob-privateendpoint with resource guid 81980b71-8fc6-4e39-a291-1b42d5f4fe3b"
+    "creator" = "created by private endpoint pitestdatastorage-${each.value.type}-privateendpoint with resource guid ${each.value.guid}"
   }
 }
 
-resource "azurerm_private_dns_zone_virtual_network_link" "blob_dns" {
+resource "azurerm_private_dns_zone_virtual_network_link" "pdi" {
+  for_each = var.dns_vars
   name                  = "cys343525l454"
   resource_group_name   = var.resource_group
-  private_dns_zone_name = azurerm_private_dns_zone.blob_dns_zone.name
-  virtual_network_id    = data.azurerm_virtual_network.cdc_vnet.id
-}
-
-resource "azurerm_private_dns_zone" "file_dns_zone" {
-  name                = "privatelink.file.core.windows.net"
-  resource_group_name = var.resource_group
-
-  soa_record {
-    email = "azureprivatedns-host.microsoft.com"
-  }
-}
-
-resource "azurerm_private_dns_a_record" "file_dns" {
-  name                = "pitestdatastorage"
-  zone_name           = azurerm_private_dns_zone.file_dns_zone.name
-  resource_group_name = var.resource_group
-  ttl                 = 10
-  records             = ["172.17.9.87"]
-  tags = {
-    "creator" = "created by private endpoint pitestdatastorage-file-privateendpoint with resource guid e68a9884-1f0d-497b-b52c-90bffc665851"
-  }
-}
-
-resource "azurerm_private_dns_zone_virtual_network_link" "file_dns" {
-  name                  = "cys343525l454"
-  resource_group_name   = var.resource_group
-  private_dns_zone_name = azurerm_private_dns_zone.file_dns_zone.name
-  virtual_network_id    = data.azurerm_virtual_network.cdc_vnet.id
-}
-
-resource "azurerm_private_dns_zone" "queue_dns_zone" {
-  name                = "privatelink.queue.core.windows.net"
-  resource_group_name = var.resource_group
-
-  soa_record {
-    email = "azureprivatedns-host.microsoft.com"
-  }
-}
-
-resource "azurerm_private_dns_a_record" "queue_dns" {
-  name                = "pitestdatastorage"
-  zone_name           = azurerm_private_dns_zone.queue_dns_zone.name
-  resource_group_name = var.resource_group
-  ttl                 = 10
-  records             = ["172.17.9.84"]
-  tags = {
-    "creator" = "created by private endpoint pitestdatastorage-queue-privateendpoint with resource guid 68f761fe-1e84-4f55-82dc-39e7e50b54cc"
-  }
-}
-
-resource "azurerm_private_dns_zone_virtual_network_link" "queue_dns" {
-  name                  = "cys343525l454"
-  resource_group_name   = var.resource_group
-  private_dns_zone_name = azurerm_private_dns_zone.queue_dns_zone.name
+  private_dns_zone_name = azurerm_private_dns_zone.pdi[each.key].name
   virtual_network_id    = data.azurerm_virtual_network.cdc_vnet.id
 }
