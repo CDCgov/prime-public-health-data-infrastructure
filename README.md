@@ -12,7 +12,7 @@ The PRIME Data Ingestion prototype a sibling project to [PRIME ReportStream](htt
 
 ### Problem Scope
 
-Long-term Vision: Public health systems to digest, analyze, and respond to data are siloed. Lacking access to actionable data, our national, as well as state, local, and territorial infrastructure, isn’t pandemic-ready. Our objective was to learn how the CDC can best support STLTs in moving towards a modern public health data infrastructure.
+Long-term Vision: Public health systems to digest, analyze, and respond to data are siloed. Lacking access to actionable data, our national, as well as state, local, and territorial infrastructure, is not pandemic-ready. Our objective was to learn how the CDC can best support STLTs in moving towards a modern public health data infrastructure.
 
 Short-term prototype: The Commonwealth of Virginia Department of Public Health would like to move towards a more ‘holistic’ solution for electronic data processing and integration, so that currently siloed datasets can be processed and ultimately used in a more efficient and effective manner. Specifically, in order to support the vision of ‘holistic processing’, this prototype is focusing the on seeing what can be done with raw data, focused on COVID-19 breakthrough cases.
 
