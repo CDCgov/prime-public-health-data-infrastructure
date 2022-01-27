@@ -89,3 +89,11 @@ module "function_app" {
   terraform_caller_ip_address = var.terraform_caller_ip_address
   use_cdc_managed_vnet        = var.use_cdc_managed_vnet
 }
+
+module "log_analytics_workspace" {
+  source                         = "../../modules/log_analytics_workspace"
+  resource_group                 = var.resource_group
+  location                       = var.location
+  function_app_id                = module.function_app.function_app_id
+  function_infrastructure_app_id = module.function_app.function_infrastructure_app_id
+}
