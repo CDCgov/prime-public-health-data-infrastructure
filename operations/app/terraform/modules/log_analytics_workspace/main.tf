@@ -44,3 +44,43 @@ resource "azurerm_monitor_diagnostic_setting" "function_app_diag" {
     }
   }
 }
+
+resource "azurerm_monitor_diagnostic_setting" "app_service_diag" {
+  name                       = "app_service_diag"
+  target_resource_id         = var.app_service_plan_id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.pdi.id
+
+  metric {
+    category = "AllMetrics"
+
+    retention_policy {
+      enabled = true
+      days    = 60
+    }
+  }
+}
+
+resource "azurerm_monitor_diagnostic_setting" "vnet_diag" {
+  name                       = "vnet_diag"
+  target_resource_id         = var.cdc_managed_vnet_id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.pdi.id
+
+  log {
+    category = "VMProtectionAlerts"
+    enabled  = true
+
+    retention_policy {
+      enabled = true
+      days    = 60
+    }
+  }
+
+  metric {
+    category = "AllMetrics"
+
+    retention_policy {
+      enabled = true
+      days    = 60
+    }
+  }
+}

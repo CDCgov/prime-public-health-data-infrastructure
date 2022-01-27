@@ -96,4 +96,6 @@ module "log_analytics_workspace" {
   location                       = var.location
   function_app_id                = module.function_app.function_app_id
   function_infrastructure_app_id = module.function_app.function_infrastructure_app_id
+  app_service_plan_id            = module.app_service_plan.service_plan_id
+  cdc_managed_vnet_id            = module.network.cdc_managed_vnet_id
 }

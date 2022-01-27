@@ -17,3 +17,13 @@ variable "function_infrastructure_app_id" {
   type        = string
   description = "Infrastructure function app resource id"
 }
+
+variable "app_service_plan_id" {
+  type        = string
+  description = "App Service Plan resource id"
+}
+
+variable "cdc_managed_vnet_id" {
+  type        = string
+  description = "CDC Vnet resource id"
+}
