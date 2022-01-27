@@ -64,12 +64,13 @@ module "app_service_plan" {
 }
 
 module "application_insights" {
-  source          = "../../modules/application_insights"
-  environment     = var.environment
-  resource_group  = var.resource_group
-  resource_prefix = var.resource_prefix
-  location        = var.location
-  service_plan_id = module.app_service_plan.service_plan_id
+  source                     = "../../modules/application_insights"
+  environment                = var.environment
+  resource_group             = var.resource_group
+  resource_prefix            = var.resource_prefix
+  location                   = var.location
+  service_plan_id            = module.app_service_plan.service_plan_id
+  log_analytics_workspace_id = module.log_analytics_workspace.log_analytics_workspace_id
 }
 
 module "function_app" {
