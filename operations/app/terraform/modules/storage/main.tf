@@ -66,12 +66,12 @@ resource "azurerm_storage_account" "storage_account" {
 /* Generate multiple storage private endpoints via for_each */
 module "storageaccount_private_endpoint" {
   for_each = toset(["blob", "file", "queue"])
-  source = "../common/private_sa_endpoint"
+  source   = "../common/private_sa_endpoint"
   primary = {
-    name              = "${azurerm_storage_account.storage_account.name}-${each.key}-privateendpoint"
-    type              = "storage_account_blob"
-    location          = "eastus"
-    resource_group    = var.resource_group
+    name           = "${azurerm_storage_account.storage_account.name}-${each.key}-privateendpoint"
+    type           = "storage_account_blob"
+    location       = "eastus"
+    resource_group = var.resource_group
   }
 
   endpoint_subnet_ids = [var.cdc_service_subnet_id]
@@ -88,6 +88,8 @@ module "storageaccount_private_endpoint" {
     private_connection_resource_id = azurerm_storage_account.storage_account.id
     subresource_names              = "${each.key}"
   }
+
+  depends_on = [azurerm_storage_account.storage_account]
 }
 
 # Point-in-time restore, soft delete, versioning, and change feed were
