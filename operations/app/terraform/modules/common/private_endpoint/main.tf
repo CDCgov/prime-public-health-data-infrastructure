@@ -47,7 +47,7 @@ resource "azurerm_private_endpoint" "endpoint" {
 
   name                = "${var.name}-${var.type}-${substr(sha1(var.endpoint_subnet_ids[count.index]), 0, 9)}"
   location            = var.location
-  resource_group_name = var.resource_group
+  resource_group_name = var.resource_group_name
   subnet_id           = var.endpoint_subnet_ids[count.index]
 
   # Associate the endpoint with the service

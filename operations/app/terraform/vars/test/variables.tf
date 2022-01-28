@@ -31,7 +31,7 @@ variable "location" {
   default = "eastus"
 }
 
-variable "resource_group" {
+variable "resource_group_name" {
   default = "prime-ingestion-test"
 }
 
@@ -51,6 +51,9 @@ variable "service_subnet_name" {
   default = "service"
 }
 
+variable "route_table_name" {
+  default = "prime-ingestion-test-RT"
+}
 
 variable "aad_object_keyvault_admin" {
   # NOTE: set to object ID of CT-DMZ-PRIME-INGESTION-TST-AZ-Contributor

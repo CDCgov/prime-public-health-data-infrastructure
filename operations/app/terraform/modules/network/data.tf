@@ -29,7 +29,7 @@ locals {
 # the CDC-managed VNet
 data "azurerm_virtual_network" "cdc_vnet" {
   name                 = var.cdc_vnet_name
-  resource_group_name  = var.resource_group
+  resource_group_name  = var.resource_group_name
 }
 
 # Note that I manually added to this subnet the equivalent of the following

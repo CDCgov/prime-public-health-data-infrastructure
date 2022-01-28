@@ -3,7 +3,7 @@ variable "environment" {
   description = "Target Environment"
 }
 
-variable "resource_group" {
+variable "resource_group_name" {
   type        = string
   description = "Resource Group Name"
 }

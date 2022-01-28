@@ -1,7 +1,7 @@
 resource "azurerm_monitor_autoscale_setting" "app_autoscale" {
   count               = 1
   name                = "${var.resource_prefix}-appautoscale"
-  resource_group_name = var.resource_group
+  resource_group_name = var.resource_group_name
   location            = var.location
   target_resource_id  = azurerm_app_service_plan.service_plan.id
 

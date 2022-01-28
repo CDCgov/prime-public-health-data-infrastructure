@@ -13,7 +13,7 @@ variable "name" {
   description = "The name of the resource for which an endpoint will be created"
 }
 
-variable "resource_group" {
+variable "resource_group_name" {
   type        = string
   description = "Resource Group Name"
 }

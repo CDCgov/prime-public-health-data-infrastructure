@@ -26,12 +26,22 @@ variable "location" {
   description = "Function App Location"
 }
 
-# these are all storage account related (TODO: rename for clarity)
-variable "primary_access_key" {}
-variable "primary_connection_string" {}
-variable "primary_name" {}
+variable "sa_datastorage_access_key" {
+  type        = string
+  description = "Data storage account access key"
+}
 
-variable "resource_group" {
+variable "sa_datastorage_connection_string" {
+  type        = string
+  description = "Data storage account connection string"
+}
+
+variable "sa_datastorage_name" {
+  type        = string
+  description = "Data storage account name"
+}
+
+variable "resource_group_name" {
   type        = string
   description = "Resource Group Name"
 }
