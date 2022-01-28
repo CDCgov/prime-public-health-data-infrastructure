@@ -27,3 +27,8 @@ variable "cdc_managed_vnet_id" {
   type        = string
   description = "CDC Vnet resource id"
 }
+
+variable "sa_datastorage_id" {
+  type        = string
+  description = "Data storage account id"
+}

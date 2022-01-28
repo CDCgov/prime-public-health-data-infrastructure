@@ -84,3 +84,50 @@ resource "azurerm_monitor_diagnostic_setting" "vnet_diag" {
     }
   }
 }
+
+resource "azurerm_monitor_diagnostic_setting" "sa_data_diag" {
+  for_each                   = toset(["blob", "file"])
+  name                       = "sa_data_diag"
+  target_resource_id         = "${var.sa_datastorage_id}/${each.value}Services/default"
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.pdi.id
+
+  log {
+    category = "StorageRead"
+    enabled  = true
+
+    retention_policy {
+      enabled = true
+      days    = 60
+    }
+  }
+
+  log {
+    category = "StorageWrite"
+    enabled  = true
+
+    retention_policy {
+      enabled = true
+      days    = 60
+    }
+  }
+
+  log {
+    category = "StorageDelete"
+    enabled  = true
+
+    retention_policy {
+      enabled = true
+      days    = 60
+    }
+  }
+
+  metric {
+    category = "Transaction"
+    enabled  = true
+
+    retention_policy {
+      days    = 60
+      enabled = true
+    }
+  }
+}
