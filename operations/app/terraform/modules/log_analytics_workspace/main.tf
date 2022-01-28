@@ -130,4 +130,14 @@ resource "azurerm_monitor_diagnostic_setting" "sa_data_diag" {
       enabled = true
     }
   }
+
+  metric {
+      category = "Capacity"
+      enabled  = false
+
+      retention_policy {
+          days    = 0
+          enabled = false
+      }
+  }
 }
