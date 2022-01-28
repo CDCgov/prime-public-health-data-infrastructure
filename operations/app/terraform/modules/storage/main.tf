@@ -13,21 +13,19 @@ resource "azurerm_storage_account" "storage_account" {
   allow_blob_public_access  = false
   enable_https_traffic_only = true
 
-  # TODO: Re-enable these when we get an Azure VPN (or whatever) solution in place for viewing PII/PHI files
-  #
-  # network_rules {
-  #   default_action = "Deny"
-  #   bypass         = ["None"]
+  network_rules {
+    default_action = "Deny"
+    bypass         = ["AzureServices"]
 
-  #   # ip_rules = sensitive(concat(
-  #   #   split(",", data.azurerm_key_vault_secret.cyberark_ip_ingress.value),
-  #   #   [split("/", var.terraform_caller_ip_address)[0]], # Storage accounts only allow CIDR-notation for /[0-30]
-  #   # ))
+    # ip_rules = sensitive(concat(
+    #   split(",", data.azurerm_key_vault_secret.cyberark_ip_ingress.value),
+    #   [split("/", var.terraform_caller_ip_address)[0]], # Storage accounts only allow CIDR-notation for /[0-30]
+    # ))
 
-  #   ip_rules = [var.terraform_caller_ip_address]
+    #ip_rules = [var.terraform_caller_ip_address]
 
-  #   virtual_network_subnet_ids = concat(var.public_subnet, var.container_subnet, var.private_subnet)
-  # }
+    virtual_network_subnet_ids = var.app_subnet_ids
+  }
 
   # Required for customer-managed encryption
   identity {
@@ -35,7 +33,7 @@ resource "azurerm_storage_account" "storage_account" {
   }
 
   lifecycle {
-    prevent_destroy = false
+    prevent_destroy = true
   }
 
   tags = {
@@ -65,37 +63,33 @@ resource "azurerm_storage_account" "storage_account" {
 #   container_access_type = "private"
 # }
 
-module "storageaccount_blob_private_endpoint" {
-  source              = "../common/private_endpoint"
-  resource_id         = azurerm_storage_account.storage_account.id
-  name                = azurerm_storage_account.storage_account.name
-  type                = "storage_account_blob"
-  resource_group      = var.resource_group
-  location            = var.location
+/* Generate multiple storage private endpoints via for_each */
+module "storageaccount_private_endpoint" {
+  for_each = toset(["blob", "file", "queue"])
+  source   = "../common/private_sa_endpoint"
+  primary = {
+    name           = "${azurerm_storage_account.storage_account.name}-${each.key}-privateendpoint"
+    type           = "storage_account_${each.key}"
+    location       = "eastus"
+    resource_group = var.resource_group
+  }
 
   endpoint_subnet_ids = [var.cdc_service_subnet_id]
-}
 
-module "storageaccount_file_private_endpoint" {
-  source              = "../common/private_endpoint"
-  resource_id         = azurerm_storage_account.storage_account.id
-  name                = azurerm_storage_account.storage_account.name
-  type                = "storage_account_file"
-  resource_group      = var.resource_group
-  location            = var.location
+  private_dns_zone_group = {
+    id                   = "${var.resource_group_id}/providers/Microsoft.Network/privateEndpoints/${azurerm_storage_account.storage_account.name}-${each.key}-privateendpoint/privateDnsZoneGroups/default"
+    name                 = "default"
+    private_dns_zone_ids = "${var.resource_group_id}/providers/Microsoft.Network/privateDnsZones/privatelink.${each.key}.core.windows.net"
+  }
 
-  endpoint_subnet_ids = [var.cdc_service_subnet_id]
-}
+  private_service_connection = {
+    is_manual_connection           = false
+    name                           = "pitestdatastorage-${each.key}-privateendpoint"
+    private_connection_resource_id = azurerm_storage_account.storage_account.id
+    subresource_names              = "${each.key}"
+  }
 
-module "storageaccount_queue_private_endpoint" {
-  source              = "../common/private_endpoint"
-  resource_id         = azurerm_storage_account.storage_account.id
-  name                = azurerm_storage_account.storage_account.name
-  type                = "storage_account_queue"
-  resource_group      = var.resource_group
-  location            = var.location
-
-  endpoint_subnet_ids = [var.cdc_service_subnet_id]
+  depends_on = [azurerm_storage_account.storage_account]
 }
 
 # Point-in-time restore, soft delete, versioning, and change feed were

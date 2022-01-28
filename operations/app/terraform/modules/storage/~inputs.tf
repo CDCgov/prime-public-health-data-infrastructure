@@ -4,6 +4,10 @@ variable "cdc_subnet_ids" {
   description = "IDs of subnets in the CDC vnet"
 }
 
+variable "app_subnet_ids" {
+  description = "IDs of app subnets in the CDC vnet"
+}
+
 variable "cdc_service_subnet_id" {
   description = "ID of service subnet in the CDC vnet"
 }
@@ -42,4 +46,9 @@ variable "terraform_caller_ip_address" {
 variable "use_cdc_managed_vnet" {
   type        = bool
   description = "If the environment should be deployed to the CDC managed VNET"
+}
+
+variable "resource_group_id" {
+  type        = string
+  description = "Resource Group resource id"
 }

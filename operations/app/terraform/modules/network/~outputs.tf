@@ -61,3 +61,7 @@ output "service_subnet_ids" {
 # output "endpoint_subnet_ids" {
 #   value = azurerm_subnet.endpoint_subnet[*].id
 # }
+
+output "cdc_managed_vnet_id" {
+  value = data.azurerm_virtual_network.cdc_vnet.id
+}

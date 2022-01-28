@@ -1,4 +1,18 @@
 ##########
+## 00-cdc managed resources
+##########
+
+module "resource_group" {
+  source         = "../../modules/resource_group"
+  resource_group = var.resource_group
+}
+
+module "route_table" {
+  source         = "../../modules/route_table"
+  resource_group = var.resource_group
+}
+
+##########
 ## 01-network (including vnets)
 ##########
 
@@ -11,11 +25,12 @@ module "network" {
   resource_group      = var.resource_group
   resource_prefix     = var.resource_prefix
   service_subnet_name = var.service_subnet_name
+  route_table_id      = module.route_table.cdc_managed_route_table_id
 }
 
-# ##########
-# ## 02-storage
-# ##########
+##########
+## 02-storage
+##########
 
 module "key_vault" {
   source                      = "../../modules/key_vault"
@@ -44,12 +59,13 @@ module "storage" {
   rsa_key_4096                = var.rsa_key_4096
   terraform_caller_ip_address = var.terraform_caller_ip_address
   use_cdc_managed_vnet        = var.use_cdc_managed_vnet
+  app_subnet_ids              = module.network.app_subnet_ids
+  resource_group_id           = module.resource_group.cdc_managed_resource_group_id
 }
 
-
-# # ##########
-# # ## 03-App
-# # ##########
+##########
+## 03-App
+##########
 
 module "app_service_plan" {
   source          = "../../modules/app_service_plan"
@@ -62,12 +78,13 @@ module "app_service_plan" {
 }
 
 module "application_insights" {
-  source          = "../../modules/application_insights"
-  environment     = var.environment
-  resource_group  = var.resource_group
-  resource_prefix = var.resource_prefix
-  location        = var.location
-  service_plan_id = module.app_service_plan.service_plan_id
+  source                     = "../../modules/application_insights"
+  environment                = var.environment
+  resource_group             = var.resource_group
+  resource_prefix            = var.resource_prefix
+  location                   = var.location
+  service_plan_id            = module.app_service_plan.service_plan_id
+  log_analytics_workspace_id = module.log_analytics_workspace.log_analytics_workspace_id
 }
 
 module "function_app" {
@@ -86,4 +103,18 @@ module "function_app" {
   primary_name                = module.storage.sa_primary_name
   terraform_caller_ip_address = var.terraform_caller_ip_address
   use_cdc_managed_vnet        = var.use_cdc_managed_vnet
+}
+
+##########
+## 04-Monitoring
+##########
+
+module "log_analytics_workspace" {
+  source                         = "../../modules/log_analytics_workspace"
+  resource_group                 = var.resource_group
+  location                       = var.location
+  function_app_id                = module.function_app.function_app_id
+  function_infrastructure_app_id = module.function_app.function_infrastructure_app_id
+  app_service_plan_id            = module.app_service_plan.service_plan_id
+  cdc_managed_vnet_id            = module.network.cdc_managed_vnet_id
 }

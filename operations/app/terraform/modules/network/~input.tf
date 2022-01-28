@@ -32,3 +32,8 @@ variable "service_subnet_name" {
   type = string
   description = "Name of service subnet within CDC vnet"
 }
+
+variable "route_table_id" {
+  type = string
+  description = "Route Table resource id"
+}

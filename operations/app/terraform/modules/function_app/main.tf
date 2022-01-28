@@ -25,11 +25,18 @@ resource "azurerm_function_app" "function_app" {
     # "DOCKER_CONTENT_TRUST" = 1
 
     # App Insights
-    "APPINSIGHTS_INSTRUMENTATIONKEY"         = var.ai_instrumentation_key
-    "APPLICATIONINSIGHTS_CONNECTION_STRING"  = var.ai_connection_string
-    "FUNCTIONS_WORKER_RUNTIME"               = "python"
-    "SCM_DO_BUILD_DURING_DEPLOYMENT"         = 1
-    "WEBSITES_ENABLE_APP_SERVICE_STORAGE"    = false
+    "AZURE_STORAGE_CONNECTION_STRING"       = var.primary_connection_string
+    "APPINSIGHTS_INSTRUMENTATIONKEY"        = var.ai_instrumentation_key
+    "APPLICATIONINSIGHTS_CONNECTION_STRING" = var.ai_connection_string
+    "BUILD_FLAGS"                           = "UseExpressBuild"
+    "ENABLE_ORYX_BUILD"                     = "true"
+    "FUNCTIONS_WORKER_RUNTIME"              = "python"
+    "SCM_DO_BUILD_DURING_DEPLOYMENT"        = 1
+    "VDHSFTPHostname"                       = "vdhsftp.vdh.virginia.gov"
+    "VDHSFTPPassword"                       = "@Microsoft.KeyVault(SecretUri=https://pitest-app-kv.vault.azure.net/secrets/VDHSFTPPassword/f05c2e51f2b147699b7979d3eb79fe7e)"
+    "VDHSFTPUsername"                       = "USDS_CDC"
+    "WEBSITES_ENABLE_APP_SERVICE_STORAGE"   = false
+    "XDG_CACHE_HOME"                        = "/tmp/.cache"
   }
 
   # TODO: if we have to allow inbound HTTP we'll need to revisit these
@@ -86,12 +93,15 @@ resource "azurerm_function_app" "infrastructure_app" {
   enable_builtin_logging     = false
 
   app_settings = {
-    "APPINSIGHTS_INSTRUMENTATIONKEY"         = var.ai_instrumentation_key
-    "APPLICATIONINSIGHTS_CONNECTION_STRING"  = var.ai_connection_string
-    "FUNCTIONS_WORKER_RUNTIME"               = "python"
-    "SCM_DO_BUILD_DURING_DEPLOYMENT"         = 1
-    "WEBSITE_DNS_SERVER"                     = "168.63.129.16"
-    "WEBSITES_ENABLE_APP_SERVICE_STORAGE"    = false
+    "APPINSIGHTS_INSTRUMENTATIONKEY"        = var.ai_instrumentation_key
+    "APPLICATIONINSIGHTS_CONNECTION_STRING" = var.ai_connection_string
+    "BUILD_FLAGS"                           = "UseExpressBuild"
+    "ENABLE_ORYX_BUILD"                     = "true"
+    "FUNCTIONS_WORKER_RUNTIME"              = "python"
+    "SCM_DO_BUILD_DURING_DEPLOYMENT"        = 1
+    "WEBSITE_DNS_SERVER"                    = "168.63.129.16"
+    "WEBSITES_ENABLE_APP_SERVICE_STORAGE"   = false
+    "XDG_CACHE_HOME"                        = "/tmp/.cache"
   }
 
   identity {
@@ -100,7 +110,7 @@ resource "azurerm_function_app" "infrastructure_app" {
 
   site_config {
     use_32_bit_worker_process = false
-    vnet_route_all_enabled = true
+    vnet_route_all_enabled    = true
   }
 
   tags = {
