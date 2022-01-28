@@ -3,6 +3,6 @@ resource "azurerm_private_dns_zone_virtual_network_link" "dns_zone_private_link"
 
   name                  = "${var.resource_prefix}-${var.vnet.name}-${each.key}"
   private_dns_zone_name = each.key
-  resource_group_name   = var.resource_group
+  resource_group_name   = var.resource_group_name
   virtual_network_id    = var.vnet.id
 }

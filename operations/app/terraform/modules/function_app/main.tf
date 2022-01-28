@@ -1,10 +1,10 @@
 resource "azurerm_function_app" "function_app" {
   name                       = "${var.resource_prefix}-functionapp"
   location                   = var.location
-  resource_group_name        = var.resource_group
+  resource_group_name        = var.resource_group_name
   app_service_plan_id        = var.app_service_plan
-  storage_account_name       = "${var.resource_prefix}datastorage"
-  storage_account_access_key = var.primary_access_key
+  storage_account_name       = var.sa_datastorage_name
+  storage_account_access_key = var.sa_datastorage_access_key
   https_only                 = true
   os_type                    = "linux"
   version                    = "~3"
@@ -25,7 +25,7 @@ resource "azurerm_function_app" "function_app" {
     # "DOCKER_CONTENT_TRUST" = 1
 
     # App Insights
-    "AZURE_STORAGE_CONNECTION_STRING"       = var.primary_connection_string
+    "AZURE_STORAGE_CONNECTION_STRING"       = var.sa_datastorage_connection_string
     "APPINSIGHTS_INSTRUMENTATIONKEY"        = var.ai_instrumentation_key
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = var.ai_connection_string
     "BUILD_FLAGS"                           = "UseExpressBuild"
@@ -83,10 +83,10 @@ resource "azurerm_function_app" "function_app" {
 resource "azurerm_function_app" "infrastructure_app" {
   name                       = "${var.resource_prefix}-infra-functionapp"
   location                   = var.location
-  resource_group_name        = var.resource_group
+  resource_group_name        = var.resource_group_name
   app_service_plan_id        = var.app_service_plan
-  storage_account_name       = "${var.resource_prefix}datastorage"
-  storage_account_access_key = var.primary_access_key
+  storage_account_name       = var.sa_datastorage_name
+  storage_account_access_key = var.sa_datastorage_access_key
   https_only                 = true
   os_type                    = "linux"
   version                    = "~3"

@@ -3,7 +3,7 @@ data "azurerm_client_config" "current" {}
 # Also, the convention "{prefix}storage" was already taken, which is why this was
 # changed to "{prefix}datastorage"
 resource "azurerm_storage_account" "storage_account" {
-  resource_group_name       = var.resource_group
+  resource_group_name       = var.resource_group_name
   name                      = "${var.resource_prefix}datastorage"
   location                  = var.location
   account_kind              = "StorageV2"
@@ -25,6 +25,19 @@ resource "azurerm_storage_account" "storage_account" {
     #ip_rules = [var.terraform_caller_ip_address]
 
     virtual_network_subnet_ids = var.app_subnet_ids
+  }
+
+  blob_properties {
+    change_feed_enabled = true
+    versioning_enabled  = true
+
+    container_delete_retention_policy {
+      days = 7
+    }
+
+    delete_retention_policy {
+      days = 7
+    }
   }
 
   # Required for customer-managed encryption
@@ -68,10 +81,10 @@ module "storageaccount_private_endpoint" {
   for_each = toset(["blob", "file", "queue"])
   source   = "../common/private_sa_endpoint"
   primary = {
-    name           = "${azurerm_storage_account.storage_account.name}-${each.key}-privateendpoint"
-    type           = "storage_account_${each.key}"
-    location       = "eastus"
-    resource_group = var.resource_group
+    name                = "${azurerm_storage_account.storage_account.name}-${each.key}-privateendpoint"
+    type                = "storage_account_${each.key}"
+    location            = "eastus"
+    resource_group_name = var.resource_group_name
   }
 
   endpoint_subnet_ids = [var.cdc_service_subnet_id]

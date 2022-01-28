@@ -1,9 +1,9 @@
 variable "primary" {
   type = object({
-    name           = string
-    type           = string
-    location       = string
-    resource_group = string
+    name                = string
+    type                = string
+    location            = string
+    resource_group_name = string
   })
 }
 

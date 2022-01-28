@@ -7,7 +7,7 @@
 
 resource "azurerm_subnet" "cdc_app_subnet" {
   name                                           = var.app_subnet_name
-  resource_group_name                            = var.resource_group
+  resource_group_name                            = var.resource_group_name
   virtual_network_name                           = var.cdc_vnet_name
   address_prefixes                               = ["172.17.9.64/28"]
   enforce_private_link_endpoint_network_policies = true # true = disable, false = enable; see: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet
@@ -31,7 +31,7 @@ resource "azurerm_subnet" "cdc_app_subnet" {
 
 resource "azurerm_subnet" "cdc_service_subnet" {
   name                                           = var.service_subnet_name
-  resource_group_name                            = var.resource_group
+  resource_group_name                            = var.resource_group_name
   virtual_network_name                           = var.cdc_vnet_name
   address_prefixes                               = ["172.17.9.80/28"]
   enforce_private_link_endpoint_network_policies = true # true = disable, false = enable; see: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet
@@ -95,7 +95,7 @@ resource "azurerm_subnet_route_table_association" "cdc_service_subnet" {
 resource "azurerm_network_security_group" "vnet_nsg_private" {
   name                = "${var.resource_prefix}-private-nsg"
   location            = var.location
-  resource_group_name = var.resource_group
+  resource_group_name = var.resource_group_name
 }
 
 /* ...+ association to all the subnets -- just the CDC ones for now */
@@ -302,7 +302,7 @@ variable "dns_vars" {
 resource "azurerm_private_dns_zone" "pdi" {
   for_each            = var.dns_vars
   name                = "privatelink.${each.value.type}.core.windows.net"
-  resource_group_name = var.resource_group
+  resource_group_name = var.resource_group_name
 
   soa_record {
     email = "azureprivatedns-host.microsoft.com"
@@ -313,7 +313,7 @@ resource "azurerm_private_dns_a_record" "pdi" {
   for_each            = var.dns_vars
   name                = "pitestdatastorage"
   zone_name           = azurerm_private_dns_zone.pdi[each.key].name
-  resource_group_name = var.resource_group
+  resource_group_name = var.resource_group_name
   ttl                 = 10
   records             = [each.value.record]
   tags = {
@@ -326,7 +326,7 @@ resource "azurerm_private_dns_a_record" "pdi" {
 resource "azurerm_private_dns_zone_virtual_network_link" "pdi" {
   for_each              = var.dns_vars
   name                  = "cys343525l454"
-  resource_group_name   = var.resource_group
+  resource_group_name   = var.resource_group_name
   private_dns_zone_name = azurerm_private_dns_zone.pdi[each.key].name
   virtual_network_id    = data.azurerm_virtual_network.cdc_vnet.id
 

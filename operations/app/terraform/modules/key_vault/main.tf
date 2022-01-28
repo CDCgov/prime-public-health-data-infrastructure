@@ -9,7 +9,7 @@ resource "azurerm_key_vault" "application" {
   # Azure issues a soft delete so you can recover when you accidentally delete your secrets.
   name                            = "${var.resource_prefix}-app-kv"
   location                        = var.location
-  resource_group_name             = var.resource_group
+  resource_group_name             = var.resource_group_name
   sku_name                        = "premium"
   tenant_id                       = data.azurerm_client_config.current.tenant_id
   enabled_for_deployment          = true

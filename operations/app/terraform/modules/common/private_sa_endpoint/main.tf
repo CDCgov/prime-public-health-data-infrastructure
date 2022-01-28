@@ -2,7 +2,7 @@ resource "azurerm_private_endpoint" "sa_endpoint" {
   count               = length(var.endpoint_subnet_ids)
   name                = var.primary.name
   location            = var.primary.location
-  resource_group_name = var.primary.resource_group
+  resource_group_name = var.primary.resource_group_name
   subnet_id           = var.endpoint_subnet_ids[count.index]
 
   private_dns_zone_group {
