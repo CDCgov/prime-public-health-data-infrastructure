@@ -33,7 +33,7 @@ resource "azurerm_storage_account" "storage_account" {
   }
 
   lifecycle {
-    prevent_destroy = false
+    prevent_destroy = true
   }
 
   tags = {
@@ -69,7 +69,7 @@ module "storageaccount_private_endpoint" {
   source   = "../common/private_sa_endpoint"
   primary = {
     name           = "${azurerm_storage_account.storage_account.name}-${each.key}-privateendpoint"
-    type           = "storage_account_blob"
+    type           = "storage_account_${each.key}"
     location       = "eastus"
     resource_group = var.resource_group
   }

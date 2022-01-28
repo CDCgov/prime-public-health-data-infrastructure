@@ -38,6 +38,15 @@ resource "azurerm_subnet" "cdc_service_subnet" {
 
 }
 
+resource "azurerm_subnet_route_table_association" "cdc_app_subnet" {
+  subnet_id      = azurerm_subnet.cdc_app_subnet.id
+  route_table_id = var.route_table_id
+}
+
+resource "azurerm_subnet_route_table_association" "cdc_service_subnet" {
+  subnet_id      = azurerm_subnet.cdc_service_subnet.id
+  route_table_id = var.route_table_id
+}
 
 # TODO: leaving this out for now
 
