@@ -20,7 +20,9 @@ def local_settings() -> DecryptSettings:
     Returns:
         DecryptSettings: settings object describing relevant subset of settings for this function
     """
-    local_settings_path = files("DecryptFunction").parent / "local.settings.json"
+    local_settings_path = (
+        files("DecryptFunction").parent / "tests" / "assets" / "test.settings.json"
+    )
     local_json_config = json.loads(local_settings_path.read_text())
     local_settings_vals = local_json_config.get("Values")
     settings = DecryptSettings()
