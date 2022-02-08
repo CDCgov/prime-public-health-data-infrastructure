@@ -68,7 +68,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 }
                 results.append(result_info)
             response["results"] = results
-            logging.info(f"Lookup sent.")
+            logging.info("Lookup sent.")
 
             return func.HttpResponse(
                 json.dumps(response),

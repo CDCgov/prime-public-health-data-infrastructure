@@ -1,7 +1,5 @@
 import base64
 import logging
-from importlib.resources import files
-from pathlib import Path
 
 import azure.functions as func
 import pgpy
