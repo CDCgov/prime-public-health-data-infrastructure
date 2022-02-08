@@ -10,7 +10,7 @@ from .. import DecryptFunction as dcf
 from ..DecryptFunction.settings import DecryptSettings
 
 
-# This fixture runs before all tests and can be passed as arguments to individual tests to enable accessing the variables they define. 
+# This fixture runs before all tests and can be passed as arguments to individual tests to enable accessing the variables they define.
 # More info: https://docs.pytest.org/en/latest/fixture.html#fixtures-scope-sharing-and-autouse-autouse-fixtures
 @pytest.fixture(scope="session", autouse=True)
 def local_settings() -> DecryptSettings:
