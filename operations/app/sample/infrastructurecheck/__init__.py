@@ -8,7 +8,7 @@ Query parameters:
 Headers:
 
 * `Accept` if 'text/plain' we'll return a plaintext response, otherwise it'll be JSON
-"""
+"""  # noqa: E501
 import collections
 import json
 import logging
@@ -154,7 +154,8 @@ def verify_key_vault_read():
             return Check(
                 "Key vault",
                 "error",
-                f"Fetched secret ok but value mismatch (expected {SECRET_VALUE_EXPECTED}, got {secret}",
+                f"Fetched secret ok but value mismatch "
+                f"(expected {SECRET_VALUE_EXPECTED}, got {secret}",
             )
 
     except Exception as e:

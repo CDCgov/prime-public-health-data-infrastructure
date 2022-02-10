@@ -79,6 +79,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             return func.HttpResponse(f"Error: {err}", status_code=400)
     else:
         return func.HttpResponse(
-            "This HTTP triggered function executed successfully. Pass an address in the query string or in the request body for a personalized response.",
+            "This HTTP triggered function executed successfully. Pass an address in "
+            "the query string or in the request body for a personalized response.",
             status_code=200,
         )

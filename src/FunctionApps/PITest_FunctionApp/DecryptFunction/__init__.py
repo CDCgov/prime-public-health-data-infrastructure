@@ -34,7 +34,7 @@ def main(inputblob: func.InputStream, outputblob: func.Out[bytes]):
     Args:
         inputblob (func.InputStream): the input blob (path matches pattern in function.json) - passed automatically by Azure
         outputblob (func.Out[bytes]): the output blob (path matches pattern in function.json) - file deposited here on completion
-    """
+    """  # noqa: E501
 
     settings = DecryptSettings()
     logging.info(
