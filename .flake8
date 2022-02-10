@@ -4,9 +4,4 @@ exclude =
     .pytest_cache,
     __pycache__,
     docs
-ignore =
-    # line too long: ignore for now
-    E501,
-    # binary op on new line: combo of pathlib and black causes this
-    W503
 max-line-length = 88
