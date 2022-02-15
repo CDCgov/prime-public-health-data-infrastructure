@@ -4,6 +4,9 @@ on:
   pull_request:
     branches:
       - "**"
+  push:
+    branches:
+      - main
 
 env:
   TEST_RUNNER_JAVA_VERSION: 8
