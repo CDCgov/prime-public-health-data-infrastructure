@@ -15,15 +15,34 @@ env:
   TEST_RUNNER_TERRAFORM_VERSION: 1.1.5
 
 jobs:
+  unit-test-scanner:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install dependencies
+        run: |
+          sudo apt-get install jq
+      - id: find-python-apps
+        name: Scan for python function apps
+        run: |
+          echo "::set-output name=pydirs::$(find src/FunctionApps/ -maxdepth 2 -type f -name requirements.txt -printf "%P\n" |rev |cut -d/ -f2- |rev |jq --raw-input --slurp 'split("\n")' |jq --compact-output .[0:-1])"
+      - id: find-java-apps
+        name: Scan for java function apps
+        run: |
+          echo "::set-output name=javadirs::$(find src/FunctionApps/ -maxdepth 2 -type f -name pom.xml -printf "%P\n" |rev |cut -d/ -f2- |rev |jq --raw-input --slurp 'split("\n")' |jq --compact-output .[0:-1])"
+    outputs:
+      python-function-app-dirs: ${{steps.find-python-apps.outputs.pydirs}}
+      java-function-app-dirs: ${{steps.find-java-apps.outputs.javadirs}}
+
+
   unit-test-python:
+    needs: unit-test-scanner
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        function-to-test:
-          - PHDISmartyStreetsTest
-          - PITest_FunctionApp
-          - CachedGeocode
-          - FHIRExport
+        function-to-test: ${{fromJson(needs.unit-test-scanner.outputs.python-function-app-dirs)}}
 
     steps:
       - name: Checkout
@@ -45,11 +64,11 @@ jobs:
           python -m pytest
 
   unit-test-java:
+    needs: unit-test-scanner
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        function-to-test:
-          - DSTP
+        function-to-test: ${{fromJson(needs.unit-test-scanner.outputs.java-function-app-dirs)}}
 
     steps:
       - name: Checkout
