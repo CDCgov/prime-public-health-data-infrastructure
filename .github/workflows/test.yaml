@@ -15,9 +15,16 @@ env:
   TEST_RUNNER_TERRAFORM_VERSION: 1.1.5
 
 jobs:
-  unit-test-scanner:
+  function-app-scan:
+    # Find directories that contain function apps in python or java
+    #
+    # Look for a files in function app directories to determine the language used
+    # and output a list of directory names for functions of each language.  Language
+    # is determined based on the existence of a file inside the top-level function
+    # app directory, currently:
+    #     python: `requirements.txt`
+    #     java: `pom.xml`
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -27,23 +34,21 @@ jobs:
       - id: find-python-apps
         name: Scan for python function apps
         run: |
-          echo "::set-output name=pydirs::$(find src/FunctionApps/ -maxdepth 2 -type f -name requirements.txt -printf "%P\n" |rev |cut -d/ -f2- |rev |jq --raw-input --slurp 'split("\n")' |jq --compact-output .[0:-1])"
+          echo "::set-output name=pydirs::$(find src/FunctionApps/ -mindepth 2 -maxdepth 2 -type f -name requirements.txt -printf "%P\n" |rev |cut -d/ -f2- |rev |jq --raw-input --slurp 'split("\n")' |jq --compact-output .[0:-1])"
       - id: find-java-apps
         name: Scan for java function apps
         run: |
-          echo "::set-output name=javadirs::$(find src/FunctionApps/ -maxdepth 2 -type f -name pom.xml -printf "%P\n" |rev |cut -d/ -f2- |rev |jq --raw-input --slurp 'split("\n")' |jq --compact-output .[0:-1])"
+          echo "::set-output name=javadirs::$(find src/FunctionApps/ -mindepth 2 -maxdepth 2 -type f -name pom.xml -printf "%P\n" |rev |cut -d/ -f2- |rev |jq --raw-input --slurp 'split("\n")' |jq --compact-output .[0:-1])"
     outputs:
       python-function-app-dirs: ${{steps.find-python-apps.outputs.pydirs}}
       java-function-app-dirs: ${{steps.find-java-apps.outputs.javadirs}}
 
-
   unit-test-python:
-    needs: unit-test-scanner
+    needs: function-app-scan
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        function-to-test: ${{fromJson(needs.unit-test-scanner.outputs.python-function-app-dirs)}}
-
+        function-to-test: ${{fromJson(needs.function-app-scan.outputs.python-function-app-dirs)}}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -64,12 +69,11 @@ jobs:
           python -m pytest
 
   unit-test-java:
-    needs: unit-test-scanner
+    needs: function-app-scan
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        function-to-test: ${{fromJson(needs.unit-test-scanner.outputs.java-function-app-dirs)}}
-
+        function-to-test: ${{fromJson(needs.function-app-scan.outputs.java-function-app-dirs)}}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -99,7 +103,6 @@ jobs:
 
   code-check-python:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -124,7 +127,6 @@ jobs:
     defaults:
       run:
         working-directory: ./operations
-
     steps:
       - uses: actions/checkout@v2
       - uses: hashicorp/setup-terraform@v1
