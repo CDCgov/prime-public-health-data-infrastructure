@@ -52,3 +52,8 @@ variable "databricks_workspace_id" {
   type        = string
   description = "Databricks resource id"
 }
+
+variable "environment" {
+  type        = string
+  description = "Target Environment"
+}

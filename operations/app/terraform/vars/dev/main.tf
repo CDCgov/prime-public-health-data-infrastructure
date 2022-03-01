@@ -144,6 +144,7 @@ module "log_analytics_workspace" {
   adf_id                         = module.data_factory.adf_id
   healthcare_service_id          = module.fhir.healthcare_service_id
   databricks_workspace_id        = module.databricks.databricks_workspace_id
+  environment                    = var.environment
 }
 
 module "application_insights" {

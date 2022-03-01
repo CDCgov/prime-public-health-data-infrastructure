@@ -96,6 +96,11 @@ resource "azurerm_network_security_group" "vnet_nsg_private" {
   name                = "${var.resource_prefix}-private-nsg"
   location            = var.location
   resource_group_name = var.resource_group_name
+
+  tags = {
+    environment = var.environment
+    managed-by  = "terraform"
+  }
 }
 
 /* ...+ association to all the subnets -- just the CDC ones for now */
@@ -306,6 +311,11 @@ resource "azurerm_private_dns_zone" "pdi" {
 
   soa_record {
     email = "azureprivatedns-host.microsoft.com"
+  }
+
+  tags = {
+    environment = var.environment
+    managed-by  = "terraform"
   }
 }
 

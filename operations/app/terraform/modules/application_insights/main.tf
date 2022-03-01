@@ -7,5 +7,6 @@ resource "azurerm_application_insights" "pdi" {
 
   tags = {
     environment = var.environment
+    managed-by  = "terraform"
   }
 }

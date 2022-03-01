@@ -6,7 +6,8 @@ resource "azurerm_data_factory" "pdi" {
   managed_virtual_network_enabled = true
 
   tags = {
-    "environment" = "test"
+    environment = var.environment
+    managed-by  = "terraform"
   }
 }
 
@@ -173,14 +174,14 @@ resource "azurerm_data_factory_pipeline" "transfer_files" {
           }
         }
         userProperties = [
-            {
-                name  = "Source"
-                value = "/VEDSS/*"
-            },
-            {
-                name  = "Destination"
-                value = "bronze/raw/VEDSS"
-            },
+          {
+            name  = "Source"
+            value = "/VEDSS/*"
+          },
+          {
+            name  = "Destination"
+            value = "bronze/raw/VEDSS"
+          },
         ]
       },
     ]

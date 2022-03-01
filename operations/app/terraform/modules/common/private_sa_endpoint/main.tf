@@ -16,4 +16,8 @@ resource "azurerm_private_endpoint" "sa_endpoint" {
     private_connection_resource_id = var.private_service_connection.private_connection_resource_id
     subresource_names              = [var.private_service_connection.subresource_names]
   }
+
+  tags = {
+    managed-by  = "terraform"
+  }
 }

@@ -72,6 +72,7 @@ resource "azurerm_function_app" "pdi" {
 
   tags = {
     environment = var.environment
+    managed-by  = "terraform"
   }
 
   lifecycle {
@@ -117,6 +118,7 @@ resource "azurerm_function_app" "pdi_infrastructure" {
 
   tags = {
     environment = var.environment
+    managed-by  = "terraform"
   }
 }
 

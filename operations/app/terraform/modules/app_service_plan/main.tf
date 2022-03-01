@@ -12,5 +12,6 @@ resource "azurerm_app_service_plan" "pdi" {
 
   tags = {
     environment = var.environment
+    managed-by  = "terraform"
   }
 }

@@ -25,5 +25,6 @@ resource "azurerm_databricks_workspace" "pdi" {
 
   tags = {
     environment = var.environment
+    managed-by  = "terraform"
   }
 }

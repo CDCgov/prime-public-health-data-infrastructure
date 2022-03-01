@@ -51,6 +51,7 @@ resource "azurerm_storage_account" "pdi_data" {
 
   tags = {
     environment = var.environment
+    managed-by  = "terraform"
   }
 }
 

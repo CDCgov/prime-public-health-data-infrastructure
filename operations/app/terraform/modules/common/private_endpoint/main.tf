@@ -57,6 +57,10 @@ resource "azurerm_private_endpoint" "endpoint" {
     is_manual_connection           = false
     subresource_names              = local.option.subresource_names
   }
+
+  tags = {
+    managed-by  = "terraform"
+  }
 }
 
 # An A record is used specifically because azurerm_private_endpoint.private_dns_zone_group has an order-of-operations issue with multiple private endpoints
