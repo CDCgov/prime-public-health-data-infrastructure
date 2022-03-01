@@ -39,6 +39,10 @@ jobs:
         name: Scan for java function apps
         run: |
           echo "::set-output name=javadirs::$(find src/FunctionApps/ -mindepth 2 -maxdepth 2 -type f -name pom.xml -printf "%P\n" |rev |cut -d/ -f2- |rev |jq --raw-input --slurp 'split("\n")' |jq --compact-output .[0:-1])"
+      - name: Summary of detected apps
+        run: |
+          echo "Python (requirements.txt): ${{steps.find-python-apps.outputs.pydirs}}"
+          echo "Java (pom.xml): ${{steps.find-java-apps.outputs.javadirs}}"
     outputs:
       python-function-app-dirs: ${{steps.find-python-apps.outputs.pydirs}}
       java-function-app-dirs: ${{steps.find-java-apps.outputs.javadirs}}
