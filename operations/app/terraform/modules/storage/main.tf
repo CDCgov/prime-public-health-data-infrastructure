@@ -16,7 +16,15 @@ resource "azurerm_storage_account" "pdi_data" {
   network_rules {
     default_action = "Deny"
     bypass         = ["AzureServices"]
-
+    ip_rules                   = [
+        "100.6.165.133",
+        "136.226.6.186",
+        "136.36.137.172",
+        "158.111.21.225",
+        "158.111.236.95",
+        "24.163.118.70",
+        "73.173.186.141",
+    ]
     # ip_rules = sensitive(concat(
     #   split(",", data.azurerm_key_vault_secret.cyberark_ip_ingress.value),
     #   [split("/", var.terraform_caller_ip_address)[0]], # Storage accounts only allow CIDR-notation for /[0-30]
@@ -28,16 +36,8 @@ resource "azurerm_storage_account" "pdi_data" {
   }
 
   blob_properties {
-    change_feed_enabled = true
-    versioning_enabled  = true
-
-    container_delete_retention_policy {
-      days = 7
-    }
-
-    delete_retention_policy {
-      days = 7
-    }
+    change_feed_enabled = false
+    versioning_enabled  = false
   }
 
   # Required for customer-managed encryption

@@ -173,14 +173,14 @@ resource "azurerm_data_factory_pipeline" "transfer_files" {
           }
         }
         userProperties = [
-          {
-            name  = "Source"
-            value = "/test_dir/*"
-          },
-          {
-            name  = "Destination"
-            value = "bronze/raw/"
-          },
+            {
+                name  = "Source"
+                value = "/VEDSS/*"
+            },
+            {
+                name  = "Destination"
+                value = "bronze/raw/VEDSS"
+            },
         ]
       },
     ]
