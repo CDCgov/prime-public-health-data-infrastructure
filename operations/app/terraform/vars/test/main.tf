@@ -67,11 +67,11 @@ module "storage" {
 }
 
 module "databricks" {
-  source                      = "../../modules/databricks"
-  environment                 = var.environment
-  location                    = var.location
-  resource_group_name         = var.resource_group_name
-  resource_prefix             = var.resource_prefix
+  source              = "../../modules/databricks"
+  environment         = var.environment
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  resource_prefix     = var.resource_prefix
 }
 
 ##########
@@ -119,6 +119,14 @@ module "data_factory" {
   vdhsftp_pass             = module.key_vault.vdhsftp_pass
 }
 
+module "fhir" {
+  source              = "../../modules/fhir"
+  environment         = var.environment
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  resource_prefix     = var.resource_prefix
+}
+
 ##########
 ## 04-Monitoring
 ##########
@@ -134,6 +142,8 @@ module "log_analytics_workspace" {
   cdc_managed_vnet_id            = module.network.cdc_managed_vnet_id
   sa_data_id                     = module.storage.sa_data_id
   adf_id                         = module.data_factory.adf_id
+  healthcare_service_id          = module.fhir.healthcare_service_id
+  databricks_workspace_id        = module.databricks.databricks_workspace_id
 }
 
 module "application_insights" {

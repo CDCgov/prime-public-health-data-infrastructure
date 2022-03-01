@@ -42,3 +42,13 @@ variable "adf_id" {
   type        = string
   description = "Data Factory resource id"
 }
+
+variable "healthcare_service_id" {
+  type        = string
+  description = "FHIR service resource id"
+}
+
+variable "databricks_workspace_id" {
+  type        = string
+  description = "Databricks resource id"
+}
