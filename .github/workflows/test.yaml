@@ -33,12 +33,13 @@ jobs:
           sudo apt-get install jq
       - id: find-python-apps
         name: Scan for python function apps
+        # use jq to produce json output and filter out the empty item caused by final newline
         run: |
-          echo "::set-output name=pydirs::$(find src/FunctionApps/ -mindepth 2 -maxdepth 2 -type f -name requirements.txt -printf "%P\n" |rev |cut -d/ -f2- |rev |jq --raw-input --slurp 'split("\n")' |jq --compact-output .[0:-1])"
+          echo "::set-output name=pydirs::$(find src/FunctionApps/ -mindepth 2 -maxdepth 2 -type f -name requirements.txt -printf "%P\n" |cut -d/ -f1 |jq --raw-input --slurp 'split("\n")' |jq --compact-output .[0:-1])"
       - id: find-java-apps
         name: Scan for java function apps
         run: |
-          echo "::set-output name=javadirs::$(find src/FunctionApps/ -mindepth 2 -maxdepth 2 -type f -name pom.xml -printf "%P\n" |rev |cut -d/ -f2- |rev |jq --raw-input --slurp 'split("\n")' |jq --compact-output .[0:-1])"
+          echo "::set-output name=javadirs::$(find src/FunctionApps/ -mindepth 2 -maxdepth 2 -type f -name pom.xml -printf "%P\n" |cut -d/ -f1 |jq --raw-input --slurp 'split("\n")' |jq --compact-output .[0:-1])"
       - name: Summary of detected apps
         run: |
           echo "Python (requirements.txt): ${{steps.find-python-apps.outputs.pydirs}}"
