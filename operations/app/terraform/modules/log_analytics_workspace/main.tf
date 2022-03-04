@@ -5,6 +5,12 @@ resource "azurerm_log_analytics_workspace" "pdi" {
   sku                 = "PerGB2018"
   retention_in_days   = 30
 
+  lifecycle {
+    ignore_changes = [
+      tags
+    ]
+  }
+
   tags = {
     environment = var.environment
     managed-by  = "terraform"

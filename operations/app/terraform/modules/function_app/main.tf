@@ -25,8 +25,8 @@ resource "azurerm_function_app" "pdi" {
     # "DOCKER_CONTENT_TRUST" = 1
 
     # App Insights
-    "PrivateKey"                            = "@Microsoft.KeyVault(SecretUri=https://pitest-app-kv.vault.azure.net/secrets/PrivateKey/b6a52c1a0c5e4bd183b6c22fccf75306)"
-    "PrivateKeyPassword"                    = "@Microsoft.KeyVault(SecretUri=https://pitest-app-kv.vault.azure.net/secrets/PrivateKeyPassword/c7f2b255b4b84cbdb244dc11ee013622)"
+    "PRIVATE_KEY"                           = "@Microsoft.KeyVault(SecretUri=https://pitest-app-kv.vault.azure.net/secrets/PrivateKey/b6a52c1a0c5e4bd183b6c22fccf75306)"
+    "PRIVATE_KEY_PASSWORD"                  = "@Microsoft.KeyVault(SecretUri=https://pitest-app-kv.vault.azure.net/secrets/PrivateKeyPassword/c7f2b255b4b84cbdb244dc11ee013622)"
     "pitestdatastorage_STORAGE"             = "@Microsoft.KeyVault(SecretUri=https://pitest-app-kv.vault.azure.net/secrets/pitestdatastorageaccess/98983dbb27ec4b048311e7e4c5267c61)"
     "AZURE_STORAGE_CONNECTION_STRING"       = var.sa_data_connection_string
     "APPINSIGHTS_INSTRUMENTATIONKEY"        = var.ai_instrumentation_key
@@ -79,6 +79,7 @@ resource "azurerm_function_app" "pdi" {
     ignore_changes = [
       # Allows Docker versioning via GitHub Actions
       site_config[0].linux_fx_version,
+      tags
     ]
   }
 }
@@ -105,6 +106,12 @@ resource "azurerm_function_app" "pdi_infrastructure" {
     "WEBSITE_DNS_SERVER"                    = "168.63.129.16"
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE"   = false
     "XDG_CACHE_HOME"                        = "/tmp/.cache"
+  }
+
+  lifecycle {
+    ignore_changes = [
+      tags
+    ]
   }
 
   identity {

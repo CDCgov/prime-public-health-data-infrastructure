@@ -52,13 +52,25 @@ variable "service_subnet_name" {
 }
 
 variable "route_table_name" {
-  default = "prime-ingestion-dev-RT"
+  default = "prime-ingestion-test-RT"
+}
+
+variable "route_table_resource_group_name" {
+  default = "prime-ingestion-test"
 }
 
 variable "aad_object_keyvault_admin" {
   # NOTE: set to object ID of CT-DMZ-PRIME-INGESTION-TST-AZ-Contributor
   default = "9ff42a69-beb8-4b4a-9406-e7fbcbf847ee"
 } # Group or individual user id
+
+variable "service_subnet_ip" {
+  default = "172.17.9.128/28"
+}
+
+variable "app_subnet_ip" {
+  default = "172.17.9.144/28"
+}
 
 ##################
 ## App Service Plan Vars

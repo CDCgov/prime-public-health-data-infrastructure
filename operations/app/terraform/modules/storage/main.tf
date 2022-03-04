@@ -47,6 +47,9 @@ resource "azurerm_storage_account" "pdi_data" {
 
   lifecycle {
     prevent_destroy = true
+    ignore_changes = [
+      tags
+    ]
   }
 
   tags = {
@@ -98,7 +101,7 @@ module "storageaccount_private_endpoint" {
 
   private_service_connection = {
     is_manual_connection           = false
-    name                           = "pitestdatastorage-${each.key}-privateendpoint"
+    name                           = "${azurerm_storage_account.pdi_data.name}-${each.key}-privateendpoint"
     private_connection_resource_id = azurerm_storage_account.pdi_data.id
     subresource_names              = "${each.key}"
   }

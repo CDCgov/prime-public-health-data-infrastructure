@@ -9,7 +9,7 @@ resource "azurerm_subnet" "cdc_app_subnet" {
   name                                           = var.app_subnet_name
   resource_group_name                            = var.resource_group_name
   virtual_network_name                           = var.cdc_vnet_name
-  address_prefixes                               = ["172.17.9.64/28"]
+  address_prefixes                               = [var.app_subnet_ip]
   enforce_private_link_endpoint_network_policies = true # true = disable, false = enable; see: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet
   service_endpoints = [
     "Microsoft.Storage",
@@ -33,7 +33,7 @@ resource "azurerm_subnet" "cdc_service_subnet" {
   name                                           = var.service_subnet_name
   resource_group_name                            = var.resource_group_name
   virtual_network_name                           = var.cdc_vnet_name
-  address_prefixes                               = ["172.17.9.80/28"]
+  address_prefixes                               = [var.service_subnet_ip]
   enforce_private_link_endpoint_network_policies = true # true = disable, false = enable; see: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet
 
 }
@@ -96,6 +96,12 @@ resource "azurerm_network_security_group" "vnet_nsg_private" {
   name                = "${var.resource_prefix}-private-nsg"
   location            = var.location
   resource_group_name = var.resource_group_name
+
+  lifecycle {
+    ignore_changes = [
+      tags
+    ]
+  }
 
   tags = {
     environment = var.environment
@@ -311,6 +317,12 @@ resource "azurerm_private_dns_zone" "pdi" {
 
   soa_record {
     email = "azureprivatedns-host.microsoft.com"
+  }
+
+  lifecycle {
+    ignore_changes = [
+      tags
+    ]
   }
 
   tags = {

@@ -37,3 +37,13 @@ variable "route_table_id" {
   type        = string
   description = "Route Table resource id"
 }
+
+variable "service_subnet_ip" {
+  type        = string
+  description = "Service subnet ip"
+}
+
+variable "app_subnet_ip" {
+  type        = string
+  description = "App subnet ip"
+}

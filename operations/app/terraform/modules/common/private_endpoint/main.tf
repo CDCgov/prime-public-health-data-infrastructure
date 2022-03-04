@@ -58,6 +58,12 @@ resource "azurerm_private_endpoint" "endpoint" {
     subresource_names              = local.option.subresource_names
   }
 
+  lifecycle {
+    ignore_changes = [
+      tags
+    ]
+  }
+
   tags = {
     managed-by  = "terraform"
   }

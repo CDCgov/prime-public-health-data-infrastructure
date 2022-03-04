@@ -5,6 +5,16 @@ resource "azurerm_data_factory" "pdi" {
   public_network_enabled          = false
   managed_virtual_network_enabled = true
 
+  identity {
+    type = "SystemAssigned"
+  }
+
+  lifecycle {
+    ignore_changes = [
+      tags
+    ]
+  }
+
   tags = {
     environment = var.environment
     managed-by  = "terraform"
@@ -124,6 +134,10 @@ resource "azurerm_data_factory_pipeline" "transfer_files" {
   concurrency         = 1
   parameters          = {}
   variables           = {}
+
+  depends_on = [
+    azurerm_data_factory_dataset_binary.vdh
+  ]
 
   activities_json = jsonencode(
     [

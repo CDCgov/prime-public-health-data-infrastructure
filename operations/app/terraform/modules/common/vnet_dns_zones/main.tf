@@ -6,6 +6,12 @@ resource "azurerm_private_dns_zone_virtual_network_link" "dns_zone_private_link"
   resource_group_name   = var.resource_group_name
   virtual_network_id    = var.vnet.id
 
+  lifecycle {
+    ignore_changes = [
+      tags
+    ]
+  }
+
   tags = {
     managed-by  = "terraform"
   }

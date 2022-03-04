@@ -9,8 +9,11 @@ module "resource_group" {
 
 module "route_table" {
   source              = "../../modules/route_table"
-  resource_group_name = var.resource_group_name
+  resource_group_name = var.route_table_resource_group_name
   route_table_name    = var.route_table_name
+  environment         = var.environment
+  location            = var.location
+  resource_prefix     = var.resource_prefix
 }
 
 ##########
@@ -20,12 +23,14 @@ module "route_table" {
 module "network" {
   source              = "../../modules/network"
   app_subnet_name     = var.app_subnet_name
+  app_subnet_ip       = var.app_subnet_ip
   cdc_vnet_name       = var.cdc_vnet_name
   environment         = var.environment
   location            = var.location
   resource_group_name = var.resource_group_name
   resource_prefix     = var.resource_prefix
   service_subnet_name = var.service_subnet_name
+  service_subnet_ip   = var.service_subnet_ip
   route_table_id      = module.route_table.cdc_managed_route_table_id
 }
 
