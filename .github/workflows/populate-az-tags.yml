@@ -1,21 +1,33 @@
+# gh workflow run populate-az-tags.yml --ref josiahsiegel/tf-sync
 name: Populate Azure Tags
 
 on:
-  push:
-    branches:
-      - josiahsiegel/tf-sync
+  schedule:
+    - cron:  '5 5 * * *'
   workflow_dispatch:
 
 env:
-  resource_groups: '["prime-ingestion-dev"]'
+  RESOURCE_GROUPS: '["prime-ingestion-dev","prime-ingestion-test"]'
 
 jobs:
-  Populate-Azure-Tags:
-    name: "Populate-Azure-Tags: ${{ matrix.rg }}"
+  pre_job:
+    name: "Set Build Environment"
     runs-on: ubuntu-latest
+    outputs:
+      rg: ${{ env.RESOURCE_GROUPS }}
+    steps:
+      - name: Check out changes
+        uses: actions/checkout@v2
+
+  populate_create_tags:
+    name: "Populate Tags: ${{ matrix.rg }}"
+    needs:
+      - pre_job
+    runs-on: ubuntu-latest
+    continue-on-error: true
     strategy:
       matrix:
-        rg: env.resource_groups
+        rg: ${{ fromJson(needs.pre_job.outputs.rg) }}
     steps:
       - name: Check out changes
         uses: actions/checkout@v2
@@ -23,6 +35,7 @@ jobs:
         with:
           creds: ${{ secrets.SERVICE_PRINCIPAL_CREDS }}
       - name: Find tag values and add if not already exists
+        continue-on-error: true
         shell: bash
         run: |
           sudo apt-get install jq -y
@@ -33,26 +46,29 @@ jobs:
           # prevent override by checking if "created-by" tag exists
           tag_search='properties.tags.\"created-by\"'
 
+          # test
+          azouttest=$(az monitor activity-log list -g $resource_group --offset 90d)
+
           # fetch resource activites (last 90d)
           azout=$(az monitor activity-log list \
-            -g $resource_group \
-            --offset 90d \
-            --max-events 1000000 \
-            --query "[].{op:operationName.localizedValue, opValue:operationName.value, action:authorization.action, \
-            resourceId:resourceId, eventTimestamp:eventTimestamp, eventName:eventName.value, status:status.value, \
-            caller:caller, name:claims.name, timestamp:claims.iat, subStatus:subStatus.value, \
-            correlationId:correlationId}[? ((starts_with(op,'Create') && status=='Succeeded') \
-            || (op=='Write' && subStatus=='Created')) && action==opValue \
-            && !(contains(op, 'Deployment')) && !(contains(op, 'role assignment')) && !(contains(op, 'Subnet')) \
-            && !(contains(op, 'zone link')) && !(contains(op, 'Linked Service')) && !(contains(op, 'Runtime')) \
-            && !(contains(op, 'Peering')) && !(contains(op, 'record set')) && !(contains(op, 'diagnostic')) \
-            && !(contains(op, 'Pipeline')) && !(contains(op, 'Consumer')) && !(ends_with(op, 'rule')) \
-            && !(contains(op, 'Association')) && !(ends_with(op, 'proxy.')) && !(contains(op, 'Dataset'))]")
+          -g $resource_group \
+          --offset 90d \
+          --max-events 1000000 \
+          --query "[].{op:operationName.localizedValue, opValue:operationName.value, action:authorization.action, \
+          resourceId:resourceId, eventTimestamp:eventTimestamp, eventName:eventName.value, status:status.value, \
+          caller:caller, name:claims.name, timestamp:claims.iat, subStatus:subStatus.value, \
+          correlationId:correlationId}[? ((starts_with(op,'Create') && status=='Succeeded') \
+          || (op=='Write' && subStatus=='Created')) && action==opValue \
+          && !(contains(op, 'Deployment')) && !(contains(op, 'role assignment')) && !(contains(op, 'Subnet')) \
+          && !(contains(op, 'zone link')) && !(contains(op, 'Linked Service')) && !(contains(op, 'Runtime')) \
+          && !(contains(op, 'Peering')) && !(contains(op, 'record set')) && !(contains(op, 'diagnostic')) \
+          && !(contains(op, 'Pipeline')) && !(contains(op, 'Consumer')) && !(ends_with(op, 'rule')) \
+          && !(contains(op, 'Association')) && !(ends_with(op, 'proxy.')) && !(contains(op, 'Dataset'))]")
 
           # list grouped by resource and min timestamp
           resource_list=$(echo $azout | jq 'group_by(.resourceId) | map({resourceId: .[0].resourceId, caller: .[0].caller, op: .[0].op, min: map(.eventTimestamp) | min})[]')
 
           # if "created-by" tag does not exist, create "created-by" and "created-at" tags
           echo $resource_list \
-          | jq --arg b "$tag_search" '"if [[ -z $(az tag list --resource-id " + .resourceId + " -o tsv --query " + $b + " -o tsv >/dev/null 2>/dev/null) ]]; then " + "az tag update --resource-id " + .resourceId + " --operation merge --tags created-by=" + .caller + " created-at=" + .min + " >/dev/null 2>/dev/null; fi;"' \
+          | jq --arg b "$tag_search" '"if [[ -z $(az tag list --resource-id " + .resourceId + " -o tsv --query " + $b + " -o tsv >/dev/null 2>/dev/null) ]]; then " + "az tag update --resource-id " + .resourceId + " --operation merge --tags created-by=" + .caller + " created-at=`date -d " + .min + " --iso-8601=minutes` >/dev/null 2>/dev/null; fi;"' \
           | while read line ; do eval ${line:1:-1} ; done
