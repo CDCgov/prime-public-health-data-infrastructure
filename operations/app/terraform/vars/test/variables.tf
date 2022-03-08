@@ -72,6 +72,27 @@ variable "app_subnet_ip" {
   default = "172.17.9.64/28"
 }
 
+/* Variables to generate multiple dns records for private endpoint via for_each */
+variable "dns_vars" {
+  default = {
+    "blob" = {
+      type   = "blob"
+      record = "172.17.9.84"
+      guid   = "81980b71-8fc6-4e39-a291-1b42d5f4fe3b"
+    },
+    "file" = {
+      type   = "file"
+      record = "172.17.9.86"
+      guid   = "e68a9884-1f0d-497b-b52c-90bffc665851"
+    },
+    "queue" = {
+      type   = "queue"
+      record = "172.17.9.85"
+      guid   = "68f761fe-1e84-4f55-82dc-39e7e50b54cc"
+    }
+  }
+}
+
 ##################
 ## App Service Plan Vars
 ##################

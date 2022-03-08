@@ -98,7 +98,7 @@ resource "azurerm_key_vault_access_policy" "dev_access_policy" {
 
 // Store SAS token for Data Factory access to storage account in Key Vault
 resource "azurerm_key_vault_secret" "adf_sa_access" {
-  name         = "${var.resource_prefix}datastorageaccess"
+  name         = "datasaaccess"
   value        = var.sa_data_adf_sas
   key_vault_id = azurerm_key_vault.application.id
 

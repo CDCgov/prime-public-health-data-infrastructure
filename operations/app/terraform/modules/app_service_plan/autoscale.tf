@@ -95,6 +95,11 @@ resource "azurerm_monitor_autoscale_setting" "app_autoscale" {
     }
   }
 
+  tags = {
+    environment = var.environment
+    managed-by  = "terraform"
+  }
+
   # notification {
   #   webhook {
   #     service_uri = var.pagerduty_url

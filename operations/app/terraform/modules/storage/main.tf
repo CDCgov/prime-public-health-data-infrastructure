@@ -1,10 +1,8 @@
 data "azurerm_client_config" "current" {}
 
-# Also, the convention "{prefix}storage" was already taken, which is why this was
-# changed to "{prefix}datastorage"
 resource "azurerm_storage_account" "pdi_data" {
   resource_group_name       = var.resource_group_name
-  name                      = "${var.resource_prefix}datastorage"
+  name                      = "${var.resource_prefix}datasa"
   location                  = var.location
   account_kind              = "StorageV2"
   account_tier              = "Standard"
@@ -12,18 +10,19 @@ resource "azurerm_storage_account" "pdi_data" {
   min_tls_version           = "TLS1_2"
   allow_blob_public_access  = false
   enable_https_traffic_only = true
+  is_hns_enabled            = true
 
   network_rules {
     default_action = "Deny"
     bypass         = ["AzureServices"]
-    ip_rules                   = [
-        "100.6.165.133",
-        "136.226.6.186",
-        "136.36.137.172",
-        "158.111.21.225",
-        "158.111.236.95",
-        "24.163.118.70",
-        "73.173.186.141",
+    ip_rules = [
+      "100.6.165.133",
+      "136.226.6.186",
+      "136.36.137.172",
+      "158.111.21.225",
+      "158.111.236.95",
+      "24.163.118.70",
+      "73.173.186.141",
     ]
     # ip_rules = sensitive(concat(
     #   split(",", data.azurerm_key_vault_secret.cyberark_ip_ingress.value),
@@ -122,7 +121,7 @@ resource "azurerm_key_vault_access_policy" "storage_policy" {
   tenant_id    = data.azurerm_client_config.current.tenant_id
   object_id    = azurerm_storage_account.pdi_data.identity.0.principal_id
 
-  key_permissions = ["get", "unwrapkey", "wrapkey"]
+  key_permissions = ["Get", "UnwrapKey", "WrapKey"]
 }
 
 resource "azurerm_storage_account_customer_managed_key" "storage_key" {

@@ -47,3 +47,5 @@ variable "app_subnet_ip" {
   type        = string
   description = "App subnet ip"
 }
+
+variable "dns_vars" {}

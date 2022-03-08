@@ -289,27 +289,6 @@ resource "azurerm_subnet_network_security_group_association" "cdc_service_to_nsg
 # }
 # 
 
-/* Variables to generate multiple dns records for private endpoint via for_each */
-variable "dns_vars" {
-  default = {
-    "blob" = {
-      type   = "blob"
-      record = "172.17.9.88"
-      guid   = "81980b71-8fc6-4e39-a291-1b42d5f4fe3b"
-    },
-    "file" = {
-      type   = "file"
-      record = "172.17.9.87"
-      guid   = "e68a9884-1f0d-497b-b52c-90bffc665851"
-    },
-    "queue" = {
-      type   = "queue"
-      record = "172.17.9.84"
-      guid   = "68f761fe-1e84-4f55-82dc-39e7e50b54cc"
-    }
-  }
-}
-
 resource "azurerm_private_dns_zone" "pdi" {
   for_each            = var.dns_vars
   name                = "privatelink.${each.value.type}.core.windows.net"
@@ -333,13 +312,15 @@ resource "azurerm_private_dns_zone" "pdi" {
 
 resource "azurerm_private_dns_a_record" "pdi" {
   for_each            = var.dns_vars
-  name                = "pitestdatastorage"
+  name                = "${var.resource_prefix}datasa"
   zone_name           = azurerm_private_dns_zone.pdi[each.key].name
   resource_group_name = var.resource_group_name
   ttl                 = 10
   records             = [each.value.record]
   tags = {
-    "creator" = "created by private endpoint pitestdatastorage-${each.value.type}-privateendpoint with resource guid ${each.value.guid}"
+    creator = "created by private endpoint ${var.resource_prefix}datasa-${each.value.type}-privateendpoint with resource guid ${each.value.guid}"
+    environment = var.environment
+    managed-by  = "terraform"
   }
 
   depends_on = [azurerm_private_dns_zone.pdi]
