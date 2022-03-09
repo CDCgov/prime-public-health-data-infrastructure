@@ -35,7 +35,7 @@ resource "azurerm_key_vault" "application" {
 
   tags = {
     "environment" = var.environment
-    managed-by  = "terraform"
+    managed-by    = "terraform"
   }
 }
 

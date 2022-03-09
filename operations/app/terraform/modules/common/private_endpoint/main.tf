@@ -65,7 +65,7 @@ resource "azurerm_private_endpoint" "endpoint" {
   }
 
   tags = {
-    managed-by  = "terraform"
+    managed-by = "terraform"
   }
 }
 

@@ -53,19 +53,19 @@ resource "azurerm_route" "Net_1581112360-24" {
 }
 
 resource "azurerm_route" "cspo-az-ext" {
-  name                   = "cspo-az-ext"
-  route_table_name       = var.route_table_name
-  resource_group_name    = var.resource_group_name
-  address_prefix         = "172.30.6.64/28"
-  next_hop_type          = "None"
+  name                = "cspo-az-ext"
+  route_table_name    = var.route_table_name
+  resource_group_name = var.resource_group_name
+  address_prefix      = "172.30.6.64/28"
+  next_hop_type       = "None"
 }
 
 resource "azurerm_route" "CSPO-AZ-MGMT" {
-  name                   = "CSPO-AZ-MGMT"
-  route_table_name       = var.route_table_name
-  resource_group_name    = var.resource_group_name
-  address_prefix         = "172.30.6.96/27"
-  next_hop_type          = "None"
+  name                = "CSPO-AZ-MGMT"
+  route_table_name    = var.route_table_name
+  resource_group_name = var.resource_group_name
+  address_prefix      = "172.30.6.96/27"
+  next_hop_type       = "None"
 }
 
 resource "azurerm_route" "Net_19216800-16" {

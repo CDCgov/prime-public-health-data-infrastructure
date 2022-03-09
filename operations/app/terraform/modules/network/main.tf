@@ -318,7 +318,7 @@ resource "azurerm_private_dns_a_record" "pdi" {
   ttl                 = 10
   records             = [each.value.record]
   tags = {
-    creator = "created by private endpoint ${var.resource_prefix}datasa-${each.value.type}-privateendpoint with resource guid ${each.value.guid}"
+    creator     = "created by private endpoint ${var.resource_prefix}datasa-${each.value.type}-privateendpoint with resource guid ${each.value.guid}"
     environment = var.environment
     managed-by  = "terraform"
   }

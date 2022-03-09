@@ -203,12 +203,12 @@ resource "azurerm_data_factory_pipeline" "transfer_files" {
             }
             storeSettings = {
               deleteFilesAfterCompletion = false
-              maxConcurrentConnections = 1
-              wildcardFileName = "*"
-              wildcardFolderPath = "OtherFiles"
-              disableChunking = false
-              recursive       = true
-              type            = "SftpReadSettings"
+              maxConcurrentConnections   = 1
+              wildcardFileName           = "*"
+              wildcardFolderPath         = "OtherFiles"
+              disableChunking            = false
+              recursive                  = true
+              type                       = "SftpReadSettings"
             }
             type = "BinarySource"
           }
