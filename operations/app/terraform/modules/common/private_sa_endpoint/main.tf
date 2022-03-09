@@ -24,6 +24,7 @@ resource "azurerm_private_endpoint" "sa_endpoint" {
   }
 
   tags = {
-    managed-by = "terraform"
+    environment = var.primary.environment
+    managed-by  = "terraform"
   }
 }

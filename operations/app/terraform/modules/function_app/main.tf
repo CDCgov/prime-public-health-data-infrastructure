@@ -28,6 +28,7 @@ resource "azurerm_function_app" "pdi" {
     "PRIVATE_KEY"                           = "@Microsoft.KeyVault(SecretUri=https://${var.resource_prefix}-app-kv.vault.azure.net/secrets/PrivateKey)"
     "PRIVATE_KEY_PASSWORD"                  = "@Microsoft.KeyVault(SecretUri=https://${var.resource_prefix}-app-kv.vault.azure.net/secrets/PrivateKeyPassword)"
     "DATA_STORAGE"                          = "@Microsoft.KeyVault(SecretUri=https://${var.resource_prefix}-app-kv.vault.azure.net/secrets/datasaaccess)"
+    "AZURE_STORAGE_CONTAINER_NAME"          = "bronze"
     "AZURE_STORAGE_CONNECTION_STRING"       = var.sa_data_connection_string
     "APPINSIGHTS_INSTRUMENTATIONKEY"        = var.ai_instrumentation_key
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = var.ai_connection_string

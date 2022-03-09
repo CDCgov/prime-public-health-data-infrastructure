@@ -88,6 +88,7 @@ module "storageaccount_private_endpoint" {
     type                = "storage_account_${each.key}"
     location            = "eastus"
     resource_group_name = var.resource_group_name
+    environment         = var.environment
   }
 
   endpoint_subnet_ids = [var.cdc_service_subnet_id]
