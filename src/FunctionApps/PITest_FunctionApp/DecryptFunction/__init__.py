@@ -11,7 +11,7 @@ import azure.functions as func
 import pgpy
 
 from .settings import DecryptSettings
-from shared.PHDIStorageClient import PHDIStorageClient
+from shared.storage_client import PHDIStorageClient
 
 
 def decrypt_message(message: bytes, private_key_string: str, password: str) -> bytes:
