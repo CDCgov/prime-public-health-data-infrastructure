@@ -1,4 +1,4 @@
-data "azurerm_client_config" "current" {}
+#data "azurerm_client_config" "current" {}
 
 resource "azurerm_storage_account" "pdi_data" {
   resource_group_name       = var.resource_group_name
@@ -11,6 +11,7 @@ resource "azurerm_storage_account" "pdi_data" {
   allow_blob_public_access  = false
   enable_https_traffic_only = true
   is_hns_enabled            = true
+  shared_access_key_enabled = false
 
   network_rules {
     default_action = "Deny"
@@ -23,6 +24,7 @@ resource "azurerm_storage_account" "pdi_data" {
       "158.111.236.95",
       "24.163.118.70",
       "73.173.186.141",
+      "173.49.171.3"
     ]
     # ip_rules = sensitive(concat(
     #   split(",", data.azurerm_key_vault_secret.cyberark_ip_ingress.value),
@@ -119,7 +121,7 @@ module "storageaccount_private_endpoint" {
 # Grant the storage account Key Vault access, to access encryption keys
 resource "azurerm_key_vault_access_policy" "storage_policy" {
   key_vault_id = var.application_key_vault_id
-  tenant_id    = data.azurerm_client_config.current.tenant_id
+  tenant_id    = azurerm_storage_account.pdi_data.identity.0.tenant_id
   object_id    = azurerm_storage_account.pdi_data.identity.0.principal_id
 
   key_permissions = ["Get", "UnwrapKey", "WrapKey"]

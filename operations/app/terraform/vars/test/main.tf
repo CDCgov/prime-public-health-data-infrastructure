@@ -70,6 +70,8 @@ module "storage" {
   use_cdc_managed_vnet        = var.use_cdc_managed_vnet
   app_subnet_ids              = module.network.app_subnet_ids
   resource_group_id           = module.resource_group.cdc_managed_resource_group_id
+  data_access_group           = var.data_access_group
+  data_access_sp              = var.data_access_sp
 }
 
 module "databricks" {
