@@ -14,7 +14,7 @@ output "sa_data_id" {
   value = azurerm_storage_account.pdi_data.id
 }
 
-output "sa_data_adf_sas" {
-  value     = data.azurerm_storage_account_sas.adf_sa_access.sas
-  sensitive = true
-}
+# output "sa_data_adf_sas" {
+#   value     = data.azurerm_storage_account_sas.adf_sa_access.sas
+#   sensitive = true
+# }

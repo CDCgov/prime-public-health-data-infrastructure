@@ -24,7 +24,8 @@ resource "azurerm_storage_account" "pdi_data" {
       "158.111.236.95",
       "24.163.118.70",
       "73.173.186.141",
-      "173.49.171.3"
+      "173.49.171.3",
+      "24.35.73.5"
     ]
     # ip_rules = sensitive(concat(
     #   split(",", data.azurerm_key_vault_secret.cyberark_ip_ingress.value),
@@ -49,7 +50,8 @@ resource "azurerm_storage_account" "pdi_data" {
   lifecycle {
     prevent_destroy = true
     ignore_changes = [
-      tags
+      tags,
+      shared_access_key_enabled
     ]
   }
 
@@ -119,20 +121,20 @@ module "storageaccount_private_endpoint" {
 # for Blob service
 
 # Grant the storage account Key Vault access, to access encryption keys
-resource "azurerm_key_vault_access_policy" "storage_policy" {
-  key_vault_id = var.application_key_vault_id
-  tenant_id    = azurerm_storage_account.pdi_data.identity.0.tenant_id
-  object_id    = azurerm_storage_account.pdi_data.identity.0.principal_id
+# resource "azurerm_key_vault_access_policy" "storage_policy" {
+#   key_vault_id = var.application_key_vault_id
+#   tenant_id    = azurerm_storage_account.pdi_data.identity.0.tenant_id
+#   object_id    = azurerm_storage_account.pdi_data.identity.0.principal_id
 
-  key_permissions = ["Get", "UnwrapKey", "WrapKey"]
-}
+#   key_permissions = ["Get", "UnwrapKey", "WrapKey"]
+# }
 
-resource "azurerm_storage_account_customer_managed_key" "storage_key" {
-  count              = var.rsa_key_4096 != null && var.rsa_key_4096 != "" ? 1 : 0
-  key_name           = var.rsa_key_4096
-  key_vault_id       = var.application_key_vault_id
-  key_version        = null // Null allows automatic key rotation
-  storage_account_id = azurerm_storage_account.pdi_data.id
+# resource "azurerm_storage_account_customer_managed_key" "storage_key" {
+#   count              = var.rsa_key_4096 != null && var.rsa_key_4096 != "" ? 1 : 0
+#   key_name           = var.rsa_key_4096
+#   key_vault_id       = var.application_key_vault_id
+#   key_version        = null // Null allows automatic key rotation
+#   storage_account_id = azurerm_storage_account.pdi_data.id
 
-  depends_on = [azurerm_key_vault_access_policy.storage_policy]
-}
+#   depends_on = [azurerm_key_vault_access_policy.storage_policy]
+# }

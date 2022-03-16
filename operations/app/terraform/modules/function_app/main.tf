@@ -1,14 +1,14 @@
 resource "azurerm_function_app" "pdi" {
-  name                       = "${var.resource_prefix}-functionapp"
-  location                   = var.location
-  resource_group_name        = var.resource_group_name
-  app_service_plan_id        = var.app_service_plan
-  storage_account_name       = var.sa_data_name
-  storage_account_access_key = var.sa_data_access_key
-  https_only                 = true
-  os_type                    = "linux"
-  version                    = "~3"
-  enable_builtin_logging     = false
+  name                = "${var.resource_prefix}-functionapp"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  app_service_plan_id = var.app_service_plan
+  #storage_account_name       = var.sa_data_name
+  #storage_account_access_key = var.sa_data_access_key
+  https_only             = true
+  os_type                = "linux"
+  version                = "~3"
+  enable_builtin_logging = false
 
   app_settings = {
     # Use the CDC DNS for everything; they have mappings for all our internal
@@ -40,6 +40,7 @@ resource "azurerm_function_app" "pdi" {
     "VDHSFTPPassword"                       = "@Microsoft.KeyVault(SecretUri=https://${var.resource_prefix}-app-kv.vault.azure.net/secrets/VDHSFTPPassword)"
     "VDHSFTPUsername"                       = "USDS_CDC"
     "XDG_CACHE_HOME"                        = "/tmp/.cache"
+    AzureWebJobsStorage__accountName        = var.sa_data_name
   }
 
   # TODO: if we have to allow inbound HTTP we'll need to revisit these
@@ -90,8 +91,8 @@ resource "azurerm_function_app" "pdi_infrastructure" {
   location                   = var.location
   resource_group_name        = var.resource_group_name
   app_service_plan_id        = var.app_service_plan
-  storage_account_name       = var.sa_data_name
-  storage_account_access_key = var.sa_data_access_key
+  #storage_account_name       = var.sa_data_name
+  #storage_account_access_key = var.sa_data_access_key
   https_only                 = true
   os_type                    = "linux"
   version                    = "~3"
@@ -107,6 +108,7 @@ resource "azurerm_function_app" "pdi_infrastructure" {
     "WEBSITE_DNS_SERVER"                    = "168.63.129.16"
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE"   = false
     "XDG_CACHE_HOME"                        = "/tmp/.cache"
+    AzureWebJobsStorage__accountName        = var.sa_data_name
   }
 
   lifecycle {

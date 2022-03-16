@@ -62,3 +62,18 @@ variable "data_access_sp" {
   type = string
   description = "Service principal to grant data access"
 }
+
+variable "function_app_id" {
+  type        = string
+  description = "Function app resource id"
+}
+
+variable "function_infrastructure_app_id" {
+  type        = string
+  description = "Infrastructure function app resource id"
+}
+
+variable "adf_uuid" {
+  type        = string
+  description = "Azure Data Factory resource uuid"
+}

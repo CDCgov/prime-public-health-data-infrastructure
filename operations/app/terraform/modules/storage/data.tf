@@ -65,37 +65,37 @@ data "azuread_service_principal" "pitest" {
 # }
 
 // Generate SAS token for Data Factory access to storage account
-data "azurerm_storage_account_sas" "adf_sa_access" {
-  connection_string = azurerm_storage_account.pdi_data.primary_connection_string
-  https_only        = true
-  signed_version    = "2020-08-04"
+# data "azurerm_storage_account_sas" "adf_sa_access" {
+#   connection_string = azurerm_storage_account.pdi_data.primary_connection_string
+#   https_only        = true
+#   signed_version    = "2020-08-04"
 
-  resource_types {
-    service   = true
-    container = true
-    object    = true
-  }
+#   resource_types {
+#     service   = true
+#     container = true
+#     object    = true
+#   }
 
-  services {
-    blob  = true
-    queue = true
-    table = true
-    file  = true
-  }
+#   services {
+#     blob  = true
+#     queue = true
+#     table = true
+#     file  = true
+#   }
 
-  start  = "2022-02-04T15:43:06Z"
-  expiry = "2026-02-04T23:43:06Z"
+#   start  = "2022-02-04T15:43:06Z"
+#   expiry = "2026-02-04T23:43:06Z"
 
-  permissions {
-    read    = true
-    write   = true
-    delete  = true
-    list    = true
-    add     = true
-    create  = true
-    update  = true
-    process = true
-  }
+#   permissions {
+#     read    = true
+#     write   = true
+#     delete  = true
+#     list    = true
+#     add     = true
+#     create  = true
+#     update  = true
+#     process = true
+#   }
 
-  depends_on = [azurerm_storage_account.pdi_data]
-}
+#   depends_on = [azurerm_storage_account.pdi_data]
+# }

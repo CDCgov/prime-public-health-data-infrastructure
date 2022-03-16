@@ -1,10 +1,10 @@
 terraform {
-  required_version = ">= 1.0.5, < 1.2.0" # This version must also be changed in other environments
+  required_version = ">= 1.0.5" # This version must also be changed in other environments
 
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 2.61.0" # This version must also be changed in other environments
+      version = ">= 2.99.0" # This version must also be changed in other environments
     }
   }
 
