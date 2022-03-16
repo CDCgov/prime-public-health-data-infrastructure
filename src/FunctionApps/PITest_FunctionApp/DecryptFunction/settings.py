@@ -18,3 +18,8 @@ class DecryptSettings:
     private_key = os.getenv("PRIVATE_KEY")
     connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
     container_name = os.getenv("AZURE_STORAGE_CONTAINER_NAME")
+
+@dataclass
+class StorageClientSettings:
+    connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+    container_name = os.getenv("AZURE_STORAGE_CONTAINER_NAME")

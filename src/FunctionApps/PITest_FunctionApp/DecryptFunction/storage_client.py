@@ -7,7 +7,8 @@ import traceback
 
 from azure.storage.blob import BlobServiceClient
 
-from .settings import StorageClientSettings
+from DecryptFunction.settings import StorageClientSettings
+
 
 logger = logging.getLogger(__name__)
 

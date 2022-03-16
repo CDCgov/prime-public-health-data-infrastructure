@@ -10,8 +10,8 @@ from typing import Optional
 import azure.functions as func
 import pgpy
 
-from .settings import DecryptSettings
-from shared.storage_client import PHDIStorageClient
+from DecryptFunction.settings import DecryptSettings
+from DecryptFunction.storage_client import PHDIStorageClient
 
 
 def decrypt_message(message: bytes, private_key_string: str, password: str) -> bytes:
@@ -64,13 +64,10 @@ def main_with_overload(
     body = json.loads(req.get_body().decode("utf-8"))
     input_file = body.get("input")
     output_base_path = body.get("output")
-    
-    if not input_file or not output_base_path:
-        return func.HttpResponse(
-            "Missing input output parameter", status_code=400
-        )
 
-    
+    if not input_file or not output_base_path:
+        return func.HttpResponse("Missing input output parameter", status_code=400)
+
     sc = PHDIStorageClient(settings)
 
     logging.info(f"Reading file at path {input_file}")
@@ -89,7 +86,7 @@ def main_with_overload(
             f"No encrypted message found at path {input_file}",
             status_code=500,
         )
-        
+
     try:
         logging.info(f"File found. Decrypting file at path {input_file}")
         decrypted_message = decrypt_message(

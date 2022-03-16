@@ -2,10 +2,9 @@ import logging
 import os
 import traceback
 
-import pysftp
 import pytest
-from shared.settings import StorageClientSettings
-from shared.storage_client import PHDIStorageClient
+from DecryptFunction.settings import StorageClientSettings
+from DecryptFunction.storage_client import PHDIStorageClient
 
 
 # Fixtures run before each test and can be passed as arguments to individual tests to enable accessing the variables they define. More info: https://docs.pytest.org/en/latest/fixture.html#fixtures-scope-sharing-and-autouse-autouse-fixtures

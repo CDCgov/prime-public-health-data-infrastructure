@@ -4,9 +4,8 @@ from pathlib import Path
 import azure.functions as func
 import pgpy.errors
 import pytest
-
-from .. import DecryptFunction as dcf
-from ..DecryptFunction.settings import DecryptSettings
+from DecryptFunction import __init__ as dcf
+from DecryptFunction.settings import DecryptSettings
 
 
 # This fixture runs before all tests and can be passed as arguments to individual
