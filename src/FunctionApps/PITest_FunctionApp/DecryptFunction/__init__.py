@@ -64,23 +64,17 @@ def main_with_overload(
     body = json.loads(req.get_body().decode("utf-8"))
     input_file = body.get("input")
     output_base_path = body.get("output")
-    logging.info(f"File parameter found, decrypting file at path {input_file}")
-    sc = PHDIStorageClient(settings)
-    encrypted_message = sc.read_blob(input_file)
+    
+    if not input_file or not output_base_path:
+        return func.HttpResponse(
+            "Missing input output parameter", status_code=400
+        )
 
-    # if input_file:
-    #     logging.info(f"File parameter found, decrypting file at path {input_file}")
-    #     sc = PHDIStorageClient(settings)
-    #     logging.info(f"Reading file...")
-    #     encrypted_message = sc.read_blob(input_file)
-    # else:
-    #     logging.info(f"File parameter missing, decrypting body")
-    #     encrypted_message = req.get_body()
-    #     message_size = sys.getsizeof(encrypted_message)
-    #     logging.info(
-    #         f"Decryption function fired using function body. \n"
-    #         f"Byte Size: {message_size} bytes"
-    #     )
+    
+    sc = PHDIStorageClient(settings)
+
+    logging.info(f"Reading file at path {input_file}")
+    encrypted_message = sc.read_blob(input_file)
 
     if not settings.private_key or not settings.private_key_password:
         logging.error("Error 500: No private key or password provided")
@@ -90,17 +84,19 @@ def main_with_overload(
         )
 
     if not encrypted_message:
-        logging.error("Error 400: No message provided in request body")
+        logging.error(f"Error 500: No encrypted message found at path {input_file}")
         return func.HttpResponse(
-            "Please pass the encrypted message in the request body",
-            status_code=400,
+            f"No encrypted message found at path {input_file}",
+            status_code=500,
         )
+        
     try:
+        logging.info(f"File found. Decrypting file at path {input_file}")
         decrypted_message = decrypt_message(
             encrypted_message, settings.private_key, settings.private_key_password
         )
         logging.info(f"Writing file...")
-        output_path = Path(output_base_path) / Path(input_file).name
+        output_path = str(Path(output_base_path) / Path(input_file).name)
         sc.upload_data_to_blob(decrypted_message, output_path)
         logging.info(f"Blob written to {output_path}")
         return func.HttpResponse(
