@@ -1,36 +1,78 @@
+from ast import Str
 import logging
-import os
-import traceback
+import uuid
 
 import pytest
-from DecryptFunction.settings import StorageClientSettings
+from azure.core.exceptions import ResourceNotFoundError
+from azure.storage.blob import BlobServiceClient
+from DecryptFunction.settings import DecryptSettings, StorageClientSettings
 from DecryptFunction.storage_client import PHDIStorageClient
-
-
-# Fixtures run before each test and can be passed as arguments to individual tests to enable accessing the variables they define. More info: https://docs.pytest.org/en/latest/fixture.html#fixtures-scope-sharing-and-autouse-autouse-fixtures
-@pytest.fixture(scope="session", autouse=True)
-def initialize_env_vars():
-    # get storage account settings
-    storage_connection_string = os.environ.get("AZURE_STORAGE_CONNECTION_STRING")
-    container_name = os.environ.get("STORAGE_CONTAINER")
-    return storage_connection_string, container_name
+from pytest import TempPathFactory
 
 
 @pytest.fixture(scope="session")
-def storage_client(initialize_env_vars):
-    storage_connection_string, _ = initialize_env_vars
-    settings = StorageClientSettings()
-    settings.connection_string = storage_connection_string
-    storage_client = PHDIStorageClient(settings)
+def storage_client(local_settings: DecryptSettings) -> PHDIStorageClient:
+    storage_client = PHDIStorageClient(local_settings.storage_client_settings)
     yield storage_client
 
 
-def test_create_container(storage_client):
-    result = storage_client.create_container()
+@pytest.fixture(scope="function")
+def method_test_file(
+    blob_service_client: BlobServiceClient,
+    tmp_path_factory: TempPathFactory,
+    method_container: str,
+) -> str:
+    file_name = "hello.txt"
+    file_path = tmp_path_factory.getbasetemp() / file_name
+    with open(file_path, "w") as f:
+        f.write("Hello World!")
+
+    # Create a blob client using the local file name as the name for the blob
+    blob_client = blob_service_client.get_blob_client(
+        container=method_container, blob=str(file_name)
+    )
+
+    logging.info(f"Uploading to Azure Storage as blob: {file_path}")
+
+    # Upload the created file
+    with open(file_path, "rb") as data:
+        blob_client.upload_blob(data)
+    yield file_name
+    try:
+        blob_client.delete_blob()
+    except ResourceNotFoundError:
+        logging.info("Blob already deleted.")
+
+
+@pytest.fixture(scope="function")
+def method_container(blob_service_client: BlobServiceClient) -> str:
+    container_name = str(uuid.uuid4())
+    blob_service_client.create_container(container_name)
+    yield container_name
+    try:
+        blob_service_client.delete_container(container_name)
+    except ResourceNotFoundError:
+        logging.info("Container already deleted.")
+
+
+def test_create_container(
+    storage_client: PHDIStorageClient, blob_service_client: BlobServiceClient
+) -> None:
+    test_name = str(uuid.uuid4())
+    result = storage_client.create_container(test_name)
     assert result == True
+    blob_service_client.delete_container(test_name)
 
 
-def test_list_blobs(storage_client):
-    storage_connection_string, container_name = initialize_env_vars
-    result = storage_client.list_blobs_in_container(container_name)
-    assert result == []
+def test_list_blobs(storage_client, method_container: str, method_test_file: str):
+    result = [r.name for r in storage_client.list_blobs_in_container(method_container)]
+    assert result == [method_test_file]
+
+
+def test_read_blob(method_container: str, method_test_file: str):
+    settings = StorageClientSettings()
+    settings.connection_string = "AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;DefaultEndpointsProtocol=http;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;TableEndpoint=http://127.0.0.1:10002/devstoreaccount1;"
+    settings.container_name = method_container
+    storage_client = PHDIStorageClient(settings)
+    result = storage_client.read_blob(method_test_file)
+    assert result == b"Hello World!"

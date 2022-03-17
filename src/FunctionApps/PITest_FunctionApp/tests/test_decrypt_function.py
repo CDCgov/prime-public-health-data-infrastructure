@@ -4,31 +4,44 @@ from pathlib import Path
 import azure.functions as func
 import pgpy.errors
 import pytest
-from DecryptFunction import __init__ as dcf
+from azure.storage.blob import BlobServiceClient
+from DecryptFunction import decrypt
 from DecryptFunction.settings import DecryptSettings
 
 
-# This fixture runs before all tests and can be passed as arguments to individual
-# tests to enable accessing the variables they define.
-# More info: https://docs.pytest.org/en/latest/fixture.html#fixtures-scope-sharing-and-autouse-autouse-fixtures  # noqa: E501
-@pytest.fixture(scope="session", autouse=True)
-def local_settings() -> DecryptSettings:
-    """Local settings relevant for running these tests.
-    Note, unlike running the function itself, we manually parse this file,
-    because it is not loaded automatically by the test runner.
+@pytest.fixture(scope="session")
+def encrypted_file(blob_service_client: BlobServiceClient, container_name: str) -> str:
+    """Upload a file to the blob storage container using a neutral Microsoft-provided lib.
+
+    Args:
+        blob_service_client (BlobServiceClient): Azure blob storage client, fixture
 
     Returns:
-        DecryptSettings: settings object describing relevant subset of settings for this function
-    """  # noqa: E501
-    local_settings_path = (
-        Path("DecryptFunction").parent / "tests" / "assets" / "test.settings.json"
+        str: file name of local file
+    """
+    file_name = "encrypted.txt"
+    test_file_path = Path("DecryptFunction").parent / "tests" / "assets" / file_name
+
+    try:
+        blob_client = blob_service_client.get_blob_client(
+            container=container_name, blob=file_name
+        )
+        blob_client.upload_blob(data=test_file_path.read_bytes())
+    except:
+        pytest.skip("Could not upload test file to blob storage")
+    yield file_name
+    blob_client.delete_blob()
+
+
+def get_blob_contents(
+    file_path: str, blob_service_client: BlobServiceClient, container_name: str
+) -> bytes:
+    blob_client = blob_service_client.get_blob_client(
+        container=container_name, blob=file_path
     )
-    local_json_config = json.loads(local_settings_path.read_text())
-    local_settings_vals = local_json_config.get("Values")
-    settings = DecryptSettings()
-    settings.private_key = local_settings_vals.get("PRIVATE_KEY")
-    settings.private_key_password = local_settings_vals.get("PRIVATE_KEY_PASSWORD")
-    return settings
+    stream_downloader = blob_client.download_blob()
+    blob_data = stream_downloader.readall()
+    return blob_data
 
 
 def test_decrypt_message_success(local_settings):
@@ -42,7 +55,7 @@ def test_decrypt_message_success(local_settings):
     )
     blob_data = test_file_path.read_bytes()
     input_stream = func.blob.InputStream(data=blob_data, name="input test")
-    result = dcf.decrypt_message(
+    result = decrypt.decrypt_message(
         input_stream.read(),
         local_settings.private_key,
         local_settings.private_key_password,
@@ -66,7 +79,7 @@ def test_decrypt_message_failure_wrong_receiver(local_settings):
     input_stream = func.blob.InputStream(data=blob_data, name="input test")
 
     with pytest.raises(pgpy.errors.PGPError) as exc_info:
-        dcf.decrypt_message(
+        decrypt.decrypt_message(
             input_stream.read(),
             local_settings.private_key,
             local_settings.private_key_password,
@@ -75,25 +88,28 @@ def test_decrypt_message_failure_wrong_receiver(local_settings):
     assert "Cannot decrypt the provided message with this key" in str(exc_info.value)
 
 
-def test_trigger_success(local_settings):
-    """Test function trigger conditions
+def test_trigger_success(
+    local_settings,
+    encrypted_file: str,
+    blob_service_client: BlobServiceClient,
+    container_name: str,
+):
+    output_base_path = "decrypted"
+    output_path = Path(output_base_path) / encrypted_file
 
-    Args:
-        local_settings ([type]): passed automatically via above fixture
-    """
-    test_file_path = (
-        Path("DecryptFunction").parent / "tests" / "assets" / "encrypted.txt"
-    )
-    blob_data = test_file_path.read_bytes()
+    body = {"input": encrypted_file, "output": output_base_path}
     req_success = func.HttpRequest(
         method="POST",
-        body=blob_data,
-        headers={"Content-Type": "application/octet-stream"},
+        body=json.dumps(body),
         url="/",
     )
-    resp = dcf.main_with_overload(req_success, local_settings)
+    resp = decrypt.main_with_overload(req_success, local_settings)
     assert resp.status_code == 200
-    assert resp.get_body() == b"TESTING EICR ENCRYPTION"
+
+    blob_contents = get_blob_contents(
+        str(output_path), blob_service_client, container_name
+    )
+    assert blob_contents == b"TESTING EICR ENCRYPTION"
 
 
 def test_trigger_missing_body(local_settings):
@@ -108,43 +124,74 @@ def test_trigger_missing_body(local_settings):
         headers={"Content-Type": "application/octet-stream"},
         url="/",
     )
-    resp = dcf.main_with_overload(req_success, local_settings)
+    resp = decrypt.main_with_overload(req_success, local_settings)
     assert (
         resp.status_code == 400
-        and b"Please pass the encrypted message in the request body" in resp.get_body()
+        and b"Please pass the encrypted message in the body of the request"
+        in resp.get_body()
     )
 
 
-def test_trigger_malformed(local_settings):
-    """Test trigger with malformed bytes
+def test_malformed_json(local_settings):
+    """Test trigger with malformed json body
 
     Args:
         local_settings ([type]): passed automatically via above fixture
     """
     req_success = func.HttpRequest(
         method="POST",
-        body=b"bad data",
+        body="{lol",
         headers={"Content-Type": "application/octet-stream"},
         url="/",
     )
-    resp = dcf.main_with_overload(req_success, local_settings)
-    assert resp.status_code == 500 and b"Decryption failed" in resp.get_body()
+    resp = decrypt.main_with_overload(req_success, local_settings)
+    assert resp.status_code == 400 and b"Failed to parse JSON" in resp.get_body()
 
 
-def test_trigger_missing_settings(local_settings):
+def test_trigger_missing_settings():
     """Test missing settings (could happen if we can't connect to keyvault)
 
     Args:
         local_settings ([type]): passed automatically via above fixture
     """
+    body = {
+        "input": "encrypted.txt",
+        "output": "decrypted",
+    }
     req_success = func.HttpRequest(
         method="POST",
-        body=b"bad data",
+        body=json.dumps(body),
         headers={"Content-Type": "application/octet-stream"},
         url="/",
     )
-    resp = dcf.main_with_overload(req_success, {})
+    resp = decrypt.main_with_overload(req_success, {})
     assert (
         resp.status_code == 500
-        and b"Server missing required settings" in resp.get_body()
+        and b"Failed to create storage client" in resp.get_body()
     )
+
+
+def test_trigger_missing_params(local_settings):
+    body = {
+        "output": "decrypted",
+    }
+    req_success = func.HttpRequest(
+        method="POST",
+        body=json.dumps(body),
+        headers={"Content-Type": "application/octet-stream"},
+        url="/",
+    )
+    resp = decrypt.main_with_overload(req_success, {})
+    assert resp.status_code == 400 and b"Missing required parameters" in resp.get_body()
+
+    body = {
+        "input": "decrypted",
+    }
+    req_success = func.HttpRequest(
+        method="POST",
+        body=json.dumps(body),
+        headers={"Content-Type": "application/octet-stream"},
+        url="/",
+    )
+    resp = decrypt.main_with_overload(req_success, {})
+    assert resp.status_code == 400 and b"Missing required parameters" in resp.get_body()

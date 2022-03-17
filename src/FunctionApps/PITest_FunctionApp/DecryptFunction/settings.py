@@ -3,6 +3,12 @@ import os
 
 
 @dataclass
+class StorageClientSettings:
+    connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+    container_name = os.getenv("AZURE_STORAGE_CONTAINER_NAME")
+
+
+@dataclass
 class DecryptSettings:
     """Settings necessary for decrypting a given message.
     When run remotely, settings are passed by environment variables in the function app,
@@ -16,10 +22,4 @@ class DecryptSettings:
 
     private_key_password = os.getenv("PRIVATE_KEY_PASSWORD")
     private_key = os.getenv("PRIVATE_KEY")
-    connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
-    container_name = os.getenv("AZURE_STORAGE_CONTAINER_NAME")
-
-@dataclass
-class StorageClientSettings:
-    connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
-    container_name = os.getenv("AZURE_STORAGE_CONTAINER_NAME")
+    storage_client_settings = StorageClientSettings()
