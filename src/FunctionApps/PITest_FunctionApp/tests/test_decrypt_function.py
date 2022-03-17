@@ -9,8 +9,9 @@ from DecryptFunction import decrypt
 from DecryptFunction.settings import DecryptSettings
 
 """
-Note: These tests require a running Azurite container to work locally. 
-See instructions [here](https://docs.microsoft.com/en-us/azure/storage/blobs/use-azurite-to-run-automated-tests)
+Note: These tests require a running Azurite container to work locally.
+See instructions
+[here](https://docs.microsoft.com/en-us/azure/storage/blobs/use-azurite-to-run-automated-tests)
 
 Confirmed that these run by running `Azurite:Start` in VSCode
 
@@ -30,13 +31,10 @@ def encrypted_file(blob_service_client: BlobServiceClient, container_name: str) 
     file_name = "encrypted.txt"
     test_file_path = Path("DecryptFunction").parent / "tests" / "assets" / file_name
 
-    try:
-        blob_client = blob_service_client.get_blob_client(
-            container=container_name, blob=file_name
-        )
-        blob_client.upload_blob(data=test_file_path.read_bytes())
-    except:
-        pytest.skip("Could not upload test file to blob storage")
+    blob_client = blob_service_client.get_blob_client(
+        container=container_name, blob=file_name
+    )
+    blob_client.upload_blob(data=test_file_path.read_bytes(), overwrite=True)
     yield file_name
     blob_client.delete_blob()
 
@@ -117,7 +115,8 @@ def test_trigger_success(
     Args:
         local_settings (_type_): (Fixture) pre-configured test settings
         encrypted_file (str): (Fixture) path to local encrypted file
-        blob_service_client (BlobServiceClient): (Fixture) Microsoft azure blob storage client
+        blob_service_client (BlobServiceClient):
+            (Fixture) Microsoft azure blob storage client
         container_name (str): (Fixture) Name of blob storage container
     """
     output_base_path = "decrypted"

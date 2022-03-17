@@ -1,4 +1,3 @@
-from ast import Str
 import logging
 import uuid
 
@@ -15,7 +14,7 @@ def storage_client(local_settings: DecryptSettings) -> PHDIStorageClient:
     """Storage Client
 
     Args:
-        local_settings (DecryptSettings): (fixture) Pre-configured Decrypt Settings
+        local_settings (DecryptSettings): (Fixture) Pre-configured Decrypt Settings
 
     Returns:
         PHDIStorageClient: a pre-configured PHDI Storage Client for use with tests
@@ -33,9 +32,12 @@ def method_test_file(
     """Create a temporary file for just this method. (Removes after method is complete)
 
     Args:
-        blob_service_client (BlobServiceClient): (fixture) Azure Blob Service Client for confirmation purposes
-        tmp_path_factory (TempPathFactory): (fixture) Temporary file path factory for creating a path for this test run
-        method_container (str): (Fixture) A temporary container for just this method
+        blob_service_client (BlobServiceClient):
+            (Fixture) Azure Blob Service Client for confirmation purposes
+        tmp_path_factory (TempPathFactory):
+            (Fixture) Temporary file path factory for creating a path for this test run
+        method_container (str):
+            (Fixture) A temporary container for just this method
 
     Returns:
         str: The path to the just-created temporary file
@@ -88,12 +90,14 @@ def test_create_container(
     """Create Container
 
     Args:
-        storage_client (PHDIStorageClient): (fixture) Pre-configured PHDI Storage Client
-        blob_service_client (BlobServiceClient): (fixture) Azure Blob Service Client for confirmation purposes
+        storage_client (PHDIStorageClient):
+            (Fixture) Pre-configured PHDI Storage Client
+        blob_service_client (BlobServiceClient):
+            (Fixture) Azure Blob Service Client for confirmation purposes
     """
     test_name = str(uuid.uuid4())
     result = storage_client.create_container(test_name)
-    assert result == True
+    assert result
     blob_service_client.delete_container(test_name)
 
 
@@ -103,9 +107,12 @@ def test_list_blobs(
     """List blobs
 
     Args:
-        storage_client (PHDIStorageClient): (fixture) Pre-configured PHDI Storage Client
-        method_container (str): (Fixture) A temporary container for just this method
-        method_test_file (str): (Fixture) A temporary test file in this container for just this method
+        storage_client (PHDIStorageClient):
+            (Fixture) Pre-configured PHDI Storage Client
+        method_container (str):
+            (Fixture) A temporary container for just this method
+        method_test_file (str):
+            (Fixture) A temporary test file in this container for just this method
     """
     result = [r.name for r in storage_client.list_blobs_in_container(method_container)]
     assert result == [method_test_file]
@@ -115,11 +122,13 @@ def test_read_blob(method_container: str, method_test_file: str):
     """Read a blob from Azure Storage.
 
     Args:
-        method_container (str): (Fixture) A temporary container for just this method
-        method_test_file (str): (Fixture) A temporary test file in this container for just this method
+        method_container (str):
+            (Fixture) A temporary container for just this method
+        method_test_file (str):
+            (Fixture) A temporary test file in this container for just this method
     """
     settings = StorageClientSettings()
-    settings.connection_string = "AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;DefaultEndpointsProtocol=http;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;TableEndpoint=http://127.0.0.1:10002/devstoreaccount1;"
+    settings.connection_string = "AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;DefaultEndpointsProtocol=http;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;TableEndpoint=http://127.0.0.1:10002/devstoreaccount1;"  # noqa
     settings.container_name = method_container
     storage_client = PHDIStorageClient(settings)
     result = storage_client.read_blob(method_test_file)

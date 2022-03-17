@@ -73,7 +73,7 @@ def main_with_overload(
         decrypted_message = decrypt_message(
             encrypted_message, settings.private_key, settings.private_key_password
         )
-        logging.info(f"Writing file...")
+        logging.info("Writing file...")
         output_path = str(Path(output_base_path) / Path(input_file).name)
         sc.upload_data_to_blob(decrypted_message, output_path)
         logging.info(f"Blob written to {output_path}")
