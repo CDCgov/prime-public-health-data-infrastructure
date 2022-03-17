@@ -62,6 +62,11 @@ jobs:
         with:
           python-version: ${{env.TEST_RUNNER_PYTHON_VERSION}}
           cache: pip
+      - name: Install Azurite
+        run: npm install -g azurite
+      - name: Run Azurite
+        shell: bash
+        run: azurite-blob &
       - name: Install dependencies
         working-directory: ./src/FunctionApps/${{matrix.function-to-test}}
         run: |
