@@ -110,8 +110,6 @@ module "function_app" {
   app_service_plan            = module.app_service_plan.service_plan_id
   application_key_vault_id    = module.key_vault.application_key_vault_id
   cdc_app_subnet_id           = module.network.cdc_app_subnet_id
-  sa_data_access_key          = module.storage.sa_data_access_key
-  sa_data_connection_string   = module.storage.sa_data_connection_string
   sa_data_name                = module.storage.sa_data_name
   terraform_caller_ip_address = var.terraform_caller_ip_address
   use_cdc_managed_vnet        = var.use_cdc_managed_vnet

@@ -1,10 +1,8 @@
 resource "azurerm_function_app" "pdi" {
-  name                = "${var.resource_prefix}-functionapp"
-  location            = var.location
-  resource_group_name = var.resource_group_name
-  app_service_plan_id = var.app_service_plan
-  #storage_account_name       = var.sa_data_name
-  #storage_account_access_key = var.sa_data_access_key
+  name                   = "${var.resource_prefix}-functionapp"
+  location               = var.location
+  resource_group_name    = var.resource_group_name
+  app_service_plan_id    = var.app_service_plan
   https_only             = true
   os_type                = "linux"
   version                = "~3"
@@ -29,7 +27,6 @@ resource "azurerm_function_app" "pdi" {
     "PRIVATE_KEY_PASSWORD"                  = "@Microsoft.KeyVault(SecretUri=https://${var.resource_prefix}-app-kv.vault.azure.net/secrets/PrivateKeyPassword)"
     "DATA_STORAGE"                          = "@Microsoft.KeyVault(SecretUri=https://${var.resource_prefix}-app-kv.vault.azure.net/secrets/datasaaccess)"
     "AZURE_STORAGE_CONTAINER_NAME"          = "bronze"
-    "AZURE_STORAGE_CONNECTION_STRING"       = var.sa_data_connection_string
     "APPINSIGHTS_INSTRUMENTATIONKEY"        = var.ai_instrumentation_key
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = var.ai_connection_string
     "BUILD_FLAGS"                           = "UseExpressBuild"
@@ -87,18 +84,17 @@ resource "azurerm_function_app" "pdi" {
 }
 
 resource "azurerm_function_app" "pdi_infrastructure" {
-  name                = "${var.resource_prefix}-infra-functionapp"
-  location            = var.location
-  resource_group_name = var.resource_group_name
-  app_service_plan_id = var.app_service_plan
-  #storage_account_name       = var.sa_data_name
-  #storage_account_access_key = var.sa_data_access_key
+  name                   = "${var.resource_prefix}-infra-functionapp"
+  location               = var.location
+  resource_group_name    = var.resource_group_name
+  app_service_plan_id    = var.app_service_plan
   https_only             = true
   os_type                = "linux"
   version                = "~3"
   enable_builtin_logging = false
 
   app_settings = {
+    "WEBSITE_RUN_FROM_PACKAGE"              = "https://${var.sa_data_name}.blob.core.windows.net/functions/${azurerm_storage_blob.functions.name}",
     "APPINSIGHTS_INSTRUMENTATIONKEY"        = var.ai_instrumentation_key
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = var.ai_connection_string
     "BUILD_FLAGS"                           = "UseExpressBuild"
@@ -130,6 +126,10 @@ resource "azurerm_function_app" "pdi_infrastructure" {
     environment = var.environment
     managed-by  = "terraform"
   }
+
+  depends_on = [
+    azurerm_storage_blob.functions
+  ]
 }
 
 resource "azurerm_key_vault_access_policy" "pdi_function_app" {
