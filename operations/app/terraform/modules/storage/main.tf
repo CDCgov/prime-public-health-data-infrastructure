@@ -16,24 +16,6 @@ resource "azurerm_storage_account" "pdi_data" {
   network_rules {
     default_action = "Deny"
     bypass         = ["AzureServices"]
-    ip_rules = [
-      "100.6.165.133",
-      "136.226.6.186",
-      "136.36.137.172",
-      "158.111.21.225",
-      "158.111.236.95",
-      "24.163.118.70",
-      "73.173.186.141",
-      "173.49.171.3",
-      "24.35.73.5",
-      "198.255.246.159"
-    ]
-    # ip_rules = sensitive(concat(
-    #   split(",", data.azurerm_key_vault_secret.cyberark_ip_ingress.value),
-    #   [split("/", var.terraform_caller_ip_address)[0]], # Storage accounts only allow CIDR-notation for /[0-30]
-    # ))
-
-    #ip_rules = [var.terraform_caller_ip_address]
 
     virtual_network_subnet_ids = var.app_subnet_ids
   }
@@ -52,7 +34,8 @@ resource "azurerm_storage_account" "pdi_data" {
     prevent_destroy = true
     ignore_changes = [
       tags,
-      shared_access_key_enabled
+      shared_access_key_enabled,
+      network_rules[0].ip_rules
     ]
   }
 
@@ -61,28 +44,6 @@ resource "azurerm_storage_account" "pdi_data" {
     managed-by  = "terraform"
   }
 }
-
-# Turns out that creating containers in storage accounts doesn't work like you'd expect; may be able
-# to inline a template for it.
-#
-# See: https://github.com/hashicorp/terraform-provider-azurerm/issues/2977
-# resource "azurerm_storage_container" "data_bronze" {
-#   name                  = "bronze"
-#   storage_account_name  = azurerm_storage_account.pdi_data.name
-#   container_access_type = "private"
-# }
-# 
-# resource "azurerm_storage_container" "data_silver" {
-#   name                  = "silver"
-#   storage_account_name  = azurerm_storage_account.pdi_data.name
-#   container_access_type = "private"
-# }
-# 
-# resource "azurerm_storage_container" "data_gold" {
-#   name                  = "gold"
-#   storage_account_name  = azurerm_storage_account.pdi_data.name
-#   container_access_type = "private"
-# }
 
 /* Generate multiple storage private endpoints via for_each */
 module "storageaccount_private_endpoint" {
