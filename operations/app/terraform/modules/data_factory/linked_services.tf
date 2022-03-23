@@ -7,7 +7,7 @@ resource "azurerm_data_factory_linked_service_azure_function" "pdi_func" {
 
   key_vault_key {
     linked_service_name = azurerm_data_factory_linked_service_key_vault.pdi_appkv.name
-    secret_name = "${var.resource_prefix}functionappaccess"
+    secret_name         = "${var.resource_prefix}functionappaccess"
   }
 }
 

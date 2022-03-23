@@ -87,16 +87,16 @@ resource "azurerm_function_app" "pdi" {
 }
 
 resource "azurerm_function_app" "pdi_infrastructure" {
-  name                       = "${var.resource_prefix}-infra-functionapp"
-  location                   = var.location
-  resource_group_name        = var.resource_group_name
-  app_service_plan_id        = var.app_service_plan
+  name                = "${var.resource_prefix}-infra-functionapp"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  app_service_plan_id = var.app_service_plan
   #storage_account_name       = var.sa_data_name
   #storage_account_access_key = var.sa_data_access_key
-  https_only                 = true
-  os_type                    = "linux"
-  version                    = "~3"
-  enable_builtin_logging     = false
+  https_only             = true
+  os_type                = "linux"
+  version                = "~3"
+  enable_builtin_logging = false
 
   app_settings = {
     "APPINSIGHTS_INSTRUMENTATIONKEY"        = var.ai_instrumentation_key

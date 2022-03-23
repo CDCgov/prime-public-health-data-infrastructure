@@ -25,7 +25,8 @@ resource "azurerm_storage_account" "pdi_data" {
       "24.163.118.70",
       "73.173.186.141",
       "173.49.171.3",
-      "24.35.73.5"
+      "24.35.73.5",
+      "198.255.246.159"
     ]
     # ip_rules = sensitive(concat(
     #   split(",", data.azurerm_key_vault_secret.cyberark_ip_ingress.value),

@@ -54,12 +54,12 @@ variable "resource_group_id" {
 }
 
 variable "data_access_group" {
-  type = string
+  type        = string
   description = "AD group to grant data access"
 }
 
 variable "data_access_sp" {
-  type = string
+  type        = string
   description = "Service principal to grant data access"
 }
 

@@ -1,7 +1,7 @@
 # data "azurerm_client_config" "current" {}
 
 data "azuread_group" "owners" {
-  display_name     = var.data_access_group
+  display_name = var.data_access_group
 }
 
 data "azuread_service_principal" "pitest" {
