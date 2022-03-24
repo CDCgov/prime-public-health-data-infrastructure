@@ -1,17 +1,29 @@
-data "archive_file" "file_function_app" {
+# Devops functions
+
+data "archive_file" "devops_function_app" {
   type        = "zip"
-  source_dir  = "../../../../../src/FunctionApps/PITest_FunctionApp"
-  output_path = "function-app.zip"
+  source_dir  = "../../../../../src/FunctionApps/DevOps"
+  output_path = "devops-function-app.zip"
 }
 
-resource "azurerm_storage_blob" "functions" {
-  name = "${filesha256(data.archive_file.file_function_app.output_path)}.zip"
-  storage_account_name = var.sa_data_name
-  storage_container_name = "functions"
-  type = "Block"
-  source = data.archive_file.file_function_app.output_path
+locals {
+  publish_devops_command = <<EOF
+      az functionapp deployment source config-zip --resource-group ${var.resource_group_name} \
+      --name ${azurerm_function_app.pdi_infrastructure.name} --src ${data.archive_file.devops_function_app.output_path} \
+      --build-remote false
+    EOF
+}
 
+resource "null_resource" "devops_function_app_publish" {
+  provisioner "local-exec" {
+    command = local.publish_devops_command
+  }
   depends_on = [
-    data.archive_file.file_function_app
+    local.publish_devops_command,
+    azurerm_function_app.pdi_infrastructure
   ]
+  triggers = {
+    input_json           = filemd5(data.archive_file.devops_function_app.output_path)
+    publish_code_command = local.publish_devops_command
+  }
 }

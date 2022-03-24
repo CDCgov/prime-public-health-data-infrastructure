@@ -28,13 +28,7 @@ resource "azurerm_storage_data_lake_gen2_path" "pdi_data_bronze" {
   resource           = "directory"
   owner              = data.azuread_group.owners.id
   group              = data.azuread_group.owners.id
-
-  # permit dir misspelling (OtherFIles) in test
-  path = (
-    "${each.value.bronze_root_dir}${each.value.bronze_sub_dir}" == "decrypted/OtherFiles" &&
-    var.environment == "test" ? "decrypted/OtherFIles" :
-    "${each.value.bronze_root_dir}${each.value.bronze_sub_dir}"
-  )
+  path               = "${each.value.bronze_root_dir}${each.value.bronze_sub_dir}"
 
   lifecycle {
     prevent_destroy = true

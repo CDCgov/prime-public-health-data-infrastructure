@@ -94,13 +94,11 @@ resource "azurerm_function_app" "pdi_infrastructure" {
   enable_builtin_logging = false
 
   app_settings = {
-    "WEBSITE_RUN_FROM_PACKAGE"              = "https://${var.sa_data_name}.blob.core.windows.net/functions/${azurerm_storage_blob.functions.name}",
     "APPINSIGHTS_INSTRUMENTATIONKEY"        = var.ai_instrumentation_key
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = var.ai_connection_string
     "BUILD_FLAGS"                           = "UseExpressBuild"
-    "ENABLE_ORYX_BUILD"                     = "true"
     "FUNCTIONS_WORKER_RUNTIME"              = "python"
-    "SCM_DO_BUILD_DURING_DEPLOYMENT"        = 1
+    "SCM_DO_BUILD_DURING_DEPLOYMENT"        = true
     "WEBSITE_DNS_SERVER"                    = "168.63.129.16"
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE"   = false
     "XDG_CACHE_HOME"                        = "/tmp/.cache"
@@ -126,10 +124,6 @@ resource "azurerm_function_app" "pdi_infrastructure" {
     environment = var.environment
     managed-by  = "terraform"
   }
-
-  depends_on = [
-    azurerm_storage_blob.functions
-  ]
 }
 
 resource "azurerm_key_vault_access_policy" "pdi_function_app" {
