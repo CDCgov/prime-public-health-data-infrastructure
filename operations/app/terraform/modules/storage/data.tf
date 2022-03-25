@@ -65,7 +65,7 @@ locals {
       }
     ]
   ]))
-  gold_root_dirs   = ["temp"]
+  gold_root_dirs = ["temp"]
   gold_sub_dirs = [
     ""
   ]

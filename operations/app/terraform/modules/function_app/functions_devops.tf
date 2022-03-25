@@ -1,7 +1,7 @@
 # Devops functions
 
 locals {
-  devops_function_path   = "../../../../../src/FunctionApps/DevOps"
+  devops_function_path = "../../../../../src/FunctionApps/DevOps"
   # Deploy zip and re-add WEBSITE_RUN_FROM_PACKAGE
   devops_publish_command = <<EOF
       az functionapp deployment source config-zip --resource-group ${var.resource_group_name} \
