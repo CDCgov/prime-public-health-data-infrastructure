@@ -63,14 +63,14 @@ variable "data_access_sp" {
   description = "Service principal to grant data access"
 }
 
-variable "function_app_id" {
+variable "pdi_function_app_uuid" {
   type        = string
-  description = "Function app resource id"
+  description = "PDI function app resource uuid"
 }
 
-variable "function_infrastructure_app_id" {
+variable "infrastructure_function_app_uuid" {
   type        = string
-  description = "Infrastructure function app resource id"
+  description = "Infrastructure function app resource uuid"
 }
 
 variable "adf_uuid" {

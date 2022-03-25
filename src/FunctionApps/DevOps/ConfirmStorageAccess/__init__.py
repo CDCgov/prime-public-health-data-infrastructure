@@ -10,7 +10,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     if container:
         creds = DefaultAzureCredential()
 
-        storage_account=os.getenv('DataStorageAccount')
+        storage_account=os.getenv('DATA_STORAGE_ACCOUNT')
         container_service_client = ContainerClient.from_container_url(container_url=f"https://{storage_account}.blob.core.windows.net/{container}", credential=creds)
         properties = list(container_service_client.list_blobs(maxresults=50))
 

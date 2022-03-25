@@ -5,3 +5,4 @@
 azure-functions
 azure-storage-blob
 pgpy
+dataclasses

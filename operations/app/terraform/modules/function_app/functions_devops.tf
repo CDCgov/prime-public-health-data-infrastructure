@@ -5,18 +5,18 @@ locals {
   # Deploy zip and re-add WEBSITE_RUN_FROM_PACKAGE
   devops_publish_command = <<EOF
       az functionapp deployment source config-zip --resource-group ${var.resource_group_name} \
-      --name ${azurerm_function_app.pdi_infrastructure.name} --src ${data.archive_file.devops_function_app.output_path} \
+      --name ${azurerm_function_app.infrastructure.name} --src ${data.archive_file.devops_function_app.output_path} \
       --build-remote false
       az functionapp config appsettings set --resource-group ${var.resource_group_name} \
-      --name ${azurerm_function_app.pdi_infrastructure.name} \
-      --settings WEBSITE_RUN_FROM_PACKAGE="1"
+      --name ${azurerm_function_app.infrastructure.name} \
+      --settings WEBSITE_RUN_FROM_PACKAGE="1" --query '[].[name]'
     EOF
 }
 
 data "archive_file" "devops_function_app" {
   type        = "zip"
   source_dir  = local.devops_function_path
-  output_path = "devops-function-app.zip"
+  output_path = "function-app-devops.zip"
 
   excludes = [
     ".venv",
@@ -34,7 +34,7 @@ resource "null_resource" "devops_function_app_publish" {
   }
   depends_on = [
     local.devops_publish_command,
-    azurerm_function_app.pdi_infrastructure
+    azurerm_function_app.infrastructure
   ]
   triggers = {
     input_json           = filemd5(data.archive_file.devops_function_app.output_path)
