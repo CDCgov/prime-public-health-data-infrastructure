@@ -11,12 +11,23 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         creds = DefaultAzureCredential()
 
         storage_account=os.getenv('DATA_STORAGE_ACCOUNT')
-        container_service_client = ContainerClient.from_container_url(container_url=f"https://{storage_account}.blob.core.windows.net/{container}", credential=creds)
-        properties = list(container_service_client.list_blobs(maxresults=50))
+        container_service_client = ContainerClient.from_container_url(
+            container_url=f"https://{storage_account}.blob.core.windows.net/{container}", credential=creds
+        )
+        
+        try:
+            # Read root of container to validate access
+            list(container_service_client.walk_blobs(delimiter='/'))
+            access=1
+        except:
+            access=0
 
-        return func.HttpResponse(f"{storage_account} : {properties}")
+        return func.HttpResponse(
+            body=f"{{\"access\":{access}}}",
+            status_code=200
+        )
     else:
         return func.HttpResponse(
-            "Please pass a container name on the query string",
+            body="{\"error\":\"Please pass a container name on the query string\"}",
             status_code=400
         )
