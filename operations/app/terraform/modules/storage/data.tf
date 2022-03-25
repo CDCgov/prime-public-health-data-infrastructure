@@ -9,6 +9,7 @@ data "azuread_service_principal" "pitest" {
 }
 
 # storage account data containers and permissions
+# see docs/security/data-access.md for additional notes
 locals {
   data_containers = ["bronze", "silver", "gold"]
   data_ace_access = [
