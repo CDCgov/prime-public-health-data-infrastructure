@@ -49,19 +49,30 @@ locals {
       }
     ]
   ]))
-  silver_root_dirs = []
-  gold_root_dirs   = []
-}
-
-# storage account function app containers and permissions
-locals {
-  webjob_containers = ["azure-webjobs-hosts", "azure-webjobs-secrets"]
-  webjob_ace_access = [
-    { permissions = "---", id = null, type = "other", scope = "access" },
-    { permissions = "r-x", id = null, type = "group", scope = "access" },
-    { permissions = "rwx", id = null, type = "user", scope = "access" },
-    { permissions = "rwx", id = null, type = "mask", scope = "access" },
-    { permissions = "rwx", id = var.function_app_id, type = "user", scope = "access" },
-    { permissions = "rwx", id = var.function_infrastructure_app_id, type = "user", scope = "access" }
+  silver_root_dirs = ["temp"]
+  silver_sub_dirs = [
+    ""
   ]
+  # Nested loop over both lists, and flatten the result.
+  silver_mapping = distinct(flatten([
+    for silver_root_dir in local.silver_root_dirs : [
+      for silver_sub_dir in local.silver_sub_dirs : {
+        silver_sub_dir  = silver_sub_dir
+        silver_root_dir = silver_root_dir
+      }
+    ]
+  ]))
+  gold_root_dirs   = ["temp"]
+  gold_sub_dirs = [
+    ""
+  ]
+  # Nested loop over both lists, and flatten the result.
+  gold_mapping = distinct(flatten([
+    for gold_root_dir in local.gold_root_dirs : [
+      for gold_sub_dir in local.gold_sub_dirs : {
+        gold_sub_dir  = gold_sub_dir
+        gold_root_dir = gold_root_dir
+      }
+    ]
+  ]))
 }

@@ -113,6 +113,7 @@ module "function_app" {
   sa_data_name                = module.storage.sa_data_name
   terraform_caller_ip_address = var.terraform_caller_ip_address
   use_cdc_managed_vnet        = var.use_cdc_managed_vnet
+  sa_functionapps             = module.storage.sa_functionapps
 }
 
 module "data_factory" {

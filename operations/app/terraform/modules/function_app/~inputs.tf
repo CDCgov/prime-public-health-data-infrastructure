@@ -54,3 +54,5 @@ variable "use_cdc_managed_vnet" {
   type        = bool
   description = "If the environment should be deployed to the CDC managed VNET"
 }
+
+variable "sa_functionapps" {}

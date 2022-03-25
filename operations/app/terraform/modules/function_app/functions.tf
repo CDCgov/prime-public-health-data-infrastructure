@@ -2,10 +2,14 @@
 
 locals {
   devops_function_path   = "../../../../../src/FunctionApps/DevOps"
+  # Deploy zip and re-add WEBSITE_RUN_FROM_PACKAGE
   devops_publish_command = <<EOF
       az functionapp deployment source config-zip --resource-group ${var.resource_group_name} \
       --name ${azurerm_function_app.pdi_infrastructure.name} --src ${data.archive_file.devops_function_app.output_path} \
       --build-remote false
+      az functionapp config appsettings set --resource-group ${var.resource_group_name} \
+      --name ${azurerm_function_app.pdi_infrastructure.name} \
+      --settings WEBSITE_RUN_FROM_PACKAGE="1"
     EOF
 }
 
@@ -17,7 +21,10 @@ data "archive_file" "devops_function_app" {
   excludes = [
     ".venv",
     ".vscode",
-    "local.settings.json"
+    "local.settings.json",
+    "getting_started.md",
+    "README.md",
+    ".gitignore"
   ]
 }
 

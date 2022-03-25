@@ -34,7 +34,6 @@ resource "azurerm_storage_account" "pdi_data" {
     prevent_destroy = true
     ignore_changes = [
       tags,
-      shared_access_key_enabled,
       network_rules[0].ip_rules
     ]
   }
@@ -75,28 +74,46 @@ module "storageaccount_private_endpoint" {
   depends_on = [azurerm_storage_account.pdi_data]
 }
 
-# Point-in-time restore, soft delete, versioning, and change feed were
-# enabled in the portal as terraform does not currently support this.
-# At some point, this should be moved into an azurerm_template_deployment
-# resource.
-# These settings can be configured under the "Data protection" blade
-# for Blob service
+resource "azurerm_storage_account" "function_apps" {
+  resource_group_name       = var.resource_group_name
+  name                      = "${var.resource_prefix}functionapps"
+  location                  = var.location
+  account_kind              = "StorageV2"
+  account_tier              = "Standard"
+  account_replication_type  = "GRS"
+  min_tls_version           = "TLS1_2"
+  allow_blob_public_access  = false
+  enable_https_traffic_only = true
 
-# Grant the storage account Key Vault access, to access encryption keys
-# resource "azurerm_key_vault_access_policy" "storage_policy" {
-#   key_vault_id = var.application_key_vault_id
-#   tenant_id    = azurerm_storage_account.pdi_data.identity.0.tenant_id
-#   object_id    = azurerm_storage_account.pdi_data.identity.0.principal_id
 
-#   key_permissions = ["Get", "UnwrapKey", "WrapKey"]
-# }
+  network_rules {
+    default_action = "Deny"
+    bypass         = ["AzureServices"]
 
-# resource "azurerm_storage_account_customer_managed_key" "storage_key" {
-#   count              = var.rsa_key_4096 != null && var.rsa_key_4096 != "" ? 1 : 0
-#   key_name           = var.rsa_key_4096
-#   key_vault_id       = var.application_key_vault_id
-#   key_version        = null // Null allows automatic key rotation
-#   storage_account_id = azurerm_storage_account.pdi_data.id
+    virtual_network_subnet_ids = var.app_subnet_ids
+  }
 
-#   depends_on = [azurerm_key_vault_access_policy.storage_policy]
-# }
+  blob_properties {
+    change_feed_enabled = false
+    versioning_enabled  = false
+  }
+
+  # Required for customer-managed encryption
+  identity {
+    type = "SystemAssigned"
+  }
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes = [
+      tags,
+      shared_access_key_enabled,
+      network_rules[0].ip_rules
+    ]
+  }
+
+  tags = {
+    environment = var.environment
+    managed-by  = "terraform"
+  }
+}
