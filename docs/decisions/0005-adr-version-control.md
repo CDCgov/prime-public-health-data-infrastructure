@@ -8,7 +8,7 @@ Proposed
 
 ## Context and Problem Statement
 
-As this project moves forward, more people will join the team and new information/insights will be identified, both of which will lead to changes in decisions the team has made and recorded in an ADR. As a result, these new decisions will need to be recorded and prior decisions will need to be deprecated. Readers of the codebase should be able to understand when and why a decision changed and what the latest thought process is.
+As this project moves forward, more people will join the team and new information/insights will be identified, both of which will lead to changes in decisions the team has made and recorded in an ADR previously. As a result, these new decisions will need to be recorded and prior decisions will need to be deprecated. Readers of the codebase should be able to understand when and why a decision changed and what the latest thought process is.
 
 ## Decision Drivers
 
@@ -21,4 +21,4 @@ An alternative approach would be to treat the ADR as a mutable document, with ea
 
 ## Decision Outcome
 
-When a previous ADR becomes outdated and a new decision supersedes it, a new ADR is created the describes all of the pertinent information related to that decision, and the ADR that is being superseded is updated to reflect which ADR supersedes it. Any Pull Request that implements an ADR that supersedes another must include both the changes for the new ADR, as well as the changes to the superseded ADR.
+When a previous ADR becomes outdated and a new decision supersedes it, a new ADR is created that describes all of the pertinent information related to that decision, and the ADR that is being superseded is updated to reflect which ADR supersedes it. This is done by changing the `Status` to `Deprecated` and the text `Amended by ADR #<x>`, where `<x>` is the number of the ADR being added. Any Pull Request that implements an ADR that supersedes another must include both the changes for the new ADR, as well as the changes to the superseded ADR.
