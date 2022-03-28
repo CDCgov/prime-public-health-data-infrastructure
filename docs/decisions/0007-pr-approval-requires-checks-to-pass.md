@@ -18,7 +18,7 @@ One of the conditions that must be met before a Pull Request can be merged into 
 
 ## Considered Options
 
-No other options were considered.
+We could simply require that all status checks pass before allowing merges, a solution that has been submitted as [ADR #8](https://github.com/CDCgov/prime-public-health-data-infrastructure/blob/main/docs/decisions/0008-merging-prs-requires-checks-to-pass.md). This would nullify the need for this ADR as the risk of merging a PR with unsuccessful status checks would no longer exist.
 
 ## Decision Outcome
 
