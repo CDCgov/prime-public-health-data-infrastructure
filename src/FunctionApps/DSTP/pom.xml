@@ -60,14 +60,9 @@
             <version>${functions.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.azure.identity</groupId>
+            <groupId>com.azure</groupId>
             <artifactId>azure-identity</artifactId>
             <version>1.4.6</version>
-        </dependency>
-        <dependency>
-            <groupId>com.azure.core.credential</groupId>
-            <artifactId>azure-core</artifactId>
-            <version>1.26.0</version>
         </dependency>
         <!-- Kotlin -->
         <dependency>
