@@ -1,4 +1,4 @@
-# 8. Pull Request Approvals Require All Checks to be Passing
+# 8. Merging Pull Requests Requires All Checks to be Passing
 
 Date: 2022-03-27
 
