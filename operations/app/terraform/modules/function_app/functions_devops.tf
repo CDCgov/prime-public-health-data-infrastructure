@@ -5,10 +5,10 @@ locals {
   # Deploy zip and re-add WEBSITE_RUN_FROM_PACKAGE
   devops_publish_command = <<EOF
       az functionapp deployment source config-zip --resource-group ${var.resource_group_name} \
-      --name ${azurerm_function_app.infrastructure.name} --src ${data.archive_file.devops_function_app.output_path} \
+      --name ${module.pdi_function_app["infra"].submodule_function_app.name} --src ${data.archive_file.devops_function_app.output_path} \
       --build-remote false
       az functionapp config appsettings set --resource-group ${var.resource_group_name} \
-      --name ${azurerm_function_app.infrastructure.name} \
+      --name ${module.pdi_function_app["infra"].submodule_function_app.name} \
       --settings WEBSITE_RUN_FROM_PACKAGE="1" --query '[].[name]'
     EOF
 }
@@ -34,7 +34,7 @@ resource "null_resource" "devops_function_app_publish" {
   }
   depends_on = [
     local.devops_publish_command,
-    azurerm_function_app.infrastructure
+    module.pdi_function_app["infra"].submodule_function_app
   ]
   triggers = {
     input_json           = filemd5(data.archive_file.devops_function_app.output_path)
