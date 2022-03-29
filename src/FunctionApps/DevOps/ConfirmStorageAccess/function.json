@@ -1,5 +1,5 @@
 {
-  "scriptFile": "__init__.py",
+  "scriptFile": "confirm_storage_access.py",
   "bindings": [
     {
       "authLevel": "function",

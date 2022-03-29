@@ -1,6 +1,7 @@
 import socket
 import azure.functions as func
 
+
 def main(req: func.HttpRequest) -> func.HttpResponse:
 
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
