@@ -12,8 +12,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         creds = DefaultAzureCredential()
 
         storage_account = os.getenv("DATA_STORAGE_ACCOUNT")
+        storage_url = (f"https://{storage_account}.blob.core.windows.net",)
         container_service_client = ContainerClient.from_container_url(
-            container_url=f"https://{storage_account}.blob.core.windows.net/{container}",
+            container_url=f"{storage_url}/{container}",
             credential=creds,
         )
 
@@ -21,7 +22,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             # Read root of container to validate access
             list(container_service_client.walk_blobs(delimiter="/"))
             access = 1
-        except:
+        except Exception:
             access = 0
 
         return func.HttpResponse(

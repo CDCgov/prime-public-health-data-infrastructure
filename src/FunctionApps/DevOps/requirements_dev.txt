@@ -5,3 +5,4 @@
 mypy
 pytest
 black
+flake8
