@@ -11,9 +11,6 @@ resource "azurerm_function_app" "pdi" {
   storage_account_access_key = var.sa_functionapps.primary_access_key
 
   app_settings = {
-    # Use the CDC DNS for everything; they have mappings for all our internal
-    # resources, so if we add a new resource we'll have to contact them (see
-    # prime-router/docs/dns.md)
     WEBSITE_DNS_SERVER = "168.63.129.16"
 
     # App Insights
