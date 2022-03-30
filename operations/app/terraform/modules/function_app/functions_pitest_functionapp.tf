@@ -5,10 +5,10 @@ locals {
   # Deploy zip and re-add WEBSITE_RUN_FROM_PACKAGE
   PITest_FunctionApp_publish_command = <<EOF
       az functionapp deployment source config-zip --resource-group ${var.resource_group_name} \
-      --name ${azurerm_function_app.pdi.name} --src ${data.archive_file.PITest_FunctionApp_function_app.output_path} \
+      --name ${module.pdi_function_app["default"].submodule_function_app.name} --src ${data.archive_file.PITest_FunctionApp_function_app.output_path} \
       --build-remote false
       az functionapp config appsettings set --resource-group ${var.resource_group_name} \
-      --name ${azurerm_function_app.pdi.name} \
+      --name ${module.pdi_function_app["default"].submodule_function_app.name} \
       --settings WEBSITE_RUN_FROM_PACKAGE="1" --query '[].[name]'
     EOF
 }
@@ -34,7 +34,7 @@ resource "null_resource" "PITest_FunctionApp_function_app_publish" {
   }
   depends_on = [
     local.PITest_FunctionApp_publish_command,
-    azurerm_function_app.pdi
+    module.pdi_function_app["default"].submodule_function_app
   ]
   triggers = {
     input_json           = filemd5(data.archive_file.PITest_FunctionApp_function_app.output_path)

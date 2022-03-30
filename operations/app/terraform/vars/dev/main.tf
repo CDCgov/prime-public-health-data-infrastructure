@@ -145,7 +145,7 @@ module "log_analytics_workspace" {
   resource_group_name            = var.resource_group_name
   location                       = var.location
   resource_prefix                = var.resource_prefix
-  pdi_function_app_id            = module.function_app.pdi_function_app.id
+  pdi_function_app_id            = module.function_app.pdi_function_app_id
   infrastructure_function_app_id = module.function_app.infrastructure_function_app_id
   java_function_app_id           = module.function_app.java_function_app_id
   python_function_app_id         = module.function_app.python_function_app_id

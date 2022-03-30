@@ -1,5 +1,6 @@
 locals {
   function_apps = {
+    default : { runtime = "python" },
     python : { runtime = "python" },
     java : { runtime = "java" },
     infra : { runtime = "python" },
@@ -12,7 +13,7 @@ module "pdi_function_app" {
   source   = "../common/function_app"
 
   primary = {
-    name                       = "${var.resource_prefix}-${each.key}-functionapp"
+    name                       = replace("${var.resource_prefix}-${each.key}-functionapp", "-default-", "-")
     location                   = var.location
     resource_group_name        = var.resource_group_name
     app_service_plan_id        = var.app_service_plan

@@ -1,9 +1,9 @@
-output "pdi_function_app" {
-  value = azurerm_function_app.pdi
+output "pdi_function_app_id" {
+  value = module.pdi_function_app["default"].submodule_function_app.id
 }
 
 output "pdi_function_app_uuid" {
-  value = azurerm_function_app.pdi.identity[0].principal_id
+  value = module.pdi_function_app["default"].submodule_function_app.identity[0].principal_id
 }
 
 output "infrastructure_function_app_id" {
