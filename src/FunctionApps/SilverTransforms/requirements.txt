@@ -6,3 +6,5 @@ smartystreets_python_sdk
 pymongo
 
 phdi_transforms @ git+https://github.com/CDCgov/prime-public-health-data-infrastructure@main#subdirectory=src/lib/phdi-transforms
+
+pandas
