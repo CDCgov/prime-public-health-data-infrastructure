@@ -7,7 +7,6 @@ locals {
   }
 }
 
-
 module "pdi_function_app" {
   for_each = local.function_apps
   source   = "../common/function_app"
