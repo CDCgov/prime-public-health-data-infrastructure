@@ -74,6 +74,25 @@ def merge_duplicates(
     return df2
 
 
+def get_patient_col(resource: pd.DataFrame) -> str:
+    '''
+    Given a dataframe of a particular type of resource, determine the
+    name of the column that holds a reference to the patient that
+    the resource relates to. Note some resource types do not reference
+    a patient at all; these are returned as blank strings.
+    '''
+    resource_type = resource['resourceType'][0]
+    if resource_type == 'Organization' or resource_type == 'Practitioner':
+        return ''
+    if resource_type == 'ExplanationOfBenefit':
+        return ['patient', 'subject']
+    if resource_type == 'Observation' or resource_type == 'Condition' \
+        or resource_type == 'DiagnosticReport' or resource_type == 'Encounter' \
+            or resource_type == 'MedicationRequest' or resource_type == 'Procedure':
+        return 'subject'
+    return 'patient'
+
+
 def replace_id(patient_ref: dict, dupes: dict) -> str:
     '''
     Given a single entry in a reference column for a non-patient
