@@ -20,20 +20,20 @@ class ConvertToFHIR {
             name = "file",
             dataType = "binary",
             path = "bronze/decrypted/{name}",
-            connection="LOCALAzureWebJobsStorage"
+            connection="AzureWebJobsStorage"
         ) content: ByteArray,
         @BindingName("name") filename: String,
         @BlobOutput(
             name="validTarget",
             dataType = "string",
             path="bronze/valid-messages/{name}.fhir",
-            connection="LOCALAzureWebJobsStorage"
+            connection="AzureWebJobsStorage"
         ) validContent: OutputBinding<String>,
         @BlobOutput(
             name="invalidTarget",
             dataType = "string",
             path="bronze/invalid-messages/{name}.txt",
-            connection="LOCALAzureWebJobsStorage"
+            connection="AzureWebJobsStorage"
         ) invalidContent: OutputBinding<String>,
         context: ExecutionContext
 	) {
