@@ -20,20 +20,20 @@ class ConvertToFHIR {
             name = "file",
             dataType = "binary",
             path = "bronze/decrypted/{name}",
-            connection="AzureWebJobsStorage"
+            connection="LOCALAzureWebJobsStorage"
         ) content: ByteArray,
         @BindingName("name") filename: String,
         @BlobOutput(
             name="validTarget",
             dataType = "string",
             path="bronze/valid-messages/{name}.fhir",
-            connection="AzureWebJobsStorage"
+            connection="LOCALAzureWebJobsStorage"
         ) validContent: OutputBinding<String>,
         @BlobOutput(
             name="invalidTarget",
             dataType = "string",
             path="bronze/invalid-messages/{name}.txt",
-            connection="AzureWebJobsStorage"
+            connection="LOCALAzureWebJobsStorage"
         ) invalidContent: OutputBinding<String>,
         context: ExecutionContext
 	) {
@@ -94,12 +94,14 @@ class ConvertToFHIR {
                         accessToken
                     )
                     if (isValidFHIRMessage(json)) {
-                        validMessages.append("$json,\n")
+                        val json_single_line = json!!.replace("[\n\r]".toRegex(), "")
+                        validMessages.append("$json_single_line\n")
                     } else {
                         context.logger.info(
                             "The FHIR Server failed to convert a $messageCategory message."
                         )
-                        invalidMessages.append("$it,\n")
+                        val it_single_line = it.replace("[\n\r]".toRegex(), "")
+                        invalidMessages.append("$it_single_line\n")
                     }
                 } catch (e: Exception) {
                     val msg: String = """
@@ -112,16 +114,17 @@ class ConvertToFHIR {
                     //TODO: implement logic to handle retries
                 }
             } else {
-                invalidMessages.append("$it\n")
+                val it_single_line = it.replace("[\n\r]".toRegex(), "")
+                invalidMessages.append("$it_single_line\n")
             }
         }
 
         if (validMessages.isNotBlank()) {
-            validContent.setValue("[" + validMessages.toString().trim().trim(',') + "]")
+            validContent.setValue(validMessages.toString().trim())
         }
 
         if (invalidMessages.isNotBlank()) {
-            invalidContent.setValue("[" + invalidMessages.toString().trim().trim(',') + "]")
+            invalidContent.setValue(invalidMessages.toString().trim())
         }
     }
 }
