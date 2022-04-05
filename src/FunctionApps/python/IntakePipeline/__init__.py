@@ -7,6 +7,8 @@ from IntakePipeline.transform import transform_bundle
 from IntakePipeline.linkage import add_patient_identifier
 from IntakePipeline.fhir import read_fhir_bundles, upload_bundle_to_fhir_server
 
+from phdi_transforms.geo import get_smartystreets_client
+
 
 def get_required_config(varname: str) -> str:
     """Grab a required config val and throw an exception if it's not present"""
@@ -16,11 +18,16 @@ def get_required_config(varname: str) -> str:
 
 
 def run_pipeline():
+    geocoder = get_smartystreets_client(
+        get_required_config("SMARTYSTREETS_AUTH_ID"),
+        get_required_config("SMARTYSTREETS_AUTH_TOKEN"),
+    )
+
     for bundle in read_fhir_bundles(
         get_required_config("INTAKE_CONTAINER_URL"),
         get_required_config("INTAKE_CONTAINER_PREFIX"),
     ):
-        transform_bundle(bundle)
+        transform_bundle(geocoder, bundle)
         add_patient_identifier(bundle)
         upload_bundle_to_fhir_server(bundle)
 
