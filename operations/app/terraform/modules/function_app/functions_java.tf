@@ -5,10 +5,9 @@ locals {
 }
 
 locals {
-  # Deploy zip and re-add WEBSITE_RUN_FROM_PACKAGE
   java_publish_command = <<EOF
-      mvn clean package -f ${local.java_function_path}/pom.xml
-      mvn azure-functions:deploy -f ${local.java_function_path}/pom.xml
+      mvn clean package -Denv=${var.environment} -f ${local.java_function_path}/pom.xml
+      mvn azure-functions:deploy -Denv=${var.environment} -f ${local.java_function_path}/pom.xml
       az functionapp config appsettings set --resource-group ${var.resource_group_name} \
       --name ${module.pdi_function_app["java"].submodule_function_app.name} \
       --settings WEBSITE_RUN_FROM_PACKAGE="1" --query '[].[name]'

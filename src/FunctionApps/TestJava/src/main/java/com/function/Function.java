@@ -19,6 +19,25 @@ import java.util.Optional;
 import com.azure.storage.blob.*;
 import com.azure.storage.blob.models.*;
 
+/*
+Description:
+Poorly written function to validate storage account access via Managed identity.
+
+Common commands:
+mvn clean package -Denv=test
+mvn azure-functions:run -Denv=test
+mvn azure-functions:deploy -Denv=test
+
+Example local.settings.json
+{
+  "IsEncrypted": false,
+  "Values": {
+    "JAVA_HOME": "/usr",
+    "FUNCTIONS_WORKER_RUNTIME": "java",
+    "DATA_STORAGE_ACCOUNT": "pitestdatasa"
+  }
+}
+*/
 public class Function {
 
     @FunctionName("HttpExample")
@@ -30,10 +49,12 @@ public class Function {
 
         context.getLogger().info("Java HTTP trigger processed a request.");
 
+        final String account = System.getenv("DATA_STORAGE_ACCOUNT");
         final String query = request.getQueryParameters().get("container");
         final String containerName = request.getBody().orElse(query);
-        final String endpoint = "https://pidevdatasa.blob.core.windows.net";
+        final String endpoint = "https://" + account + ".blob.core.windows.net";
         final String container = containerName;
+
         String access;
 
         DefaultAzureCredential defaultCredential = new DefaultAzureCredentialBuilder().build();
@@ -45,7 +66,7 @@ public class Function {
 
         try {
 
-            PagedIterable<BlobItem> blobs = client.listBlobs();
+            PagedIterable<BlobItem> blobs = client.listBlobsByHierarchy("/");
             List target = new ArrayList<>();
             blobs.forEach(target::add);
 

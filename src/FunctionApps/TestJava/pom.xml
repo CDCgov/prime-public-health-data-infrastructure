@@ -14,7 +14,7 @@
         <java.version>11</java.version>
         <azure.functions.maven.plugin.version>1.16.0</azure.functions.maven.plugin.version>
         <azure.functions.java.library.version>1.4.2</azure.functions.java.library.version>
-        <functionAppName>pidev-java-functionapp</functionAppName>
+        <functionAppName>pi${env}-java-functionapp</functionAppName>
     </properties>
 
     <dependencies>
@@ -90,9 +90,9 @@
                     <!-- function app name -->
                     <appName>${functionAppName}</appName>
                     <!-- function app resource group -->
-                    <resourceGroup>prime-ingestion-dev</resourceGroup>
+                    <resourceGroup>prime-ingestion-${env}</resourceGroup>
                     <!-- function app service plan name -->
-                    <appServicePlanName>pidev-serviceplan</appServicePlanName>
+                    <appServicePlanName>pi${env}-serviceplan</appServicePlanName>
                     <!-- function app region-->
                     <!-- refers https://github.com/microsoft/azure-maven-plugins/wiki/Azure-Functions:-Configuration-Details#supported-regions for all valid values -->
                     <region>eastus</region>
