@@ -1,14 +1,24 @@
 locals {
   default = {
-    "function_infrastructure_app" = {
-      id    = var.function_infrastructure_app_id
-      name  = "function_infrastructure_app"
-      diags = data.azurerm_monitor_diagnostic_categories.function_infrastructure_app
+    "infrastructure_function_app" = {
+      id    = var.infrastructure_function_app_id
+      name  = "infrastructure_function_app"
+      diags = data.azurerm_monitor_diagnostic_categories.infrastructure_function_app
     },
-    "function_app" = {
-      id    = var.function_app_id
-      name  = "function_app"
-      diags = data.azurerm_monitor_diagnostic_categories.function_app
+    "pdi_function_app" = {
+      id    = var.pdi_function_app_id
+      name  = "pdi_function_app"
+      diags = data.azurerm_monitor_diagnostic_categories.pdi_function_app
+    },
+    "java_function_app" = {
+      id    = var.java_function_app_id
+      name  = "java_function_app"
+      diags = data.azurerm_monitor_diagnostic_categories.java_function_app
+    },
+    "python_function_app" = {
+      id    = var.python_function_app_id
+      name  = "python_function_app"
+      diags = data.azurerm_monitor_diagnostic_categories.python_function_app
     },
     "app_service_plan" = {
       id    = var.app_service_plan_id
@@ -38,12 +48,20 @@ locals {
   }
 }
 
-data "azurerm_monitor_diagnostic_categories" "function_infrastructure_app" {
-  resource_id = var.function_infrastructure_app_id
+data "azurerm_monitor_diagnostic_categories" "infrastructure_function_app" {
+  resource_id = var.infrastructure_function_app_id
 }
 
-data "azurerm_monitor_diagnostic_categories" "function_app" {
-  resource_id = var.function_app_id
+data "azurerm_monitor_diagnostic_categories" "pdi_function_app" {
+  resource_id = var.pdi_function_app_id
+}
+
+data "azurerm_monitor_diagnostic_categories" "java_function_app" {
+  resource_id = var.java_function_app_id
+}
+
+data "azurerm_monitor_diagnostic_categories" "python_function_app" {
+  resource_id = var.python_function_app_id
 }
 
 data "azurerm_monitor_diagnostic_categories" "app_service_plan" {

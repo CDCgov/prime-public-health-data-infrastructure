@@ -98,11 +98,11 @@ variable "dns_vars" {
 ##################
 
 variable "app_tier" {
-  default = "PremiumV2"
+  default = "PremiumV3"
 }
 
 variable "app_size" {
-  default = "P3v2"
+  default = "P1v3"
 }
 
 ##################
@@ -116,4 +116,14 @@ variable "use_cdc_managed_vnet" {
 variable "terraform_caller_ip_address" {
   type    = list(string)
   default = ["162.224.209.174/32", "73.173.186.141/32", "24.163.118.70/32"]
+}
+
+variable "data_access_group" {
+  type    = string
+  default = "CT-PRIMEIngestion-AZ-Owners"
+}
+
+variable "data_access_sp" {
+  type    = string
+  default = "pitest-service-principal"
 }
