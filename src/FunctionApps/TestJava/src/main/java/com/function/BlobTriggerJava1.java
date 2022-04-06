@@ -40,6 +40,4 @@ public class BlobTriggerJava1 {
     ) {
         context.getLogger().info("Java Blob trigger function processed a blob. Name: " + name + "\n  Size: " + content.length + " Bytes");
     }
-
-    DefaultAzureCredential defaultCredential = new DefaultAzureCredentialBuilder().build();
 }
