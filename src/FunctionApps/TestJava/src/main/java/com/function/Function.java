@@ -49,7 +49,7 @@ public class Function {
 
         context.getLogger().info("Java HTTP trigger processed a request.");
 
-        final String account = System.getenv("DATA_STORAGE_ACCOUNT");
+        final String account = System.getenv("AzureWebJobsStorage__accountName");
         final String query = request.getQueryParameters().get("container");
         final String containerName = request.getBody().orElse(query);
         final String endpoint = "https://" + account + ".blob.core.windows.net";
