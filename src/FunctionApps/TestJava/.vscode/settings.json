@@ -1,6 +1,6 @@
 {
   "azureFunctions.javaBuildTool": "maven",
-  "azureFunctions.deploySubpath": "target/azure-functions/TestJava-1649178468347",
+  "azureFunctions.deploySubpath": "target/azure-functions/HttpExample",
   "azureFunctions.projectLanguage": "Java",
   "azureFunctions.projectRuntime": "~3",
   "azureFunctions.preDeployTask": "package (functions)"
