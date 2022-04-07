@@ -50,11 +50,7 @@ class TestFhir(unittest.TestCase):
 
         url = os.environ.get("FHIR_URL")
 
-<<<<<<< HEAD:src/FunctionApps/python/tests/test_fhir.py
         fhir.process_fhir_resource(fhir_json_req)
-=======
-        main.process_fhir_resource(fhir_json_req)
->>>>>>> 468e465 (Make import function json (dict) centric):src/FunctionApps/BulkImport/tests/test_import_function.py
 
         mock_put.assert_called_with(
             f"{url}/{fhir_json_req['resourceType']}/{fhir_json_req['id']}",
@@ -105,11 +101,7 @@ class TestFhir(unittest.TestCase):
         fhir_resp.json.return_value = fhir_json_req
         mock_post.side_effect = [token_resp, fhir_resp]
 
-<<<<<<< HEAD:src/FunctionApps/python/tests/test_fhir.py
         fhir.process_fhir_resource(fhir_json_orig)
-=======
-        main.process_fhir_resource(fhir_json_orig)
->>>>>>> 468e465 (Make import function json (dict) centric):src/FunctionApps/BulkImport/tests/test_import_function.py
 
         mock_post.assert_called_with(
             f"{url}",
