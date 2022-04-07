@@ -105,7 +105,7 @@ class TestImport(unittest.TestCase):
                     },
                     "request": {
                         "method": "PUT",
-                        "url": f"{url}/Patient/test-id1"
+                        "url": f"Patient/test-id1"
                     }
                 },
                 {
@@ -115,7 +115,7 @@ class TestImport(unittest.TestCase):
                     },
                     "request": {
                         "method": "PUT",
-                        "url": f"{url}/Patient/test-id2"
+                        "url": f"Patient/test-id2"
                     }
                 }
             ]

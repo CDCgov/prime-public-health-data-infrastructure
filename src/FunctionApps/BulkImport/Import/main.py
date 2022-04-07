@@ -14,7 +14,9 @@ unzipped_directory = "./FhirResources"
 
 
 def main(file):
-    """"""
+    """
+
+    """
     # Default fhir_location to be the input file
     fhir_location = file
 
@@ -27,11 +29,24 @@ def main(file):
 
 
 def _unzip_input_file(zip_filepath: str) -> str:
+    """Unzip a file to the unzipped_directory
+    :param str zip_filepath: The filepath referencing a zip file.
+    """
     with zipfile.ZipFile(zip_filepath, "r") as zip_ref:
         zip_ref.extractall(unzipped_directory)
         return unzipped_directory
 
 def process_fhir(path: str):
+    """Process FHIR data contained in the specified file path.
+
+    If the the path points to a directory, all files will be read from that directory recursively.
+    Otherwise, a normal file path may be read individually.
+
+    The file(s) found may contain ndjson (file path should end with .ndjson).
+    They may also contain standard JSON input (one object per file).  
+    Whether ndjson or standard JSON, the resource types supported are described in :py:func:`import_to_fhir` documentation.
+    :param str path: The path to the file containing FHIR data.
+    """
     path = os.fsencode(path)
     if os.isdir(path):
         for file in os.listdir(path):
@@ -44,11 +59,17 @@ def process_fhir(path: str):
         process_fhir_resource(path)
         
 def process_fhir_ndjson(filename: str):
+    """Process a file containing FHIR resource(s) enclosed by ndjson
+    :param str filename: FHIR resource(s) enclosed by ndjson
+    """
     with open(filename) as fp:
         for line in fp:
             import_to_fhir(line)
 
 def process_fhir_resource(fhir_json: dict = {}, fhir_string: str = "", fhir_filepath: str = ""):
+    """Process a file containing FHIR resource(s) enclosed by ndjson
+    :param str filename: FHIR resource(s) enclosed by ndjson
+    """
     if len(fhir_json) > 0:
         pass
     elif os.path.exists(fhir_filepath):
@@ -61,6 +82,14 @@ def process_fhir_resource(fhir_json: dict = {}, fhir_string: str = "", fhir_file
     
 
 def import_to_fhir(fhir_json: dict, method: str = "PUT"):
+    """Import a FHIR resource to the FHIR server.
+    The submissions may Bundles or individual FHIR resources.  
+    
+    See :py:func:`_ensure_bundle_batch` for details about Bundle conversion and handling.
+
+    :param dict fhir_json: FHIR resource in json format.
+    :param str method: HTTP method to use (currently PUT or POST supported)
+    """
     try:
         token = get_access_token()
     except Exception:
@@ -80,7 +109,7 @@ def import_to_fhir(fhir_json: dict, method: str = "PUT"):
         resource_type = fhir_json["resourceType"]
 
         if resource_type == "Bundle":
-            transaction_json = _ensure_bundle_transaction(fhir_json,method,fhir_url)
+            transaction_json = _ensure_bundle_batch(fhir_json,method)
             resp = requests.post(
                 fhir_url,
                 headers={
@@ -118,7 +147,20 @@ def import_to_fhir(fhir_json: dict, method: str = "PUT"):
         logging.exception("Request using method " + method + " failed for json: " + str(fhir_json))
         return 
 
-def _ensure_bundle_transaction(fhir_json : dict, method: str, fhir_url: str) -> dict:
+def _ensure_bundle_batch(fhir_json : dict, method: str) -> dict:
+    """Convert a FHIR Bundle of any type to a "batch" bundle.
+
+    The received bundle will be converted to a "batch" type.
+    A new "request" will be built for each resource in the Bundle with the following content:
+    { "method" = method (from param)
+      "url" = resource["resourceType"] (for post), resource["resourceType"]/resource["id"] (for put)}
+    }
+
+    :param dict fhir_json: FHIR Bundle
+    :param str method: PUT for update or POST for create.  
+    PUT can also create, and will use the submitted id
+    POST will always create a new resource and assign a new id
+    """
     if fhir_json["resourceType"] != "Bundle":
         raise ValueError("_ensure_bundle_transaction called on non-Bundle resource: " + fhir_json["resourceType"])
 
@@ -129,7 +171,7 @@ def _ensure_bundle_transaction(fhir_json : dict, method: str, fhir_url: str) -> 
     new_bundle["type"] = "transaction"
 
     for entry in new_bundle["entry"]:
-        url = fhir_url + "/" + entry["resource"]["resourceType"]
+        url = entry["resource"]["resourceType"]
 
         # PUT requires the URL to contain the resource ID, POST does not.
         if method == "PUT":
