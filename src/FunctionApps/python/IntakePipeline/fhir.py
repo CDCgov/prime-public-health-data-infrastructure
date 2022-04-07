@@ -77,7 +77,8 @@ def import_to_fhir(fhir_json: dict, method: str = "PUT"):
     """Import a FHIR resource to the FHIR server.
     The submissions may Bundles or individual FHIR resources.
 
-    See :py:func:`_ensure_bundle_batch` for details about Bundle conversion and handling.
+    See :py:func:`_ensure_bundle_batch` for details about Bundle
+    conversion and handling.
 
     :param dict fhir_json: FHIR resource in json format.
     :param str method: HTTP method to use (currently PUT or POST supported)
@@ -87,7 +88,8 @@ def import_to_fhir(fhir_json: dict, method: str = "PUT"):
     except Exception:
         logging.exception("Failed to get access token")
         raise requests.exceptions.HTTPError(
-            "Authorization error occurred while processing information into FHIR server."
+            "Authorization error occurred while processing information into \
+            FHIR server."
         )
     retry_strategy = Retry(
         total=3,
@@ -146,9 +148,11 @@ def _ensure_bundle_batch(fhir_json: dict, method: str) -> dict:
     """Convert a FHIR Bundle of any type to a "batch" bundle.
 
     The received bundle will be converted to a "batch" type.
-    A new "request" will be built for each resource in the Bundle with the following content:
+    A new "request" will be built for each resource in the Bundle
+    with the following content:
     { "method" = method (from param)
-      "url" = resource["resourceType"] (for post), resource["resourceType"]/resource["id"] (for put)}
+      "url" = resource["resourceType"] (for post),
+              resource["resourceType"]/resource["id"] (for put)}
     }
 
     :param dict fhir_json: FHIR Bundle
