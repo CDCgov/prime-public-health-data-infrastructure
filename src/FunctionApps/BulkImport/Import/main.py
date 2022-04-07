@@ -5,8 +5,10 @@ import io
 
 import requests
 import json
+import copy
 from requests.adapters import HTTPAdapter
 from urllib3 import Retry
+
 
 unzipped_directory = "./FhirResources"
 
@@ -70,11 +72,11 @@ def import_to_fhir(json_string: str, method: str = "PUT"):
     fhir_url = os.environ.get("FHIR_URL", "")
     try:
         json_object = json.loads(json_string)
-        resource_id = json_object["resource_id"]
-        resource_type = json_object["resource_type"]
+        resource_id = json_object["id"]
+        resource_type = json_object["resourceType"]
 
         if resource_type == "Bundle":
-            transaction_json = _ensure_bundle_transaction(json_object,method,url)
+            transaction_json = _ensure_bundle_transaction(json_object,method,fhir_url)
             resp = requests.post(
                 fhir_url,
                 headers={
@@ -118,7 +120,7 @@ def _ensure_bundle_transaction(json_object : dict, method: str, fhir_url: str) -
     if method not in ("PUT","POST"):
         raise ValueError("_ensure_bundle_transaction only supports PUT and POST methods")
 
-    new_bundle = json_object.deepcopy()
+    new_bundle = copy.deepcopy(json_object)
     new_bundle["type"] = "transaction"
 
     for entry in new_bundle["entry"]:
