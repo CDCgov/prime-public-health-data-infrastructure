@@ -1,4 +1,5 @@
 # infra functions
+# publish: terraform apply -replace=module.function_app.null_resource.default_function_app_publish
 
 locals {
   infra_function_path = "../../../../../src/FunctionApps/DevOps"
@@ -6,10 +7,7 @@ locals {
   infra_publish_command = <<EOF
       az functionapp deployment source config-zip --resource-group ${var.resource_group_name} \
       --name ${module.pdi_function_app["infra"].submodule_function_app.name} --src ${data.archive_file.infra_function_app.output_path} \
-      --build-remote false
-      az functionapp config appsettings set --resource-group ${var.resource_group_name} \
-      --name ${module.pdi_function_app["infra"].submodule_function_app.name} \
-      --settings WEBSITE_RUN_FROM_PACKAGE="1" --query '[].[name]'
+      --build-remote false --timeout 120 --slot blue
     EOF
 }
 
@@ -29,6 +27,7 @@ data "archive_file" "infra_function_app" {
 }
 
 resource "null_resource" "infra_function_app_publish" {
+  count = var.environment == "dev" ? 1 : 0
   provisioner "local-exec" {
     command = local.infra_publish_command
   }
