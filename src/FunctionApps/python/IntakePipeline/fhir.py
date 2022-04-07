@@ -56,9 +56,13 @@ def upload_bundle_to_fhir_server(bundle: dict) -> None:
     process_fhir_resource(bundle)
 
 
+<<<<<<< HEAD
 def process_fhir_resource(
     fhir_json: dict = {}, fhir_string: str = "", fhir_filepath: str = ""
 ):
+=======
+def process_fhir_resource(fhir_json: dict = {}, fhir_string: str = "", fhir_filepath: str = ""):
+>>>>>>> a46258b (Upload to FHIR server)
     """Process a file containing FHIR resource(s) enclosed by ndjson
     :param str filename: FHIR resource(s) enclosed by ndjson
     """
@@ -71,6 +75,7 @@ def process_fhir_resource(
         fhir_json = json.loads(fhir_string)
 
     import_to_fhir(fhir_json)
+<<<<<<< HEAD
 
 
 def import_to_fhir(fhir_json: dict, method: str = "PUT"):
@@ -79,6 +84,15 @@ def import_to_fhir(fhir_json: dict, method: str = "PUT"):
 
     See :py:func:`_ensure_bundle_batch` for details about Bundle
     conversion and handling.
+=======
+    
+
+def import_to_fhir(fhir_json: dict, method: str = "PUT"):
+    """Import a FHIR resource to the FHIR server.
+    The submissions may Bundles or individual FHIR resources.  
+    
+    See :py:func:`_ensure_bundle_batch` for details about Bundle conversion and handling.
+>>>>>>> a46258b (Upload to FHIR server)
 
     :param dict fhir_json: FHIR resource in json format.
     :param str method: HTTP method to use (currently PUT or POST supported)
@@ -87,10 +101,14 @@ def import_to_fhir(fhir_json: dict, method: str = "PUT"):
         token = get_access_token()
     except Exception:
         logging.exception("Failed to get access token")
+<<<<<<< HEAD
         raise requests.exceptions.HTTPError(
             "Authorization error occurred while processing information into \
             FHIR server."
         )
+=======
+        raise requests.exceptions.HTTPError("Authorization error occurred while processing information into FHIR server.")
+>>>>>>> a46258b (Upload to FHIR server)
     retry_strategy = Retry(
         total=3,
         status_forcelist=[429, 500, 502, 503, 504],
@@ -105,8 +123,13 @@ def import_to_fhir(fhir_json: dict, method: str = "PUT"):
         resource_type = fhir_json["resourceType"]
 
         if resource_type == "Bundle":
+<<<<<<< HEAD
             transaction_json = _ensure_bundle_batch(fhir_json, method)
             requests.post(
+=======
+            transaction_json = _ensure_bundle_batch(fhir_json,method)
+            resp = requests.post(
+>>>>>>> a46258b (Upload to FHIR server)
                 fhir_url,
                 headers={
                     "Authorization": f"Bearer {token}",
@@ -115,8 +138,14 @@ def import_to_fhir(fhir_json: dict, method: str = "PUT"):
                 },
                 data=json.dumps(transaction_json),
             )
+<<<<<<< HEAD
         elif method == "POST":
             requests.post(
+=======
+            print(f"status={resp.status_code} message={resource_id}")
+        elif method == "POST":
+            resp = requests.post(
+>>>>>>> a46258b (Upload to FHIR server)
                 f"{fhir_url}/{resource_type}",
                 headers={
                     "Authorization": f"Bearer {token}",
@@ -125,15 +154,23 @@ def import_to_fhir(fhir_json: dict, method: str = "PUT"):
                 },
                 data=json.dumps(fhir_json),
             )
+<<<<<<< HEAD
         elif method == "PUT":
             resource_id = fhir_json["id"]
             requests.put(
+=======
+            print(f"status={resp.status_code} message={resource_id}")
+        elif method == "PUT":
+            resource_id = fhir_json["id"]
+            resp = requests.put(
+>>>>>>> a46258b (Upload to FHIR server)
                 f"{fhir_url}/{resource_type}/{resource_id}",
                 headers={
                     "Authorization": f"Bearer {token}",
                     "Accept": "application/fhir+json",
                     "Content-Type": "application/fhir+json",
                 },
+<<<<<<< HEAD
                 data=json.dumps(fhir_json),
             )
 
@@ -157,10 +194,31 @@ def _ensure_bundle_batch(fhir_json: dict, method: str) -> dict:
 
     :param dict fhir_json: FHIR Bundle
     :param str method: PUT for update or POST for create.
+=======
+                data=json.dumps(fhir_json)
+            )
+
+    except Exception:
+        logging.exception("Request using method " + method + " failed for json: " + str(fhir_json))
+        return 
+
+def _ensure_bundle_batch(fhir_json : dict, method: str) -> dict:
+    """Convert a FHIR Bundle of any type to a "batch" bundle.
+
+    The received bundle will be converted to a "batch" type.
+    A new "request" will be built for each resource in the Bundle with the following content:
+    { "method" = method (from param)
+      "url" = resource["resourceType"] (for post), resource["resourceType"]/resource["id"] (for put)}
+    }
+
+    :param dict fhir_json: FHIR Bundle
+    :param str method: PUT for update or POST for create.  
+>>>>>>> a46258b (Upload to FHIR server)
     PUT can also create, and will use the submitted id
     POST will always create a new resource and assign a new id
     """
     if fhir_json["resourceType"] != "Bundle":
+<<<<<<< HEAD
         raise ValueError(
             "_ensure_bundle_transaction called on non-Bundle resource: "
             + fhir_json["resourceType"]
@@ -170,6 +228,12 @@ def _ensure_bundle_batch(fhir_json: dict, method: str) -> dict:
         raise ValueError(
             "_ensure_bundle_transaction only supports PUT and POST methods"
         )
+=======
+        raise ValueError("_ensure_bundle_transaction called on non-Bundle resource: " + fhir_json["resourceType"])
+
+    if method not in ("PUT","POST"):
+        raise ValueError("_ensure_bundle_transaction only supports PUT and POST methods")
+>>>>>>> a46258b (Upload to FHIR server)
 
     new_bundle = copy.deepcopy(fhir_json)
     new_bundle["type"] = "transaction"
@@ -181,11 +245,19 @@ def _ensure_bundle_batch(fhir_json: dict, method: str) -> dict:
         if method == "PUT":
             url += "/" + entry["resource"]["id"]
 
+<<<<<<< HEAD
         entry["request"] = {"method": method, "url": url}
 
     return new_bundle
 
 
+=======
+        entry["request"] = { "method": method,
+                            "url": url}
+        
+    return new_bundle
+
+>>>>>>> a46258b (Upload to FHIR server)
 def get_access_token() -> str:
     """Get the access token based on creds in the environment"""
     tenant_id = os.environ.get("TENANT_ID")
