@@ -79,9 +79,8 @@ def geocode(row):
                     lat=lat,
                     lng=lng)
 
-    except Exception as e:
-        data = dict(lat=lat,
-                    lng=lng)
+    except Exception:
+        data = dict(lat=lat, lng=lng)
 
     return data
 
@@ -110,6 +109,7 @@ def write_points(points, filename='synthetic_locations.csv'):
         writer.writerow(['latitude', 'longitude'])
         for p in points:
             writer.writerow([p[0], p[1]])
+
 
 def generate_random_date(start_date, end_date):
     time_between_dates = end_date - start_date
