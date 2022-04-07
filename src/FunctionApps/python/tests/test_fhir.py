@@ -5,8 +5,6 @@ from IntakePipeline import fhir
 
 import json
 import os
-import shutil
-from pathlib import Path
 
 
 class TestFhir(unittest.TestCase):
@@ -90,11 +88,11 @@ class TestFhir(unittest.TestCase):
             "entry": [
                 {
                     "resource": {"resourceType": "Patient", "id": "test-id1"},
-                    "request": {"method": "PUT", "url": f"Patient/test-id1"},
+                    "request": {"method": "PUT", "url": "Patient/test-id1"},
                 },
                 {
                     "resource": {"resourceType": "Patient", "id": "test-id2"},
-                    "request": {"method": "PUT", "url": f"Patient/test-id2"},
+                    "request": {"method": "PUT", "url": "Patient/test-id2"},
                 },
             ],
         }

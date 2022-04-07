@@ -113,7 +113,6 @@ def import_to_fhir(fhir_json: dict, method: str = "PUT"):
                 },
                 data=json.dumps(transaction_json),
             )
-            print(f"status={resp.status_code} message={resource_id}")
         elif method == "POST":
             resp = requests.post(
                 f"{fhir_url}/{resource_type}",
@@ -124,7 +123,6 @@ def import_to_fhir(fhir_json: dict, method: str = "PUT"):
                 },
                 data=json.dumps(fhir_json),
             )
-            print(f"status={resp.status_code} message={resource_id}")
         elif method == "PUT":
             resource_id = fhir_json["id"]
             resp = requests.put(
