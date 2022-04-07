@@ -168,9 +168,9 @@ def create_dataframe(radius, number_of_points, center):
     })
 
     with ThreadPoolExecutor() as tpe:
-         data = list(
-             tqdm(tpe.map(geocode,
-                 df[['latitude', 'longitude']].itertuples()), total=len(df)))
+        data = list(
+            tqdm(tpe.map(geocode,
+                df[['latitude', 'longitude']].itertuples()), total=len(df)))
     data_df = pd.DataFrame.from_records(data)
 
     df['census_tract'] = data_df['state'] + data_df['county'] + data_df['tract']
@@ -233,7 +233,6 @@ def plot_time_series_metric(df, window, metric_label):
     ), fontsize=22)
     ax_lst.yaxis.set_major_formatter(mtick.PercentFormatter(1.0))
 
-
     plt.tight_layout(h_pad=6)
 
     return fig, ax_lst
@@ -274,7 +273,7 @@ def create_map(geography, shapefile_path, metric, df):
         right_on=geography,
     )
 
-    fig, ax = plt.subplots(figsize=(10,10))
+    fig, ax = plt.subplots(figsize=(10, 10))
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="5%", pad=0.1)
     fairfax_map.plot(
