@@ -90,7 +90,7 @@ def generate_point(center: Point, radius: int) -> Point:
     """
     This is from
 
-    https://stackoverflow.com/questions/31192451/generate-random-geo-coordinates-within-specific-radius-from-seed-point
+    https://stackoverflow.com/questions/31192451/
     """
     radius_in_kilometers = radius * 1e-3
     random_distance = random.random() * radius_in_kilometers
@@ -100,9 +100,12 @@ def generate_point(center: Point, radius: int) -> Point:
 
 def write_points(points, filename='synthetic_locations.csv'):
     """
-    Output a CSV so that you can upload to Google Maps to just check the synthetic points
+    Output a CSV so that you can upload to Google Maps
+
+    This is to just check the synthetic points
     """
-    with open(os.path.join(OUTPUTS_DIR, filename), 'w', encoding='UTF8', newline="") as f:
+    output_file = os.path.join(OUTPUTS_DIR, filename)
+    with open(output_file, 'w', encoding='UTF8', newline="") as f:
         writer = csv.writer(f)
         writer.writerow(['latitude', 'longitude'])
         for p in points:
@@ -126,7 +129,7 @@ def generate_covid_positive(row):
         return covid_positive[0]
 
 
-def create_dataframe(radius=20000, number_of_points=10000, center=FAIRFAX_COUNTY_CENTER):
+def create_dataframe(radius, number_of_points, center):
     start_date = dt.date(2021, 6, 1)
     end_date = dt.date(2022, 3, 31)
 
@@ -165,17 +168,22 @@ def create_dataframe(radius=20000, number_of_points=10000, center=FAIRFAX_COUNTY
     })
 
     with ThreadPoolExecutor() as tpe:
-         data = list(tqdm(tpe.map(geocode, df[['latitude', 'longitude']].itertuples()), total=len(df)))
+         data = list(
+             tqdm(tpe.map(geocode,
+                 df[['latitude', 'longitude']].itertuples()), total=len(df)))
     data_df = pd.DataFrame.from_records(data)
 
     df['census_tract'] = data_df['state'] + data_df['county'] + data_df['tract']
-    df['census_block_group'] = data_df['state'] + data_df['county'] + data_df['tract'] + data_df['block'].str[0]
+    df['census_block_group'] = data_df['state'] +\
+        data_df['county'] + data_df['tract'] + data_df['block'].str[0]
     df['census_block'] = data_df['geoid']
 
     is_fully_vax = random.choices([0, 1], weights=(0.4, 0.6), k=len(points))
     df['is_fully_vax'] = is_fully_vax
-    df['tested_covid_positive'] = df.apply(lambda row: generate_covid_positive(row), 1)
-    df['breakthrough_infection'] = df['is_fully_vax'] * df['tested_covid_positive']
+    df['tested_covid_positive'] = df.apply(
+        lambda row: generate_covid_positive(row), 1)
+    df['breakthrough_infection'] = df['is_fully_vax'] *\
+        df['tested_covid_positive']
 
     df['event_dt'] = pd.to_datetime(df['event_dt'])
 
