@@ -40,7 +40,6 @@ class TestImport(unittest.TestCase):
     @mock.patch.dict("os.environ", TEST_ENV)
     def test_fhir_resource_put(self, mock_post, mock_put):
         token_resp = mock.Mock()
-        #token_resp.ok = True
         token_resp.json.return_value = {"access_token": "some-access-token"}
         mock_post.return_value = token_resp
 
@@ -52,7 +51,7 @@ class TestImport(unittest.TestCase):
 
         url = os.environ.get("FHIR_URL")
 
-        main.process_fhir_resource(fhir_string = json.dumps(fhir_json_req))
+        main.process_fhir_resource(fhir_json_req)
 
         mock_put.assert_called_with(
             f"{url}/{fhir_json_req['resourceType']}/{fhir_json_req['id']}",
@@ -126,7 +125,7 @@ class TestImport(unittest.TestCase):
         fhir_resp.json.return_value = fhir_json_req
         mock_post.side_effect = [token_resp, fhir_resp]
 
-        main.process_fhir_resource(fhir_string = json.dumps(fhir_json_orig))
+        main.process_fhir_resource(fhir_json_orig)
 
         mock_post.assert_called_with(
             f"{url}",

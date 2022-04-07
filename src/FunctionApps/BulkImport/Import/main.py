@@ -14,6 +14,7 @@ unzipped_directory = "./FhirResources"
 
 
 def main(file):
+    """"""
     # Default fhir_location to be the input file
     fhir_location = file
 
@@ -47,14 +48,19 @@ def process_fhir_ndjson(filename: str):
         for line in fp:
             import_to_fhir(line)
 
-def process_fhir_resource(fhir_filepath: str = "", fhir_string: str = ""):
-    if os.path.exists(fhir_filepath):
+def process_fhir_resource(fhir_json: dict = {}, fhir_string: str = "", fhir_filepath: str = ""):
+    if len(fhir_json) > 0:
+        pass
+    elif os.path.exists(fhir_filepath):
         fhir_string = open(fhir_filepath).read()
+        fhir_json = json.loads(fhir_string)
+    else:
+        fhir_json = json.loads(fhir_string)
 
-    import_to_fhir(fhir_string)
+    import_to_fhir(fhir_json)
     
 
-def import_to_fhir(json_string: str, method: str = "PUT"):
+def import_to_fhir(fhir_json: dict, method: str = "PUT"):
     try:
         token = get_access_token()
     except Exception:
@@ -71,12 +77,10 @@ def import_to_fhir(json_string: str, method: str = "PUT"):
     http.mount("http://", adapter)
     fhir_url = os.environ.get("FHIR_URL", "")
     try:
-        json_object = json.loads(json_string)
-        resource_id = json_object["id"]
-        resource_type = json_object["resourceType"]
+        resource_type = fhir_json["resourceType"]
 
         if resource_type == "Bundle":
-            transaction_json = _ensure_bundle_transaction(json_object,method,fhir_url)
+            transaction_json = _ensure_bundle_transaction(fhir_json,method,fhir_url)
             resp = requests.post(
                 fhir_url,
                 headers={
@@ -95,10 +99,11 @@ def import_to_fhir(json_string: str, method: str = "PUT"):
                     "Accept": "application/fhir+json",
                     "Content-Type": "application/fhir+json",
                 },
-                data=json_string,
+                data=json.dumps(fhir_json),
             )
             print(f"status={resp.status_code} message={resource_id}")
         elif method == "PUT":
+            resource_id = fhir_json["id"]
             resp = requests.put(
                 f"{fhir_url}/{resource_type}/{resource_id}",
                 headers={
@@ -106,21 +111,21 @@ def import_to_fhir(json_string: str, method: str = "PUT"):
                     "Accept": "application/fhir+json",
                     "Content-Type": "application/fhir+json",
                 },
-                data=json_string
+                data=json.dumps(fhir_json)
             )
 
     except Exception:
-        logging.exception("Request using method " + method + " failed for json: " + json_string)
+        logging.exception("Request using method " + method + " failed for json: " + str(fhir_json))
         return 
 
-def _ensure_bundle_transaction(json_object : dict, method: str, fhir_url: str) -> dict:
-    if json_object["resourceType"] != "Bundle":
-        raise ValueError("_ensure_bundle_transaction called on non-Bundle resource: " + json_object["resourceType"])
+def _ensure_bundle_transaction(fhir_json : dict, method: str, fhir_url: str) -> dict:
+    if fhir_json["resourceType"] != "Bundle":
+        raise ValueError("_ensure_bundle_transaction called on non-Bundle resource: " + fhir_json["resourceType"])
 
     if method not in ("PUT","POST"):
         raise ValueError("_ensure_bundle_transaction only supports PUT and POST methods")
 
-    new_bundle = copy.deepcopy(json_object)
+    new_bundle = copy.deepcopy(fhir_json)
     new_bundle["type"] = "transaction"
 
     for entry in new_bundle["entry"]:
