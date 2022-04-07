@@ -8,6 +8,7 @@ import os
 import shutil
 from pathlib import Path
 
+
 class TestFhir(unittest.TestCase):
     TEST_ENV = {
         "TENANT_ID": "a-tenant-id",
@@ -63,7 +64,6 @@ class TestFhir(unittest.TestCase):
             data=json.dumps(fhir_json_req),
         )
 
-
     @mock.patch("requests.post")
     @mock.patch.dict("os.environ", TEST_ENV)
     def test_fhir_bundle_put(self, mock_post):
@@ -73,52 +73,30 @@ class TestFhir(unittest.TestCase):
         token_resp = mock.Mock()
         token_resp.json.return_value = {"access_token": "some-access-token"}
 
-        fhir_json_orig = { 
+        fhir_json_orig = {
             "resourceType": "Bundle",
             "type": "transaction",
             "id": "bundle-id",
             "entry": [
-                {
-                    "resource": {
-                        "resourceType": "Patient", 
-                        "id": "test-id1"
-                    }
-                },
-                {
-                    "resource": {
-                        "resourceType": "Patient", 
-                        "id": "test-id2"
-                    }
-                }
-            ]
+                {"resource": {"resourceType": "Patient", "id": "test-id1"}},
+                {"resource": {"resourceType": "Patient", "id": "test-id2"}},
+            ],
         }
 
-        fhir_json_req = { 
+        fhir_json_req = {
             "resourceType": "Bundle",
             "type": "transaction",
             "id": "bundle-id",
             "entry": [
                 {
-                    "resource": {
-                        "resourceType": "Patient", 
-                        "id": "test-id1"
-                    },
-                    "request": {
-                        "method": "PUT",
-                        "url": f"Patient/test-id1"
-                    }
+                    "resource": {"resourceType": "Patient", "id": "test-id1"},
+                    "request": {"method": "PUT", "url": f"Patient/test-id1"},
                 },
                 {
-                    "resource": {
-                        "resourceType": "Patient", 
-                        "id": "test-id2"
-                    },
-                    "request": {
-                        "method": "PUT",
-                        "url": f"Patient/test-id2"
-                    }
-                }
-            ]
+                    "resource": {"resourceType": "Patient", "id": "test-id2"},
+                    "request": {"method": "PUT", "url": f"Patient/test-id2"},
+                },
+            ],
         }
 
         fhir_resp = mock.Mock()
