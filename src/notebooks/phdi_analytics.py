@@ -169,8 +169,11 @@ def create_dataframe(radius, number_of_points, center):
 
     with ThreadPoolExecutor() as tpe:
         data = list(
-            tqdm(tpe.map(geocode,
-                df[['latitude', 'longitude']].itertuples()), total=len(df)))
+            tqdm(
+                tpe.map(geocode, df[['latitude', 'longitude']].itertuples()),
+                total=len(df)
+            )
+        )
     data_df = pd.DataFrame.from_records(data)
 
     df['census_tract'] = data_df['state'] + data_df['county'] + data_df['tract']
