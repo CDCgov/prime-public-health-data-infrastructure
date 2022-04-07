@@ -14,16 +14,14 @@ unzipped_directory = "./FhirResources"
 
 
 def main(file):
-    """
-
-    """
+    """ """
     # Default fhir_location to be the input file
     fhir_location = file
 
     # If input file is a zip file, unzip it, and process the resulting directory
     if zipfile.is_zipfile(file):
         fhir_location = _unzip_input_file(file)
-    
+
     # Process input FHIR file or directory
     process_fhir(fhir_location)
 
@@ -36,6 +34,7 @@ def _unzip_input_file(zip_filepath: str) -> str:
         zip_ref.extractall(unzipped_directory)
         return unzipped_directory
 
+
 def process_fhir(path: str):
     """Process FHIR data contained in the specified file path.
 
@@ -43,7 +42,7 @@ def process_fhir(path: str):
     Otherwise, a normal file path may be read individually.
 
     The file(s) found may contain ndjson (file path should end with .ndjson).
-    They may also contain standard JSON input (one object per file).  
+    They may also contain standard JSON input (one object per file).
     Whether ndjson or standard JSON, the resource types supported are described in :py:func:`import_to_fhir` documentation.
     :param str path: The path to the file containing FHIR data.
     """
@@ -51,13 +50,14 @@ def process_fhir(path: str):
     if os.isdir(path):
         for file in os.listdir(path):
             filename = os.fsdecode(file)
-            #; Recursively call on files within directory
+            # Recursively call on files within directory
             process_fhir(filename)
-    elif(path.endswith(".ndjson")):
+    elif path.endswith(".ndjson"):
         process_fhir_ndjson(path)
     else:
         process_fhir_resource(path)
-        
+
+
 def process_fhir_ndjson(filename: str):
     """Process a file containing FHIR resource(s) enclosed by ndjson
     :param str filename: FHIR resource(s) enclosed by ndjson
@@ -66,7 +66,10 @@ def process_fhir_ndjson(filename: str):
         for line in fp:
             import_to_fhir(line)
 
-def process_fhir_resource(fhir_json: dict = {}, fhir_string: str = "", fhir_filepath: str = ""):
+
+def process_fhir_resource(
+    fhir_json: dict = {}, fhir_string: str = "", fhir_filepath: str = ""
+):
     """Process a file containing FHIR resource(s) enclosed by ndjson
     :param str filename: FHIR resource(s) enclosed by ndjson
     """
@@ -79,12 +82,12 @@ def process_fhir_resource(fhir_json: dict = {}, fhir_string: str = "", fhir_file
         fhir_json = json.loads(fhir_string)
 
     import_to_fhir(fhir_json)
-    
+
 
 def import_to_fhir(fhir_json: dict, method: str = "PUT"):
     """Import a FHIR resource to the FHIR server.
-    The submissions may Bundles or individual FHIR resources.  
-    
+    The submissions may Bundles or individual FHIR resources.
+
     See :py:func:`_ensure_bundle_batch` for details about Bundle conversion and handling.
 
     :param dict fhir_json: FHIR resource in json format.
@@ -94,7 +97,9 @@ def import_to_fhir(fhir_json: dict, method: str = "PUT"):
         token = get_access_token()
     except Exception:
         logging.exception("Failed to get access token")
-        raise requests.exceptions.HTTPError("Authorization error occurred while processing information into FHIR server.")
+        raise requests.exceptions.HTTPError(
+            "Authorization error occurred while processing information into FHIR server."
+        )
     retry_strategy = Retry(
         total=3,
         status_forcelist=[429, 500, 502, 503, 504],
@@ -109,7 +114,7 @@ def import_to_fhir(fhir_json: dict, method: str = "PUT"):
         resource_type = fhir_json["resourceType"]
 
         if resource_type == "Bundle":
-            transaction_json = _ensure_bundle_batch(fhir_json,method)
+            transaction_json = _ensure_bundle_batch(fhir_json, method)
             resp = requests.post(
                 fhir_url,
                 headers={
@@ -140,14 +145,17 @@ def import_to_fhir(fhir_json: dict, method: str = "PUT"):
                     "Accept": "application/fhir+json",
                     "Content-Type": "application/fhir+json",
                 },
-                data=json.dumps(fhir_json)
+                data=json.dumps(fhir_json),
             )
 
     except Exception:
-        logging.exception("Request using method " + method + " failed for json: " + str(fhir_json))
-        return 
+        logging.exception(
+            "Request using method " + method + " failed for json: " + str(fhir_json)
+        )
+        return
 
-def _ensure_bundle_batch(fhir_json : dict, method: str) -> dict:
+
+def _ensure_bundle_batch(fhir_json: dict, method: str) -> dict:
     """Convert a FHIR Bundle of any type to a "batch" bundle.
 
     The received bundle will be converted to a "batch" type.
@@ -157,15 +165,20 @@ def _ensure_bundle_batch(fhir_json : dict, method: str) -> dict:
     }
 
     :param dict fhir_json: FHIR Bundle
-    :param str method: PUT for update or POST for create.  
+    :param str method: PUT for update or POST for create.
     PUT can also create, and will use the submitted id
     POST will always create a new resource and assign a new id
     """
     if fhir_json["resourceType"] != "Bundle":
-        raise ValueError("_ensure_bundle_transaction called on non-Bundle resource: " + fhir_json["resourceType"])
+        raise ValueError(
+            "_ensure_bundle_transaction called on non-Bundle resource: "
+            + fhir_json["resourceType"]
+        )
 
-    if method not in ("PUT","POST"):
-        raise ValueError("_ensure_bundle_transaction only supports PUT and POST methods")
+    if method not in ("PUT", "POST"):
+        raise ValueError(
+            "_ensure_bundle_transaction only supports PUT and POST methods"
+        )
 
     new_bundle = copy.deepcopy(fhir_json)
     new_bundle["type"] = "transaction"
@@ -177,10 +190,10 @@ def _ensure_bundle_batch(fhir_json : dict, method: str) -> dict:
         if method == "PUT":
             url += "/" + entry["resource"]["id"]
 
-        entry["request"] = { "method": method,
-                            "url": url}
-        
+        entry["request"] = {"method": method, "url": url}
+
     return new_bundle
+
 
 def get_access_token() -> str:
     """Get the access token based on creds in the environment"""
