@@ -2,7 +2,6 @@ import csv
 import datetime as dt
 import os
 import random
-from random import uniform
 import re
 
 import censusgeocode as cg
@@ -34,8 +33,14 @@ HOME_DIR = os.path.expanduser('~')
 INVENTORY_DIR = os.path.join(HOME_DIR, 'inventory')
 GIT_ROOT_DIR = get_git_root(NOTEBOOK_PATH)
 OUTPUTS_DIR = os.path.join(GIT_ROOT_DIR, 'src', 'notebooks', 'outputs')
-FAIRFAX_COUNTY_CENTER = Point(38.845262, -77.307035)  # Approximate center of Fairfax County chosen on Google Maps
-VA_CBG_MAP_PATH = os.path.join(INVENTORY_DIR, '2019 Virginia Census Block Groups', 'geo_export_64de6806-7ef0-4c39-97f1-b52e5d986702.shp')
+
+# Approximate center of Fairfax County chosen on Google Maps
+FAIRFAX_COUNTY_CENTER = Point(38.845262, -77.307035)
+VA_CBG_MAP_PATH = os.path.join(
+    INVENTORY_DIR,
+    '2019 Virginia Census Block Groups',
+    'geo_export_64de6806-7ef0-4c39-97f1-b52e5d986702.shp'
+)
 VA_TRACT_MAP_PATH = os.path.join(INVENTORY_DIR, 'tl_2018_51_tract')
 
 FAIRFAX_COUNTY_ZIPS = [
@@ -203,12 +208,21 @@ def plot_time_series_metric(df, window, metric_label):
 
     fig, ax_lst = plt.subplots(nrows=1, ncols=1, figsize=(15, 8))
 
-    sns.lineplot(data=df_agg, x='event_dt', y='rolling_rate', ax=ax_lst, ci=None)
+    sns.lineplot(
+        data=df_agg,
+        x='event_dt',
+        y='rolling_rate',
+        ax=ax_lst,
+        ci=None
+    )
 
     ax_lst.set_ylabel(metric_label, fontsize=14)
     ax_lst.set_xlabel('Date', fontsize=14)
 
-    ax_lst.set_title('{} Rate ({} Day Rolling)'.format(metric_label, window_length_label), fontsize=22)
+    ax_lst.set_title('{} Rate ({} Day Rolling)'.format(
+        metric_label,
+        window_length_label
+    ), fontsize=22)
     ax_lst.yaxis.set_major_formatter(mtick.PercentFormatter(1.0))
 
 
@@ -238,12 +252,16 @@ def create_map(geography, shapefile_path, metric, df):
         'tested_covid_positive': np.sum,
         'breakthrough_infection': np.sum,
     })
-    df_agg.rename(columns={'pprl_generated_id': 'number_of_people'}, inplace=True)
-    df_agg['infection_rate'] = df_agg['tested_covid_positive'] / df_agg['number_of_people']
-    df_agg['breakthrough_infection_rate'] = df_agg['breakthrough_infection'] / df_agg['is_fully_vax']
+    df_agg.rename(
+        columns={'pprl_generated_id': 'number_of_people'}, inplace=True)
+    df_agg['infection_rate'] =\
+        df_agg['tested_covid_positive'] / df_agg['number_of_people']
+    df_agg['breakthrough_infection_rate'] =\
+        df_agg['breakthrough_infection'] / df_agg['is_fully_vax']
 
     fairfax_map = fairfax_map.merge(
-        right=df_agg[[geography, 'infection_rate', 'breakthrough_infection_rate']],
+        right=df_agg[[
+            geography, 'infection_rate', 'breakthrough_infection_rate']],
         left_on='geoid',
         right_on=geography,
     )
@@ -260,7 +278,8 @@ def create_map(geography, shapefile_path, metric, df):
         missing_kwds={"color": "lightgrey"},
     )
     fairfax_map.plot(ax=ax, facecolor='none', edgecolor='grey', linewidth=.5)
-    ax.set_title('Fairfax County Breakthrough Infection Rate (2020 {})'.format(geography_label), fontsize=20)
+    ax.set_title('Fairfax County Breakthrough Infection Rate (2020 {})'.format(
+        geography_label), fontsize=20)
     fig.patch.set_visible(False)
     ax.axis('off')
     plt.tight_layout()
