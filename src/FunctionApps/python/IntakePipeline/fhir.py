@@ -106,7 +106,7 @@ def import_to_fhir(fhir_json: dict, method: str = "PUT"):
 
         if resource_type == "Bundle":
             transaction_json = _ensure_bundle_batch(fhir_json, method)
-            resp = requests.post(
+            requests.post(
                 fhir_url,
                 headers={
                     "Authorization": f"Bearer {token}",
@@ -116,7 +116,7 @@ def import_to_fhir(fhir_json: dict, method: str = "PUT"):
                 data=json.dumps(transaction_json),
             )
         elif method == "POST":
-            resp = requests.post(
+            requests.post(
                 f"{fhir_url}/{resource_type}",
                 headers={
                     "Authorization": f"Bearer {token}",
@@ -127,7 +127,7 @@ def import_to_fhir(fhir_json: dict, method: str = "PUT"):
             )
         elif method == "PUT":
             resource_id = fhir_json["id"]
-            resp = requests.put(
+            requests.put(
                 f"{fhir_url}/{resource_type}/{resource_id}",
                 headers={
                     "Authorization": f"Bearer {token}",
