@@ -12,6 +12,7 @@ import shutil
 from pathlib import Path
 >>>>>>> a46258b (Upload to FHIR server)
 
+
 class TestFhir(unittest.TestCase):
     TEST_ENV = {
         "TENANT_ID": "a-tenant-id",
@@ -68,9 +69,12 @@ class TestFhir(unittest.TestCase):
         )
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 >>>>>>> a46258b (Upload to FHIR server)
+=======
+>>>>>>> edd256c (Linting)
     @mock.patch("requests.post")
     @mock.patch.dict("os.environ", TEST_ENV)
     def test_fhir_bundle_put(self, mock_post):
@@ -81,14 +85,19 @@ class TestFhir(unittest.TestCase):
         token_resp.json.return_value = {"access_token": "some-access-token"}
 
 <<<<<<< HEAD
+<<<<<<< HEAD
         fhir_json_orig = {
 =======
         fhir_json_orig = { 
 >>>>>>> a46258b (Upload to FHIR server)
+=======
+        fhir_json_orig = {
+>>>>>>> edd256c (Linting)
             "resourceType": "Bundle",
             "type": "transaction",
             "id": "bundle-id",
             "entry": [
+<<<<<<< HEAD
 <<<<<<< HEAD
                 {"resource": {"resourceType": "Patient", "id": "test-id1"}},
                 {"resource": {"resourceType": "Patient", "id": "test-id2"}},
@@ -114,11 +123,20 @@ class TestFhir(unittest.TestCase):
 
         fhir_json_req = { 
 >>>>>>> a46258b (Upload to FHIR server)
+=======
+                {"resource": {"resourceType": "Patient", "id": "test-id1"}},
+                {"resource": {"resourceType": "Patient", "id": "test-id2"}},
+            ],
+        }
+
+        fhir_json_req = {
+>>>>>>> edd256c (Linting)
             "resourceType": "Bundle",
             "type": "transaction",
             "id": "bundle-id",
             "entry": [
                 {
+<<<<<<< HEAD
 <<<<<<< HEAD
                     "resource": {"resourceType": "Patient", "id": "test-id1"},
                     "request": {"method": "PUT", "url": "Patient/test-id1"},
@@ -150,6 +168,16 @@ class TestFhir(unittest.TestCase):
                 }
             ]
 >>>>>>> a46258b (Upload to FHIR server)
+=======
+                    "resource": {"resourceType": "Patient", "id": "test-id1"},
+                    "request": {"method": "PUT", "url": f"Patient/test-id1"},
+                },
+                {
+                    "resource": {"resourceType": "Patient", "id": "test-id2"},
+                    "request": {"method": "PUT", "url": f"Patient/test-id2"},
+                },
+            ],
+>>>>>>> edd256c (Linting)
         }
 
         fhir_resp = mock.Mock()
