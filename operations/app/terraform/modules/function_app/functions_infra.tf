@@ -1,5 +1,4 @@
 # infra functions
-# publish: terraform apply -replace=module.function_app.null_resource.default_function_app_publish
 
 locals {
   infra_function_path = "../../../../../src/FunctionApps/DevOps"
@@ -27,7 +26,7 @@ data "archive_file" "infra_function_app" {
 }
 
 resource "null_resource" "infra_function_app_publish" {
-  count = var.environment == "dev" ? 1 : 0
+  count = var.publish_functions ? 1 : 0
   provisioner "local-exec" {
     command = local.infra_publish_command
   }

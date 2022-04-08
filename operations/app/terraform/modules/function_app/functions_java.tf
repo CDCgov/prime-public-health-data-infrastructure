@@ -1,7 +1,7 @@
 # java functions
 # publish:
 # requires build in the correct workspace 
-# terraform apply -replace=module.function_app.null_resource.java_function_app_publish
+# terraform apply -replace=module.function_app.null_resource.java_function_app_publish[0]
 
 locals {
   java_function_path = "../../../../../src/FunctionApps/TestJava"
@@ -15,7 +15,7 @@ locals {
 }
 
 resource "null_resource" "java_function_app_publish" {
-  count = var.environment == "dev" ? 1 : 0
+  count = var.publish_functions ? 1 : 0
   provisioner "local-exec" {
     command = local.java_publish_command
   }

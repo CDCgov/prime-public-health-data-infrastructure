@@ -1,5 +1,4 @@
 # default functions
-# publish: terraform apply -replace=module.function_app.archive_file.default_function_app
 
 locals {
   default_function_path = "../../../../../src/FunctionApps/PITest_FunctionApp"
@@ -27,7 +26,7 @@ data "archive_file" "default_function_app" {
 }
 
 resource "null_resource" "default_function_app_publish" {
-  count = var.environment == "dev" ? 1 : 0
+  count = var.publish_functions ? 1 : 0
   provisioner "local-exec" {
     command = local.default_publish_command
   }
