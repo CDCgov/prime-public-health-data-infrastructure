@@ -3,10 +3,10 @@ import io
 import json
 import logging
 import pathlib
-import uuid
-import os
 import requests
 from requests.adapters import HTTPAdapter
+import time
+import uuid
 from urllib3 import Retry
 
 from typing import Iterator, IO
@@ -51,29 +51,33 @@ def store_bundle(container_url: str, prefix: str, bundle: dict) -> None:
     blob.upload_blob(json.dumps(bundle).encode("utf-8"))
 
 
-def upload_bundle_to_fhir_server(bundle: dict) -> None:
-    """Upload a FHIR bundle to FHIR server"""
-    process_fhir_resource(bundle)
+class AzureFhirserverClient:
+    def __init__(self, fhir_url):
+        self.fhir_url = fhir_url
+
+    def get_fhir_url(self):
+        return self.fhir_url
+
+    def get_access_token(self, token_expire_tolerance: float = 10.0):
+        if not self._need_new_token(token_expire_tolerance):
+            return self.access_token
+
+        creds = DefaultAzureCredential()
+        self.access_token = creds.get_token(self.fhir_url)
+
+        return self.access_token
+
+    def _need_new_token(self, tolerance: float = 10.0):
+        return (self.access_token.expires - 10) > time.gmtime()
 
 
-def process_fhir_resource(
-    fhir_json: dict = {}, fhir_string: str = "", fhir_filepath: str = ""
+def get_fhirserver_client(fhir_url: str):
+    return AzureFhirserverClient(fhir_url)
+
+
+def upload_bundle_to_fhir_server(
+    fhirserver_client: AzureFhirserverClient, fhir_json: dict
 ):
-    """Process a file containing FHIR resource(s) enclosed by ndjson
-    :param str filename: FHIR resource(s) enclosed by ndjson
-    """
-    if len(fhir_json) > 0:
-        pass
-    elif os.path.exists(fhir_filepath):
-        fhir_string = open(fhir_filepath).read()
-        fhir_json = json.loads(fhir_string)
-    else:
-        fhir_json = json.loads(fhir_string)
-
-    import_to_fhir(fhir_json)
-
-
-def import_to_fhir(fhir_json: dict, method: str = "PUT"):
     """Import a FHIR resource to the FHIR server.
     The submissions may Bundles or individual FHIR resources.
 
@@ -84,7 +88,7 @@ def import_to_fhir(fhir_json: dict, method: str = "PUT"):
     :param str method: HTTP method to use (currently PUT or POST supported)
     """
     try:
-        token = get_access_token()
+        token = fhirserver_client.get_access_token()
     except Exception:
         logging.exception("Failed to get access token")
         raise requests.exceptions.HTTPError(
@@ -99,111 +103,17 @@ def import_to_fhir(fhir_json: dict, method: str = "PUT"):
     adapter = HTTPAdapter(max_retries=retry_strategy)
     http = requests.Session()
     http.mount("https://", adapter)
-    http.mount("http://", adapter)
-    fhir_url = os.environ.get("FHIR_URL", "")
+    fhir_url = fhirserver_client.fhir_url
     try:
-        resource_type = fhir_json["resourceType"]
-
-        if resource_type == "Bundle":
-            transaction_json = _ensure_bundle_batch(fhir_json, method)
-            requests.post(
-                fhir_url,
-                headers={
-                    "Authorization": f"Bearer {token}",
-                    "Accept": "application/fhir+json",
-                    "Content-Type": "application/fhir+json",
-                },
-                data=json.dumps(transaction_json),
-            )
-        elif method == "POST":
-            requests.post(
-                f"{fhir_url}/{resource_type}",
-                headers={
-                    "Authorization": f"Bearer {token}",
-                    "Accept": "application/fhir+json",
-                    "Content-Type": "application/fhir+json",
-                },
-                data=json.dumps(fhir_json),
-            )
-        elif method == "PUT":
-            resource_id = fhir_json["id"]
-            requests.put(
-                f"{fhir_url}/{resource_type}/{resource_id}",
-                headers={
-                    "Authorization": f"Bearer {token}",
-                    "Accept": "application/fhir+json",
-                    "Content-Type": "application/fhir+json",
-                },
-                data=json.dumps(fhir_json),
-            )
-
+        requests.post(
+            fhir_url,
+            headers={
+                "Authorization": f"Bearer {token.token}",
+                "Accept": "application/fhir+json",
+                "Content-Type": "application/fhir+json",
+            },
+            data=json.dumps(fhir_json),
+        )
     except Exception:
-        logging.exception(
-            "Request using method " + method + " failed for json: " + str(fhir_json)
-        )
+        logging.exception("Request to post Bundle failed for json: " + str(fhir_json))
         return
-
-
-def _ensure_bundle_batch(fhir_json: dict, method: str) -> dict:
-    """Convert a FHIR Bundle of any type to a "batch" bundle.
-
-    The received bundle will be converted to a "batch" type.
-    A new "request" will be built for each resource in the Bundle
-    with the following content:
-    { "method" = method (from param)
-      "url" = resource["resourceType"] (for post),
-              resource["resourceType"]/resource["id"] (for put)}
-    }
-
-    :param dict fhir_json: FHIR Bundle
-    :param str method: PUT for update or POST for create.
-    PUT can also create, and will use the submitted id
-    POST will always create a new resource and assign a new id
-    """
-    if fhir_json["resourceType"] != "Bundle":
-        raise ValueError(
-            "_ensure_bundle_transaction called on non-Bundle resource: "
-            + fhir_json["resourceType"]
-        )
-
-    if method not in ("PUT", "POST"):
-        raise ValueError(
-            "_ensure_bundle_transaction only supports PUT and POST methods"
-        )
-
-    new_bundle = copy.deepcopy(fhir_json)
-    new_bundle["type"] = "transaction"
-
-    for entry in new_bundle["entry"]:
-        url = entry["resource"]["resourceType"]
-
-        # PUT requires the URL to contain the resource ID, POST does not.
-        if method == "PUT":
-            url += "/" + entry["resource"]["id"]
-
-        entry["request"] = {"method": method, "url": url}
-
-    return new_bundle
-
-
-def get_access_token() -> str:
-    """Get the access token based on creds in the environment"""
-    tenant_id = os.environ.get("TENANT_ID")
-    url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/token"
-    resp = requests.post(
-        url,
-        data={
-            "grant_type": "client_credentials",
-            "client_id": os.environ.get("CLIENT_ID", ""),
-            "client_secret": os.environ.get("CLIENT_SECRET", ""),
-            "resource": os.environ.get("FHIR_URL", ""),
-        },
-    )
-
-    if resp.ok and "access_token" in resp.json():
-        return resp.json().get("access_token")
-
-    logging.error(
-        f"access token request failed status={resp.status_code} message={resp.text}"
-    )
-    raise Exception("access token request failed")

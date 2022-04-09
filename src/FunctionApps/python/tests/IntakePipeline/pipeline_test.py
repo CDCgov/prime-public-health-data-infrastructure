@@ -13,6 +13,7 @@ TEST_ENV = {
     "HASH_SALT": "super-secret-definitely-legit-passphrase",
     "SMARTYSTREETS_AUTH_ID": "smarty-auth-id",
     "SMARTYSTREETS_AUTH_TOKEN": "smarty-auth-token",
+    "FHIR_URL": "fhir-url",
 }
 
 
@@ -21,10 +22,12 @@ TEST_ENV = {
 @mock.patch("IntakePipeline.add_patient_identifier")
 @mock.patch("IntakePipeline.upload_bundle_to_fhir_server")
 @mock.patch("IntakePipeline.store_bundle")
+@mock.patch("IntakePipeline.get_fhirserver_client")
 @mock.patch("IntakePipeline.get_smartystreets_client")
 @mock.patch.dict("os.environ", TEST_ENV)
 def test_basic_pipeline(
     patched_get_geocoder,
+    patched_get_fhirserver_client,
     patched_store,
     patched_upload,
     patched_patient_id,
@@ -35,6 +38,9 @@ def test_basic_pipeline(
     patched_geocoder = mock.Mock()
     patched_get_geocoder.return_value = patched_geocoder
 
+    patched_fhirserver_client = mock.Mock()
+    patched_get_fhirserver_client.return_value = patched_fhirserver_client
+
     patched_fhir_read.return_value = [{"hello": "world"}]
     run_pipeline()
 
@@ -42,7 +48,7 @@ def test_basic_pipeline(
     patched_fhir_read.assert_called_with("some-url", "some-prefix")
     patched_transform.assert_called_with(patched_geocoder, {"hello": "world"})
     patched_patient_id.assert_called_with(TEST_ENV["HASH_SALT"], {"hello": "world"})
-    patched_upload.assert_called_with({"hello": "world"})
+    patched_upload.assert_called_with(patched_fhirserver_client, {"hello": "world"})
     patched_store.assert_called_with("some-url", "output/path", {"hello": "world"})
 
 

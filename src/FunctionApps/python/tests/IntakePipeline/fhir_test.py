@@ -1,5 +1,6 @@
 import io
 import json
+import os
 
 from unittest import mock
 
@@ -60,7 +61,9 @@ def test_store_bundle(mock_uuid, mock_get_client):
 
     store_bundle("some-url", "output/path", {"hello": "world"})
 
-    mock_client.get_blob_client.assert_called_with("output/path/some-uuid.fhir")
+    mock_client.get_blob_client.assert_called_with(
+        os.path.normpath("output/path/some-uuid.fhir")
+    )
     mock_blob.upload_blob.assert_called()
 
 
