@@ -78,7 +78,8 @@ class AzureFhirserverCredentialManager:
         return self.access_token
 
     def _get_azure_credentials(self):
-        """Get default Azure Credentials from login context and related Azure configuration."""
+        """Get default Azure Credentials from login context and related
+        Azure configuration."""
         return DefaultAzureCredential()
 
     def _need_new_token(self, token_reuse_tolerance: float = 10.0) -> bool:
@@ -91,7 +92,7 @@ class AzureFhirserverCredentialManager:
             return (
                 self.access_token.expires_on - token_reuse_tolerance
             ) < current_time_utc
-        except AttributeError as ae:
+        except AttributeError:
             # access_token not set
             return True
 
