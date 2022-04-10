@@ -8,7 +8,7 @@ from IntakePipeline.fhir import (
     read_fhir_bundles,
     upload_bundle_to_fhir_server,
     store_bundle,
-    get_fhirserver_client,
+    get_fhirserver_cred_manager,
 )
 from IntakePipeline.utils import get_required_config
 
@@ -21,7 +21,9 @@ def run_pipeline():
         get_required_config("SMARTYSTREETS_AUTH_ID"),
         get_required_config("SMARTYSTREETS_AUTH_TOKEN"),
     )
-    fhirserver_client = get_fhirserver_client(get_required_config("FHIR_URL"))
+    fhirserver_cred_manager = get_fhirserver_cred_manager(
+        get_required_config("FHIR_URL")
+    )
 
     container_url = get_required_config("INTAKE_CONTAINER_URL")
     container_prefix = get_required_config("INTAKE_CONTAINER_PREFIX")
@@ -31,7 +33,7 @@ def run_pipeline():
         transform_bundle(geocoder, bundle)
         add_patient_identifier(salt, bundle)
         store_bundle(container_url, output_path, bundle)
-        upload_bundle_to_fhir_server(fhirserver_client, bundle)
+        upload_bundle_to_fhir_server(fhirserver_cred_manager, bundle)
 
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
