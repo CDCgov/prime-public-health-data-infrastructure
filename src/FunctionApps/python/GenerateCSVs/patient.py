@@ -1,3 +1,20 @@
+PATIENT_COLUMNS = [
+    "patient_hash",
+    "given_name",
+    "family_name",
+    "birthDate",
+    "gender",
+    "street",
+    "city",
+    "state",
+    "postalCode",
+    "latitude",
+    "longitude",
+    "race",
+    "ethnicity",
+]
+
+
 def parse_patient_resource(pt_rsc: dict) -> str:
     """Given a FHIR patient resource return a comma deliminated string of the following form:
     '<patient_hash>,<given_name>,<family_name>,<birthDate>,<gender>,<street>,<city>,<state>,<postalCode>,<latitude>,<longitude>,<race>,<ethnicity>'"""
