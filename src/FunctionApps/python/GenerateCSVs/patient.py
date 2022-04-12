@@ -16,8 +16,9 @@ PATIENT_COLUMNS = [
 
 
 def parse_patient_resource(pt_rsc: dict) -> str:
-    """Given a FHIR patient resource return a comma deliminated string of the following form:
-    '<patient_hash>,<given_name>,<family_name>,<birthDate>,<gender>,<street>,<city>,<state>,<postalCode>,<latitude>,<longitude>,<race>,<ethnicity>'"""
+    """Given a FHIR patient resource return a comma deliminated string of the form:
+    '<patient_hash>,<given_name>,<family_name>,<birthDate>,<gender>,<street>,<city>,
+    <state>,<postalCode>,<latitude>,<longitude>,<race>,<ethnicity>'"""
 
     return ",".join(
         [
@@ -32,7 +33,8 @@ def parse_patient_resource(pt_rsc: dict) -> str:
 
 
 def get_id(pt_rsc: dict) -> str:
-    """Given a patient resource retrun the hashed identifier added previously in the PHDI pipeline."""
+    """Given a patient resource retrun the hashed identifier added previously in the
+    PHDI pipeline."""
 
     hash = ""
     identifiers = pt_rsc["resource"].get("identifier")
@@ -45,8 +47,10 @@ def get_id(pt_rsc: dict) -> str:
 
 
 def get_name(pt_rsc: dict) -> str:
-    """Given a patient resource return a string on the form '<given_name>,<family_name>'.
-    When present the first name designated as 'official' is used, otherwise the first name listed is used."""
+    """Given a patient resource return a string of the form:
+    '<given_name>,<family_name>'.
+    When present the first name designated as 'official' is used, otherwise the first
+    name listed is used."""
 
     names = pt_rsc["resource"].get("name")
     if names:
@@ -63,14 +67,17 @@ def get_name(pt_rsc: dict) -> str:
 
 
 def extract_name(name: dict) -> str:
-    """Given a an entry in a list of names from a patient resource return a string on the form '<first_name>,<last_name>'."""
+    """Given a an entry in a list of names from a patient resource return a string on
+    the form '<first_name>,<last_name>'."""
 
     return f"{get_value(name, 'given')},{get_value(name, 'family')}"
 
 
 def get_address(pt_rsc: dict) -> str:
-    """Given a patient resource return a string on the form '<street>,<city>,<state>,<postalCode>,<latitude>,<longitude>'.
-    When present the first address designated as 'home' address is used, otherwise the first address listed is used."""
+    """Given a patient resource return a string on the form:
+    '<street>,<city>,<state>,<postalCode>,<latitude>,<longitude>'.
+    When present the first address designated as 'home' address is used, otherwise the
+    first address listed is used."""
 
     addrs = pt_rsc["resource"].get("address")
     if addrs:
@@ -87,7 +94,9 @@ def get_address(pt_rsc: dict) -> str:
 
 
 def extract_address(addr: dict) -> str:
-    """Given a an entry in a list of addresses from a patient resource return a string on the form '<street>,<city>,<state>,<postalCode>,<latitude>,<longitude>'."""
+    """Given a an entry in a list of addresses from a patient resource return a string
+    of the form:
+    '<street>,<city>,<state>,<postalCode>,<latitude>,<longitude>'."""
 
     addr_parts = ["line", "city", "state", "postalCode", "latitude", "longitude"]
     addr_str = ""
@@ -103,7 +112,8 @@ def extract_address(addr: dict) -> str:
 
 
 def get_coordinate(addr: dict, coord: str) -> str:
-    """Given an entry in a list of addresses from a patient resource return latitude or longitude (specified by coord) as a string."""
+    """Given an entry in a list of addresses from a patient resource return latitude or
+    longitude (specified by coord) as a string."""
 
     value = ""
     if "extension" in addr:
@@ -120,7 +130,9 @@ def get_coordinate(addr: dict, coord: str) -> str:
 
 
 def get_race_ethnicity(pt_rsc: dict) -> str:
-    """Given a patient resource return the patients race and ethnicity in a string of the form '<race>,<ethnicity>'."""
+    """Given a patient resource return the patients race and ethnicity in a string of
+    the form:
+    '<race>,<ethnicity>'."""
 
     race = ""
     ethnicity = ""
@@ -141,7 +153,8 @@ def get_race_ethnicity(pt_rsc: dict) -> str:
 
 
 def get_value(dictionary: dict, key: str) -> str:
-    """Given a dictionary and key return the value of the key. If the key is not present return an empty string. If the value is a list return the first element."""
+    """Given a dictionary and key return the value of the key. If the key is not present
+    return an empty string. If the value is a list return the first element."""
 
     if key in dictionary:
         value = dictionary[key]

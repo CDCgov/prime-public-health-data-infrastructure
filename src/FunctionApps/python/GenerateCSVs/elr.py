@@ -1,5 +1,5 @@
 from typing import List, Any
-from GenerateCSVs.patient import PATIENT_COLUMNS, parse_patient_resource
+from GenerateCSVs.patient import PATIENT_COLUMNS
 
 ELR_COLUMNS = PATIENT_COLUMNS + []
 
