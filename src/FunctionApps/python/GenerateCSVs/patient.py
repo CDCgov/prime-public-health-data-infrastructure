@@ -5,7 +5,17 @@ def parse_patient_resource(pt_rsc: dict) -> str:
     """ Given a FHIR patient resource as a dict return a comma deliminated string containing the following values:
     frist_name
     """
-    return ','.join([get_name(pt_rsc), pt_rsc['resource'].get('birthDate'), pt_rsc['resource'].get('gender'), get_address(pt_rsc), get_race_ethnicity(pt_rsc)])
+    return ','.join([get_id(pt_rsc),get_name(pt_rsc), pt_rsc['resource'].get('birthDate'), pt_rsc['resource'].get('gender'), get_address(pt_rsc), get_race_ethnicity(pt_rsc)])
+
+def get_id(pt_rsc: dict) -> str:
+    """Given a patient resource retrun the hashed identifier added previously in the PHDI pipeline."""
+    hash = ''
+    identifiers = pt_rsc['resource'].get('identifier')
+    if identifiers:
+        for id in identifiers:
+            if id.get("system") == "urn:ietf:rfc:3986":
+                hash = id.get("value")
+    return hash
 
 def get_name(pt_rsc: dict) -> str:
     """ Given a patient resource return a string on the form '<first_name>,<last_name>'. 
