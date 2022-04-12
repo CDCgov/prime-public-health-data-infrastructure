@@ -1,6 +1,8 @@
 import io
 import json
 import logging
+import pathlib
+import uuid
 
 from typing import Iterator, IO
 
@@ -18,6 +20,7 @@ def get_blobs(container_url: str, container_prefix: str) -> Iterator[IO]:
     """Grabs blob files from the container as a readable file-like iterator"""
     client = get_blob_client(container_url)
     for props in client.list_blobs(name_starts_with=container_prefix):
+        logging.info(f"reading blob {props.name}")
         if props.size > 0:
             # If it's an actual file, download it and yield out the individual records
             blob_client = client.get_blob_client(props)
@@ -34,6 +37,13 @@ def read_fhir_bundles(container_url: str, container_prefix: str) -> Iterator[dic
             except Exception:
                 logging.exception("failed to read json contents in line, skipping file")
                 break
+
+
+def store_bundle(container_url: str, prefix: str, bundle: dict) -> None:
+    """Store the given bundle in the output container, in FHIR format"""
+    client = get_blob_client(container_url)
+    blob = client.get_blob_client(str(pathlib.Path(prefix) / f"{uuid.uuid4()}.fhir"))
+    blob.upload_blob(json.dumps(bundle).encode("utf-8"))
 
 
 def upload_bundle_to_fhir_server(bundle: dict) -> None:
