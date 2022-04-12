@@ -22,10 +22,12 @@ def get_blob_client(container_url: str) -> ContainerClient:
 
 
 def get_blobs(container_url: str, container_prefix: str) -> Iterator[Tuple[str, IO]]:
-    """Grabs blob files from the container as an iterator referencing tuples with the following content:
-    datatype str: The datatype derived from the container name.  The container name must have the following format:
+    """Grabs blob files from the container as an iterator referencing tuples with
+    the following content.
+    datatype (str) The datatype derived from the container name.  The container name
+    must have the following format:
     <container_prefix><datatype>/<filename>
-    bytes BytesIO: Actual content of the container.
+    bytes (BytesIO) Actual content of the container.
     """
     client = get_blob_client(container_url)
     for props in client.list_blobs(name_starts_with=container_prefix):
@@ -42,9 +44,10 @@ def get_blobs(container_url: str, container_prefix: str) -> Iterator[Tuple[str, 
 def read_fhir_bundles(
     container_url: str, container_prefix: str
 ) -> Iterator[Tuple[str, dict]]:
-    """Reads FHIR bundle dicts and returns an iterator referencing tuples containing the following information:
-    datatype str: The datatype (e.g. ELR, ECR, VXU)
-    bytes BytesIO: Actual content of the container.
+    """Reads FHIR bundle dicts and returns an iterator referencing tuples containing
+    the following information:
+    datatype (str) The datatype (e.g. ELR, ECR, VXU)
+    bytes (BytesIO) Actual content of the container
     """
     for datatype, fp in get_blobs(container_url, container_prefix):
         for line in fp:
