@@ -92,7 +92,9 @@ def test_read_fhir_bundles(mock_get_blobs):
     )
 
     bundles = read_fhir_bundles("some-url", "some-prefix/")
-    assert {("ELR","first"), ("VXU","second")} == {(datatype, r.get("id")) for datatype, r in bundles}
+    assert {("ELR", "first"), ("VXU", "second")} == {
+        (datatype, r.get("id")) for datatype, r in bundles
+    }
 
 
 @mock.patch("requests.post")
