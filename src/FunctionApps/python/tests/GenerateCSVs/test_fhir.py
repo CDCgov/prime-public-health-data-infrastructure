@@ -1,5 +1,4 @@
 import io
-import json
 
 from unittest import mock
 

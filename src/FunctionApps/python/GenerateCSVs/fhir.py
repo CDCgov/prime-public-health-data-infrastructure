@@ -29,7 +29,8 @@ def get_blobs(
         ):
             logging.info(f"reading blob {props.name}")
             if props.size > 0:
-                # If it's an actual file, download it and yield out the individual records along with record type
+                # If it's an actual file, download it and yield out the
+                # individual records along with record type
                 blob_client = client.get_blob_client(props)
                 yield (
                     record_type,
