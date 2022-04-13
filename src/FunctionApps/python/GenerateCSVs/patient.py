@@ -1,7 +1,9 @@
+from typing import List
+
 PATIENT_COLUMNS = [
-    "patient_hash",
-    "given_name",
-    "family_name",
+    "patientHash",
+    "givenName",
+    "familyName",
     "birthDate",
     "gender",
     "street",
@@ -15,26 +17,24 @@ PATIENT_COLUMNS = [
 ]
 
 
-def parse_patient_resource(pt_rsc: dict) -> str:
-    """Given a FHIR patient resource return a comma deliminated string of the form:
-    '<patient_hash>,<given_name>,<family_name>,<birthDate>,<gender>,<street>,<city>,
-    <state>,<postalCode>,<latitude>,<longitude>,<race>,<ethnicity>'"""
+def parse_patient_resource(pt_rsc: dict) -> List[str]:
+    """Given a FHIR patient resource return a list of the form:
+    [<patientHash>,<givenName>,<familyName>,<birthDate>,<gender>,<street>,<city>,
+    <state>,<postalCode>,<latitude>,<longitude>,<race>,<ethnicity>]"""
 
-    return ",".join(
-        [
-            get_id(pt_rsc),
-            get_name(pt_rsc),
-            pt_rsc["resource"].get("birthDate", ""),
-            pt_rsc["resource"].get("gender", ""),
-            get_address(pt_rsc),
-            get_race_ethnicity(pt_rsc),
-        ]
+    return (
+        get_id(pt_rsc)
+        + get_name(pt_rsc)
+        + [pt_rsc["resource"].get("birthDate", "")]
+        + [pt_rsc["resource"].get("gender", "")]
+        + get_address(pt_rsc)
+        + get_race_ethnicity(pt_rsc)
     )
 
 
-def get_id(pt_rsc: dict) -> str:
-    """Given a patient resource retrun the hashed identifier added previously in the
-    PHDI pipeline."""
+def get_id(pt_rsc: dict) -> List[str]:
+    """Given a patient resource retrun a list containing the hashed identifier added
+    previously in the PHDI pipeline."""
 
     hash = ""
     identifiers = pt_rsc["resource"].get("identifier")
@@ -43,77 +43,70 @@ def get_id(pt_rsc: dict) -> str:
             if id.get("system") == "urn:ietf:rfc:3986":
                 hash = id.get("value")
 
-    return hash
+    return [hash]
 
 
-def get_name(pt_rsc: dict) -> str:
-    """Given a patient resource return a string of the form:
-    '<given_name>,<family_name>'.
+def get_name(pt_rsc: dict) -> List[str]:
+    """Given a patient resource return a list of the form:[<givenName>, <familyName>].
     When present the first name designated as 'official' is used, otherwise the first
     name listed is used."""
 
+    name_list = [""] * 2
     names = pt_rsc["resource"].get("name")
     if names:
-        name_str = ""
         for name in names:
             if name.get("use") == "official":
-                name_str = extract_name(name)
-        if not name_str:
-            name_str = extract_name(names[0])
-    else:
-        name_str = ","
+                name_list = extract_name(name)
+        if name_list == [""] * 2:
+            name_list = extract_name(names[0])
 
-    return name_str
+    return name_list
 
 
-def extract_name(name: dict) -> str:
-    """Given a an entry in a list of names from a patient resource return a string on
-    the form '<first_name>,<last_name>'."""
+def extract_name(name: dict) -> List[str]:
+    """Given a an entry in the list of names from a patient resource return a list of
+    the form [<first_name>,<last_name>]."""
 
-    return f"{get_value(name, 'given')},{get_value(name, 'family')}"
+    return [get_value(name, "given"), get_value(name, "family")]
 
 
-def get_address(pt_rsc: dict) -> str:
-    """Given a patient resource return a string on the form:
-    '<street>,<city>,<state>,<postalCode>,<latitude>,<longitude>'.
-    When present the first address designated as 'home' address is used, otherwise the
-    first address listed is used."""
+def get_address(pt_rsc: dict) -> List[str]:
+    """Given a patient resource return a list on the form:
+    [<street>,<city>,<state>,<postalCode>,<latitude>,<longitude>].
+    When present the first address designated as 'home' is used, otherwise the first
+    address listed is used."""
 
+    addr_list = [""] * 6
     addrs = pt_rsc["resource"].get("address")
     if addrs:
-        addr_str = ""
         for addr in addrs:
             if addr.get("use") == "home":
-                addr_str = extract_address(addr)
-        if not addr_str:
-            addr_str = extract_address(addrs[0])
-    else:
-        addr_str = ",,,,,"
+                addr_list = extract_address(addr)
+        if addr_list == [""] * 6:
+            addr_list = extract_address(addrs[0])
 
-    return addr_str
+    return addr_list
 
 
-def extract_address(addr: dict) -> str:
-    """Given a an entry in a list of addresses from a patient resource return a string
+def extract_address(addr: dict) -> List[str]:
+    """Given a an entry in the list of addresses from a patient resource return a list
     of the form:
-    '<street>,<city>,<state>,<postalCode>,<latitude>,<longitude>'."""
+    [<street>,<city>,<state>,<postalCode>,<latitude>,<longitude>]."""
 
     addr_parts = ["line", "city", "state", "postalCode", "latitude", "longitude"]
-    addr_str = ""
+    addr_list = []
     for part in addr_parts:
         if part not in ["latitude", "longitude"]:
-            addr_str += get_value(addr, part) + ","
+            addr_list.append(get_value(addr, part))
         else:
-            addr_str += get_coordinate(addr, part)
-            if part == "latitude":
-                addr_str += ","
+            addr_list.append(get_coordinate(addr, part))
 
-    return addr_str
+    return addr_list
 
 
 def get_coordinate(addr: dict, coord: str) -> str:
-    """Given an entry in a list of addresses from a patient resource return latitude or
-    longitude (specified by coord) as a string."""
+    """Given an entry in the list of addresses from a patient resource return latitude
+    or longitude (specified by coord) as a string."""
 
     value = ""
     if "extension" in addr:
@@ -129,10 +122,9 @@ def get_coordinate(addr: dict, coord: str) -> str:
     return value
 
 
-def get_race_ethnicity(pt_rsc: dict) -> str:
-    """Given a patient resource return the patients race and ethnicity in a string of
-    the form:
-    '<race>,<ethnicity>'."""
+def get_race_ethnicity(pt_rsc: dict) -> List[str]:
+    """Given a patient resource return the patient's race and ethnicity in a list of
+    the form:[<race>,<ethnicity>]."""
 
     race = ""
     ethnicity = ""
@@ -142,14 +134,14 @@ def get_race_ethnicity(pt_rsc: dict) -> str:
                 extension["url"]
                 == "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race"
             ):
-                race = extension["extension"][0]["valueCoding"]["display"]
+                race = extension["extension"][0]["valueCoding"]["code"]
             elif (
                 extension["url"]
                 == "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity"
             ):
-                ethnicity = extension["extension"][0]["valueCoding"]["display"]
+                ethnicity = extension["extension"][0]["valueCoding"]["code"]
 
-    return f"{race},{ethnicity}"
+    return [race, ethnicity]
 
 
 def get_value(dictionary: dict, key: str) -> str:
