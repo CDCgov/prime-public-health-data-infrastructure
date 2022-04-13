@@ -39,7 +39,7 @@ def generate_csvs() -> dict[str, io.StringIO]:
     # For each record, run the associated function and write the appropriate csv
     for rtype, bundle in read_bundles_by_type():
         cols, fn = RECORD_TYPES[rtype]
-        writers[rtype].writerow(fn(bundle))
+        writers[rtype].writerows(fn(bundle))
 
     return results
 
