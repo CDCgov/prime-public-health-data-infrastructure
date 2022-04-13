@@ -11,6 +11,9 @@ def test_generate_csvs(mock_bundle_reader):
     with a single record per type
     """
 
+    container_url = "https://some-url"
+    csv_input_prefix = "some-prefix"
+
     mock_bundle_reader.return_value = [
         (RECORD_TYPE_VXU, {}),
         (RECORD_TYPE_ECR, {}),
@@ -24,7 +27,7 @@ def test_generate_csvs(mock_bundle_reader):
     }
 
     with mock.patch("GenerateCSVs.RECORD_TYPES", mock_types_def):
-        results = generate_csvs()
+        results = generate_csvs(container_url, csv_input_prefix)
 
     assert len(results) == 3
     assert results[RECORD_TYPE_VXU].getvalue() == "vxucol\r\nvxurec\r\n"
