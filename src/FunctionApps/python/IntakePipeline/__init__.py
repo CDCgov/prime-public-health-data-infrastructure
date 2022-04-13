@@ -4,8 +4,14 @@ import azure.functions as func
 
 from IntakePipeline.transform import transform_bundle
 from IntakePipeline.linkage import add_patient_identifier
-from IntakePipeline.fhir import read_fhir_bundles, upload_bundle_to_fhir_server
-from IntakePipeline.utils import get_required_config
+from IntakePipeline.fhir import (
+    read_fhir_bundles,
+    upload_bundle_to_fhir_server,
+    store_bundle,
+    get_fhirserver_cred_manager,
+)
+
+from config import get_required_config
 
 from phdi_transforms.geo import get_smartystreets_client
 
@@ -16,14 +22,19 @@ def run_pipeline():
         get_required_config("SMARTYSTREETS_AUTH_ID"),
         get_required_config("SMARTYSTREETS_AUTH_TOKEN"),
     )
+    fhirserver_cred_manager = get_fhirserver_cred_manager(
+        get_required_config("FHIR_URL")
+    )
 
-    for bundle in read_fhir_bundles(
-        get_required_config("INTAKE_CONTAINER_URL"),
-        get_required_config("INTAKE_CONTAINER_PREFIX"),
-    ):
+    container_url = get_required_config("INTAKE_CONTAINER_URL")
+    container_prefix = get_required_config("INTAKE_CONTAINER_PREFIX")
+    output_path = get_required_config("OUTPUT_CONTAINER_PATH")
+
+    for bundle in read_fhir_bundles(container_url, container_prefix):
         transform_bundle(geocoder, bundle)
         add_patient_identifier(salt, bundle)
-        upload_bundle_to_fhir_server(bundle)
+        store_bundle(container_url, output_path, bundle)
+        upload_bundle_to_fhir_server(fhirserver_cred_manager, bundle)
 
 
 def main(req: func.HttpRequest) -> func.HttpResponse:

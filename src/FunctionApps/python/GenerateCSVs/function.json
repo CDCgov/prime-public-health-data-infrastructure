@@ -1,5 +1,5 @@
 {
-  "scriptFile": "__main__.py",
+  "scriptFile": "__init__.py",
   "bindings": [
     {
       "authLevel": "Anonymous",
@@ -7,6 +7,7 @@
       "direction": "in",
       "name": "req",
       "methods": [
+        "get",
         "post"
       ]
     },
