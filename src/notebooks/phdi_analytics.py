@@ -1,12 +1,12 @@
 import csv
 import datetime as dt
 import os
+from pathlib import Path
 import random
 import re
 
 import censusgeocode as cg
 from concurrent.futures import ThreadPoolExecutor
-from faker import Faker
 from geopy import Point
 from geopy.distance import geodesic
 import geopandas as gpd
@@ -14,33 +14,38 @@ import git
 import matplotlib.ticker as mtick
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-import names
 import numpy as np
 import pandas as pd
 import seaborn as sns
 from tqdm.notebook import tqdm
 
-
-def get_git_root(path):
-    """Return Top Level Git Repository directory given path"""
-    git_repo = git.Repo(path, search_parent_directories=True)
-    git_root = git_repo.git.rev_parse("--show-toplevel")
-    return git_root
-
-
 NOTEBOOK_PATH = os.path.abspath('')
 HOME_DIR = os.path.expanduser('~')
 INVENTORY_DIR = os.path.join(HOME_DIR, 'inventory')
-GIT_ROOT_DIR = get_git_root(NOTEBOOK_PATH)
-OUTPUTS_DIR = os.path.join(GIT_ROOT_DIR, 'src', 'notebooks', 'outputs')
+
+# Changing to "hardcode" path based on comment from Bryan
+# https://github.com/CDCgov/prime-public-health-data-infrastructure/pull/
+# 56#discussion_r847258818
+FILE_DIR = Path(__file__).parent.absolute()
+OUTPUTS_DIR = os.path.join(FILE_DIR, 'outputs')
 
 # Approximate center of Fairfax County chosen on Google Maps
 FAIRFAX_COUNTY_CENTER = Point(38.845262, -77.307035)
+
+# Link to VA CBG Shapefile is here:
+# https://data.virginia.gov/Government/2019-Virginia-Census-Block-Groups/
+# gtta-aa5t/data
+# I downloaded to a local directory called "inventory". You will to do this
+# as well for your code to run
 VA_CBG_MAP_PATH = os.path.join(
     INVENTORY_DIR,
     '2019 Virginia Census Block Groups',
     'geo_export_64de6806-7ef0-4c39-97f1-b52e5d986702.shp'
 )
+
+# Link to download VA Census Tract Shapefile:
+# https://catalog.data.gov/dataset/
+# tiger-line-shapefile-2018-state-virginia-current-census-tract-state-based
 VA_TRACT_MAP_PATH = os.path.join(INVENTORY_DIR, 'tl_2018_51_tract')
 
 FAIRFAX_COUNTY_ZIPS = [
@@ -142,17 +147,18 @@ def create_dataframe(radius, number_of_points, center):
     first_names = []
     last_names = []
     addresses = []
-    fake = Faker()
     zip_codes = []
     event_dates = []
     for p in points:
         latitudes.append(p[0])
         longitudes.append(p[1])
-        address = fake.address()
-        street = address.split('\n')[0]
-        first_names.append(names.get_first_name())
-        last_names.append(names.get_last_name())
-        addresses.append(street)
+        # Note, to generate fake names you can use the names library
+        # https://pypi.org/project/names/
+        # Since we're not actually doing anything with names, we'll just put in
+        # test names
+        first_names.append('Test First Name')
+        last_names.append('Test Last Name')
+        addresses.append('Test 123 Street')
         zip_codes.append(random.sample(FAIRFAX_COUNTY_ZIPS, 1)[0])
         event_dates.append(generate_random_date(start_date, end_date))
 
@@ -196,7 +202,7 @@ def create_dataframe(radius, number_of_points, center):
     return df
 
 
-def aggregate_df(df, window='30D', metric_label='Breakthrough Infection'):
+def _aggregate_df(df, window='30D', metric_label='Breakthrough Infection'):
     df.sort_values(by='event_dt', ascending=True, inplace=True)
 
     if metric_label.lower() == 'breakthrough infection':
@@ -213,9 +219,25 @@ def aggregate_df(df, window='30D', metric_label='Breakthrough Infection'):
 
 
 def plot_time_series_metric(df, window, metric_label):
-    df_agg = aggregate_df(df, window=window, metric_label=metric_label)
+    """
+    Plot a metric as a time series
 
-    window_length_label = re.findall(r'\d+', window)[0]
+    Keyword Args:
+      - df: Dataframe
+      - window: A Python DateOffset Object. Valid values are documented here:
+        https://pandas.pydata.org/pandas-docs/stable/user_guide/
+        timeseries.html#dateoffset-objects
+
+        For this prototype we are assuming only rolling days ('D').
+        However, in theory, we could support multiple rolling time frames
+      - metric_label: The label for the metric. Will be used to label
+        y-axis
+    """
+    assert window[-1] in ['D'],\
+         'Enter a time window that is in Days'
+    window_length_label = window[:-1]
+
+    df_agg = _aggregate_df(df, window=window, metric_label=metric_label)
 
     fig, ax_lst = plt.subplots(nrows=1, ncols=1, figsize=(15, 8))
 
