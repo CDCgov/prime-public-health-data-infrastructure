@@ -231,8 +231,7 @@ def plot_time_series_metric(df, window, metric_label):
       - metric_label: The label for the metric. Will be used to label
         y-axis
     """
-    assert window[-1] in ['D'],\
-         'Enter a time window that is in Days'
+    assert window[-1] in ['D'], 'Enter a time window that is in Days'
     window_length_label = window[:-1]
 
     df_agg = _aggregate_df(df, window=window, metric_label=metric_label)
