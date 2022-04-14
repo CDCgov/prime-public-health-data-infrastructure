@@ -30,6 +30,11 @@ def run_pipeline():
     container_prefix = get_required_config("INTAKE_CONTAINER_PREFIX")
     output_path = get_required_config("OUTPUT_CONTAINER_PATH")
 
+    # TODO: replace read_fhir_bundles with something like read_hl7_file
+    # which reads in the file, separates out the individual messages, and
+    # then iterates through each message, first converting it to FHIR,
+    # then picking back up with transform_bundle, which uses the bundle
+    # returned from convert_message_to_fhir.
     for datatype, bundle in read_fhir_bundles(container_url, container_prefix):
         transform_bundle(geocoder, bundle)
         add_patient_identifier(salt, bundle)
