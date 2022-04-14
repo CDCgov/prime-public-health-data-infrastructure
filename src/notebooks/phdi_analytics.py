@@ -3,14 +3,12 @@ import datetime as dt
 import os
 from pathlib import Path
 import random
-import re
 
 import censusgeocode as cg
 from concurrent.futures import ThreadPoolExecutor
 from geopy import Point
 from geopy.distance import geodesic
 import geopandas as gpd
-import git
 import matplotlib.ticker as mtick
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
