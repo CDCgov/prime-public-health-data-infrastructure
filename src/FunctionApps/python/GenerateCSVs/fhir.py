@@ -41,10 +41,12 @@ def get_blobs(
 def read_bundles_by_type(
     container_url: str, container_prefix: str, record_types: list
 ) -> Iterator[Tuple[str, dict]]:
-    """Reads FHIR bundle dicts and returns an iterator referencing tuples containing
-    the following information:
-    record_type (str) The record type (e.g. ELR, ECR, VXU)
-    bytes (BytesIO) Actual content of the container
+    """Reads FHIR bundle dicts using the specified container info
+    and returns an iterator referencing tuples containing the
+    following information:
+    record_type (str) The record type(s) to read,
+    corresponding to RECORD_TYPE constants (e.g. elr, ecr, vxu).
+    fhir_content (dict) Actual content of the container, json formatted
     """
     for record_type, fp in get_blobs(container_url, container_prefix, record_types):
         for line in fp:
