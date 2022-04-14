@@ -1,11 +1,11 @@
 import json
 import pathlib
-from GenerateCSVs.elr import extract_covid_test
+from GenerateCSVs.elr import extract_loinc_lab
 from GenerateCSVs.elr import elr_to_csv
 import pytest
 
 
-def test_extract_covid_test():
+def test_extract_loinc_lab():
     covid_obs = json.load(
         open(pathlib.Path(__file__).parent / "assets" / "observation.json")
     )
@@ -23,8 +23,8 @@ def test_extract_covid_test():
             ]
         },
     }
-    assert extract_covid_test(non_covid_obs) == []
-    assert extract_covid_test(covid_obs) == [
+    assert extract_loinc_lab(non_covid_obs) == []
+    assert extract_loinc_lab(covid_obs) == [
         "94500-6",
         "Positive",
         "2022-01-01T01:01:00",
