@@ -1,4 +1,4 @@
-from typing import List, Any
+from typing import List
 from GenerateCSVs.patient import PATIENT_COLUMNS, parse_patient_resource
 
 
