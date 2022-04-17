@@ -67,6 +67,18 @@ def store_bundle(container_url: str, prefix: str, bundle: dict, datatype: str) -
     blob.upload_blob(json.dumps(bundle).encode("utf-8"))
 
 
+def store_message(
+    container_url: str,
+    prefix: str,
+    filename: str,
+    message: str
+) -> None:
+    """Store a message that failed to convert to FHIR in the output container"""
+    client = get_blob_client(container_url)
+    blob = client.get_blob_client(str(pathlib.Path(prefix) / f"{filename}"))
+    blob.upload_blob(message)
+
+
 class AzureFhirserverCredentialManager:
     """Manager for handling Azure credentials for access to the FHIR server"""
 
@@ -89,7 +101,8 @@ class AzureFhirserverCredentialManager:
             return self.access_token
 
         creds = self._get_azure_credentials()
-        self.access_token = creds.get_token(self.fhir_url)
+        scope = f"{self.fhir_url}/.default"
+        self.access_token = creds.get_token(scope)
 
         return self.access_token
 

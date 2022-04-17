@@ -1,4 +1,5 @@
 import re
+import json
 import requests
 from typing import List
 from config import get_required_config
@@ -59,9 +60,9 @@ def convert_batch_messages_to_list(
 
         # If we reach a line that starts with MSH and we have
         # content in nextMessage, then by definition we have
-        # a full message in nextMessage and need to append it
+        # a full message in next_message and need to append it
         # to output. This will not trigger the first time we
-        # see a line with MSH since nextMessage will be empty
+        # see a line with MSH since next_message will be empty
         # at that time.
         if next_message != "" and line.startswith("MSH"):
             output.append(next_message)
@@ -78,11 +79,6 @@ def convert_batch_messages_to_list(
         output.append(next_message)
 
     return output
-
-
-def get_access_token() -> str:
-    # TODO: implement Kotlin code in Python
-    pass
 
 
 def convert_message_to_fhir(
@@ -130,7 +126,7 @@ def convert_message_to_fhir(
     )
 
     if input_data_type is None or root_template is None:
-        return None
+        raise Exception("Unknown file format or message type")
 
     url = f"{get_required_config('FHIR_URL')}/$convert-data"
     data = {
@@ -142,6 +138,8 @@ def convert_message_to_fhir(
             {"name": "rootTemplate", "valueString": root_template}
         ]
     }
+    
+    data = json.dumps(data)
 
     response = requests.post(
         url=url,
@@ -152,4 +150,4 @@ def convert_message_to_fhir(
         }
     )
 
-    return response.json()
+    return response
