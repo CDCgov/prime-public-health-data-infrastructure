@@ -16,10 +16,7 @@ def clean_message(message: str, delimiter: str = "\n") -> str:
 
 # This method was adopted from PRIME ReportStream, which can be found here:
 # https://github.com/CDCgov/prime-reportstream/blob/194396582be02fcc51295089f20b0c2b90e7c830/prime-router/src/main/kotlin/serializers/Hl7Serializer.kt#L121
-def convert_batch_messages_to_list(
-    content: str,
-    delimiter: str = "\n"
-) -> List[str]:
+def convert_batch_messages_to_list(content: str, delimiter: str = "\n") -> List[str]:
     """
     FHS is a "File Header Segment", which is used to head a file (group of batches)
     FTS is a "File Trailer Segment", which defines the end of a file
@@ -84,13 +81,9 @@ def convert_message_to_fhir(
     message_format: str,
     message_type: str,
     access_token: str,
-    fhir_url: str
+    fhir_url: str,
 ) -> str:
-    message_format_map = {
-        "hl7v2": "Hl7v2",
-        "ccda": "Ccda",
-        "json": "Json"
-    }
+    message_format_map = {"hl7v2": "Hl7v2", "ccda": "Ccda", "json": "Json"}
 
     message_type_map = {
         "adt_a01": "ADT_A01",
@@ -108,7 +101,7 @@ def convert_message_to_fhir(
         "referralnote": "ReferralNote",
         "transfersummary": "TransferSummary",
         "examplepatient": "ExamplePatient",
-        "stu3chargeitem": "Stu3ChargeItem"
+        "stu3chargeitem": "Stu3ChargeItem",
     }
 
     template_map = {
@@ -120,8 +113,7 @@ def convert_message_to_fhir(
     input_data_type = message_format_map.get(message_format.lower())
     root_template = message_type_map.get(message_type.lower())
     template_collection = template_map.get(
-        input_data_type,
-        "microsofthealth/hl7v2templates:default"
+        input_data_type, "microsofthealth/hl7v2templates:default"
     )
 
     if input_data_type is None or root_template is None:
@@ -134,16 +126,12 @@ def convert_message_to_fhir(
             {"name": "inputData", "valueString": message},
             {"name": "inputDataType", "valueString": input_data_type},
             {"name": "templateCollectionReference", "valueString": template_collection},
-            {"name": "rootTemplate", "valueString": root_template}
-        ]
+            {"name": "rootTemplate", "valueString": root_template},
+        ],
     }
 
     response = requests.post(
-        url=url,
-        json=data,
-        headers={
-            "Authorization": f"Bearer {access_token}"
-        }
+        url=url, json=data, headers={"Authorization": f"Bearer {access_token}"}
     )
 
     return response
