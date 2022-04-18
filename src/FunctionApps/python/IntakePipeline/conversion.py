@@ -140,7 +140,7 @@ def convert_message_to_fhir(
 
     response = requests.post(
         url=url,
-        data=data,
+        json=data,
         headers={
             "Authorization": f"Bearer {access_token}"
         }
