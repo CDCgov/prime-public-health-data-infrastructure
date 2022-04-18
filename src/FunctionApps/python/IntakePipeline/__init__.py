@@ -1,5 +1,7 @@
 import logging
 
+from typing import Tuple
+
 import azure.functions as func
 
 from IntakePipeline.transform import transform_bundle
@@ -9,6 +11,7 @@ from IntakePipeline.fhir import (
     store_bundle,
     store_message,
     get_fhirserver_cred_manager,
+    AzureFhirserverCredentialManager,
 )
 from IntakePipeline.conversion import (
     convert_batch_messages_to_list,
@@ -20,18 +23,39 @@ from config import get_required_config
 from phdi_transforms.geo import get_smartystreets_client
 
 
-def run_pipeline(blob: func.InputStream, filetype: str):
+def run_pipeline(
+    bundle: dict,
+    datatype: str,
+    cred_manager: AzureFhirserverCredentialManager,
+):
     salt = get_required_config("HASH_SALT")
     geocoder = get_smartystreets_client(
         get_required_config("SMARTYSTREETS_AUTH_ID"),
         get_required_config("SMARTYSTREETS_AUTH_TOKEN"),
     )
-    fhir_url = get_required_config("FHIR_URL")
-    fhirserver_cred_manager = get_fhirserver_cred_manager(fhir_url)
 
-    container_url = get_required_config("INTAKE_CONTAINER_URL")
-    valid_output_path = get_required_config("VALID_OUTPUT_CONTAINER_PATH")
-    invalid_output_path = get_required_config("INVALID_OUTPUT_CONTAINER_PATH")
+    transform_bundle(geocoder, bundle)
+    add_patient_identifier(salt, bundle)
+    store_bundle(
+        get_required_config("CONTAINER_URL"),
+        get_required_config("VALID_OUTPUT_CONTAINER_PATH"),
+        bundle,
+        datatype,
+    )
+    upload_bundle_to_fhir_server(cred_manager, bundle)
+
+
+def convert_to_fhir(
+    blob: func.InputStream,
+    fhir_url: str,
+    container_url: str,
+    invalid_output_path: str,
+    cred_manager: AzureFhirserverCredentialManager,
+) -> Tuple[str, dict]:
+    if blob.name[-3:].lower() not in ("hl7", "xml"):
+        raise Exception(f"invalid file extension for {blob.name}")
+
+    filetype = blob.name.split("/")[-2].lower()
 
     if filetype == "elr":
         message_type = "oru_r01"
@@ -48,15 +72,13 @@ def run_pipeline(blob: func.InputStream, filetype: str):
     else:
         raise Exception(f"Found an unidentified message_format: {filetype}")
 
-    # The HL7 messages that VA sent have weird unicode characters at the beginning
-    # and end of the files (\\u000b & \\u001c, respectively) that can't be decoded.
-    # The quick fix is to ignore the errors.
-    # TODO: Properly handle the erroneous unicode characters.
+    # VA sends \\u000b & \\u001c in real data, ignore for now
     messages = convert_batch_messages_to_list(
         blob.read().decode("utf-8", errors="ignore")
     )
+
     for i, message in enumerate(messages):
-        token = fhirserver_cred_manager.get_access_token()
+        token = cred_manager.get_access_token()
         response = convert_message_to_fhir(
             message=message,
             message_format=message_format,
@@ -66,15 +88,8 @@ def run_pipeline(blob: func.InputStream, filetype: str):
         )
 
         if response.status_code == 200:
-            bundle = response.json()
-            transform_bundle(geocoder, bundle)
-            add_patient_identifier(salt, bundle)
-            store_bundle(container_url, valid_output_path, bundle, bundle_type)
-            upload_bundle_to_fhir_server(fhirserver_cred_manager, bundle)
-        # A status code of 400 is returned if the HL7 is invalid
-        # We're seeing this a lot for malformed datetimes.
+            return bundle_type, response.json()
         else:
-            # TODO: 76-78 should probably be its own function, but in what module?
             ftype, fname = blob.name.split("/")[-2:]
             fname, ext = fname.rsplit(".", 1)
             filename = f"{ftype.lower()}-{fname}-{i}.{ext}"
@@ -84,9 +99,16 @@ def run_pipeline(blob: func.InputStream, filetype: str):
 def main(blob: func.InputStream) -> func.HttpResponse:
     logging.info("Triggering intake pipeline")
     try:
-        if blob.name.endswith(".hl7") or blob.name.endswith(".xml"):
-            filetype = blob.name.split("/")[-2].lower()
-            run_pipeline(blob, filetype)
+        fhir_url = get_required_config("FHIR_URL")
+        container_url = get_required_config("INTAKE_CONTAINER_URL")
+        invalid_output_path = get_required_config("INVALID_OUTPUT_CONTAINER_PATH")
+        cred_manager = get_fhirserver_cred_manager(fhir_url)
+
+        bundles = convert_to_fhir(
+            blob, fhir_url, container_url, invalid_output_path, cred_manager
+        )
+        for bundle, datatype in bundles:
+            run_pipeline(bundle, datatype, cred_manager)
     except Exception:
         logging.exception("exception caught while running the intake pipeline")
         return func.HttpResponse(

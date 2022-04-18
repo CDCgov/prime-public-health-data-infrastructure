@@ -67,12 +67,7 @@ def store_bundle(container_url: str, prefix: str, bundle: dict, datatype: str) -
     blob.upload_blob(json.dumps(bundle).encode("utf-8"))
 
 
-def store_message(
-    container_url: str,
-    prefix: str,
-    filename: str,
-    message: str
-) -> None:
+def store_message(container_url: str, prefix: str, filename: str, message: str) -> None:
     """Store a message that failed to convert to FHIR in the output container"""
     client = get_blob_client(container_url)
     blob = client.get_blob_client(str(pathlib.Path(prefix) / f"{filename}"))
