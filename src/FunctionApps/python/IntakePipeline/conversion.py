@@ -1,7 +1,6 @@
 import re
 import requests
 from typing import List
-from config import get_required_config
 
 
 def clean_message(message: str, delimiter: str = "\n") -> str:
