@@ -1,5 +1,4 @@
 import re
-import json
 import requests
 from typing import List
 from config import get_required_config
@@ -85,7 +84,8 @@ def convert_message_to_fhir(
     message: str,
     message_format: str,
     message_type: str,
-    access_token: str
+    access_token: str,
+    fhir_url: str
 ) -> str:
     message_format_map = {
         "hl7v2": "Hl7v2",
@@ -128,7 +128,7 @@ def convert_message_to_fhir(
     if input_data_type is None or root_template is None:
         raise Exception("Unknown file format or message type")
 
-    url = f"{get_required_config('FHIR_URL')}/$convert-data"
+    url = f"{fhir_url}/$convert-data"
     data = {
         "resourceType": "Parameters",
         "parameter": [
@@ -138,14 +138,11 @@ def convert_message_to_fhir(
             {"name": "rootTemplate", "valueString": root_template}
         ]
     }
-    
-    data = json.dumps(data)
 
     response = requests.post(
         url=url,
         data=data,
         headers={
-            "Content-Type": "application/json",
             "Authorization": f"Bearer {access_token}"
         }
     )

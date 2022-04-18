@@ -26,9 +26,8 @@ def run_pipeline(blob: func.InputStream, filetype: str):
         get_required_config("SMARTYSTREETS_AUTH_ID"),
         get_required_config("SMARTYSTREETS_AUTH_TOKEN"),
     )
-    fhirserver_cred_manager = get_fhirserver_cred_manager(
-        get_required_config("FHIR_URL")
-    )
+    fhir_url = get_required_config("FHIR_URL")
+    fhirserver_cred_manager = get_fhirserver_cred_manager(fhir_url)
 
     container_url = get_required_config("INTAKE_CONTAINER_URL")
     valid_output_path = get_required_config("VALID_OUTPUT_CONTAINER_PATH")
@@ -63,7 +62,9 @@ def run_pipeline(blob: func.InputStream, filetype: str):
             message_format=message_format,
             message_type=message_type,
             access_token=token.token,
+            fhir_url=fhir_url,
         )
+
         if response.status_code == 200:
             bundle = response.json()
             transform_bundle(geocoder, bundle)
