@@ -151,7 +151,7 @@ def test_get_access_token_reuse(mock_get_token):
     # Use the default token reuse tolerance, which is less than
     # the mock token's time to live of 2399
     fhirserver_cred_manager.get_access_token()
-    mock_get_token.assert_called_once_with("https://fhir-url")
+    mock_get_token.assert_called_once_with("https://fhir-url/.default")
     assert token1.token == "my-token"
 
 
@@ -171,6 +171,6 @@ def test_get_access_token_refresh(mock_get_token):
     # force another refresh for the new call
     fhirserver_cred_manager.get_access_token(2500)
     mock_get_token.assert_has_calls(
-        [mock.call("https://fhir-url"), mock.call("https://fhir-url")]
+        [mock.call("https://fhir-url/.default"), mock.call("https://fhir-url/.default")]
     )
     assert token1.token == "my-token"

@@ -37,7 +37,7 @@ def run_pipeline(
     transform_bundle(geocoder, bundle)
     add_patient_identifier(salt, bundle)
     store_bundle(
-        get_required_config("CONTAINER_URL"),
+        get_required_config("INTAKE_CONTAINER_URL"),
         get_required_config("VALID_OUTPUT_CONTAINER_PATH"),
         bundle,
         datatype,
