@@ -2,20 +2,18 @@ import logging
 
 from typing import List
 from GenerateCSVs.patient import PATIENT_COLUMNS, parse_patient_resource
-from GenerateCSVs.elr import extract_loinc_lab
-from GenerateCSVs.vxu import parse_immunization_resource
+from GenerateCSVs.elr import ELR_SPECIFIC_COLUMNS, extract_loinc_lab
+from GenerateCSVs.vxu import VXU_SPECIFIC_COLUMNS, parse_immunization_resource
 
 ECR_COLUMNS = (
     PATIENT_COLUMNS
-    + [  # Immunization columns
-        "immunizationVaccineCode",
-        "immunizationVaccineDescription",
-        "immunizationOccurrenceDateTime",
+    + [
+        f"immunization{column[0].upper() + column[1:]}"
+        for column in VXU_SPECIFIC_COLUMNS
     ]
-    + [  # Observation columns
-        "observationLoincCode",
-        "observationResult",
-        "observationEffectiveDateTime",
+    + [
+        f"observation{column[0].upper() + column[1:]}"
+        for column in ELR_SPECIFIC_COLUMNS
     ]
 )
 

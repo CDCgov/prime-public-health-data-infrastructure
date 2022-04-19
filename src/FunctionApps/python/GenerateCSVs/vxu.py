@@ -2,11 +2,13 @@ from typing import List
 from GenerateCSVs.patient import PATIENT_COLUMNS
 from GenerateCSVs.patient import parse_patient_resource
 
-VXU_COLUMNS = PATIENT_COLUMNS + [
+VXU_SPECIFIC_COLUMNS = [
     "vaccineCode",
     "vaccineDescription",
     "occurrenceDateTime",
 ]
+
+VXU_COLUMNS = PATIENT_COLUMNS + VXU_SPECIFIC_COLUMNS
 
 
 def vxu_to_csv(bundle: dict) -> List[List[str]]:
