@@ -51,7 +51,7 @@ def vxu_to_csv(bundle: dict) -> List[List[str]]:
             imm_resource = parse_immunization_resource(imm_rsc)
 
             # Require vaccine code or decription to build a row
-            if imm_resource[0] or imm_resource[1]:
+            if imm_resource[0:2] != ["", ""]:
                 return_rows.append(patient_resources.get(pat_ref) + imm_resource)
 
     return return_rows
