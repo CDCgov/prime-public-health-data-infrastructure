@@ -1,114 +1,100 @@
 import logging
-
-from typing import Tuple
-
 import azure.functions as func
+from typing import Dict
 
 from IntakePipeline.transform import transform_bundle
 from IntakePipeline.linkage import add_patient_identifier
 from IntakePipeline.fhir import (
     upload_bundle_to_fhir_server,
-    store_bundle,
-    store_message,
+    store_data,
+    generate_filename,
     get_fhirserver_cred_manager,
     AzureFhirserverCredentialManager,
 )
 from IntakePipeline.conversion import (
     convert_batch_messages_to_list,
     convert_message_to_fhir,
+    get_file_type_mappings,
 )
-
 from config import get_required_config
-
 from phdi_transforms.geo import get_smartystreets_client
 
 
 def run_pipeline(
-    bundle: dict,
-    datatype: str,
+    message: str,
+    message_mappings: Dict[str, str],
+    fhir_url: str,
+    access_token: str,
     cred_manager: AzureFhirserverCredentialManager,
-):
+) -> None:
+    """
+    This function takes in a single message and runs it through the Data
+    Transformation section of the PHDI VA Pilot Architecture diagram. If
+    the message is successfully converted to FHIR, then it is processed
+    through the remaining transformations (standardization & geocoding),
+    and stored in both a storage container and the FHIR server. If it is
+    not valid, it is routed to a storage container marked as invalid, and
+    no further processing is done.
+    """
     salt = get_required_config("HASH_SALT")
     geocoder = get_smartystreets_client(
         get_required_config("SMARTYSTREETS_AUTH_ID"),
         get_required_config("SMARTYSTREETS_AUTH_TOKEN"),
     )
+    container_url = get_required_config("INTAKE_CONTAINER_URL")
+    valid_output_path = get_required_config("VALID_OUTPUT_CONTAINER_PATH")
+    invalid_output_path = get_required_config("INVALID_OUTPUT_CONTAINER_PATH")
 
-    transform_bundle(geocoder, bundle)
-    add_patient_identifier(salt, bundle)
-    store_bundle(
-        get_required_config("INTAKE_CONTAINER_URL"),
-        get_required_config("VALID_OUTPUT_CONTAINER_PATH"),
-        bundle,
-        datatype,
-    )
-    upload_bundle_to_fhir_server(cred_manager, bundle)
-
-
-def convert_to_fhir(
-    blob: func.InputStream,
-    fhir_url: str,
-    container_url: str,
-    invalid_output_path: str,
-    cred_manager: AzureFhirserverCredentialManager,
-) -> Tuple[str, dict]:
-    if blob.name[-3:].lower() not in ("hl7", "xml"):
-        raise Exception(f"invalid file extension for {blob.name}")
-
-    filetype = blob.name.split("/")[-2].lower()
-
-    if filetype == "elr":
-        message_type = "oru_r01"
-        message_format = "hl7v2"
-        bundle_type = "ELR"
-    elif filetype == "vxu":
-        message_type = "vxu_v04"
-        message_format = "hl7v2"
-        bundle_type = "VXU"
-    elif filetype == "eICR":
-        message_type = "ccda"
-        message_format = "ccda"
-        bundle_type = "ECR"
-    else:
-        raise Exception(f"Found an unidentified message_format: {filetype}")
-
-    # VA sends \\u000b & \\u001c in real data, ignore for now
-    messages = convert_batch_messages_to_list(
-        blob.read().decode("utf-8", errors="ignore")
+    bundle = convert_message_to_fhir(
+        message=message,
+        input_data_type=message_mappings["input_data_type"],
+        root_template=message_mappings["root_template"],
+        template_collection=message_mappings["template_collection"],
+        access_token=access_token,
+        fhir_url=fhir_url,
     )
 
-    for i, message in enumerate(messages):
-        token = cred_manager.get_access_token()
-        response = convert_message_to_fhir(
-            message=message,
-            message_format=message_format,
-            message_type=message_type,
-            access_token=token.token,
-            fhir_url=fhir_url,
+    if len(bundle) > 0:
+        transform_bundle(geocoder, bundle)
+        add_patient_identifier(salt, bundle)
+        store_data(
+            container_url,
+            valid_output_path,
+            f"{message_mappings['filename']}.fhir",
+            message_mappings["bundle_type"],
+            bundle,
         )
-
-        if response.status_code == 200:
-            return bundle_type, response.json()
-        else:
-            ftype, fname = blob.name.split("/")[-2:]
-            fname, ext = fname.rsplit(".", 1)
-            filename = f"{ftype.lower()}-{fname}-{i}.{ext}"
-            store_message(container_url, invalid_output_path, filename, message)
+        upload_bundle_to_fhir_server(cred_manager, bundle)
+    else:
+        store_data(
+            container_url,
+            invalid_output_path,
+            f"{message_mappings['filename']}.hl7",
+            message_mappings["bundle_type"],
+            bundle,
+        )
 
 
 def main(blob: func.InputStream) -> func.HttpResponse:
     logging.info("Triggering intake pipeline")
-    try:
-        fhir_url = get_required_config("FHIR_URL")
-        container_url = get_required_config("INTAKE_CONTAINER_URL")
-        invalid_output_path = get_required_config("INVALID_OUTPUT_CONTAINER_PATH")
-        cred_manager = get_fhirserver_cred_manager(fhir_url)
 
-        bundles = convert_to_fhir(
-            blob, fhir_url, container_url, invalid_output_path, cred_manager
+    fhir_url = get_required_config("FHIR_URL")
+    cred_manager = get_fhirserver_cred_manager(fhir_url)
+
+    try:
+        access_token = cred_manager.get_access_token()
+
+        # VA sends \\u000b & \\u001c in real data, ignore for now
+        messages = convert_batch_messages_to_list(
+            blob.read().decode("utf-8", errors="ignore")
         )
-        for bundle, datatype in bundles:
-            run_pipeline(bundle, datatype, cred_manager)
+        message_mappings = get_file_type_mappings(blob.name)
+
+        for i, message in enumerate(messages):
+            message_mappings["filename"] = generate_filename(blob.name, i)
+            run_pipeline(
+                message, message_mappings, fhir_url, access_token.token, cred_manager
+            )
     except Exception:
         logging.exception("exception caught while running the intake pipeline")
         return func.HttpResponse(

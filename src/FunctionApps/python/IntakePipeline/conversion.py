@@ -1,6 +1,6 @@
 import re
 import requests
-from typing import List
+from typing import List, Dict
 
 
 def clean_message(message: str, delimiter: str = "\n") -> str:
@@ -76,49 +76,67 @@ def convert_batch_messages_to_list(content: str, delimiter: str = "\n") -> List[
     return output
 
 
+def get_file_type_mappings(blob_name: str) -> Dict[str, str]:
+    if blob_name[-3:].lower() not in ("hl7", "xml"):
+        raise Exception(f"invalid file extension for {blob_name}")
+
+    filetype = blob_name.split("/")[-2].lower()
+
+    if filetype == "elr":
+        bundle_type = "ELR"
+        root_template = "ORU_R01"
+        input_data_type = "Hl7v2"
+        template_collection = "microsofthealth/fhirconverter:default"
+    elif filetype == "vxu":
+        bundle_type = "VXU"
+        root_template = "VXU_V04"
+        input_data_type = "Hl7v2"
+        template_collection = "microsofthealth/fhirconverter:default"
+    elif filetype == "eICR":
+        bundle_type = "ECR"
+        root_template = "CCD"
+        input_data_type = "Ccda"
+        template_collection = "microsofthealth/ccdatemplates:default"
+    else:
+        raise Exception(f"Found an unidentified message_format: {filetype}")
+
+    return {
+        "bundle_type": bundle_type,
+        "root_template": root_template,
+        "input_data_type": input_data_type,
+        "template_collection": template_collection,
+    }
+
+
 def convert_message_to_fhir(
     message: str,
-    message_format: str,
-    message_type: str,
+    input_data_type: str,
+    root_template: str,
+    template_collection: str,
     access_token: str,
     fhir_url: str,
-) -> str:
-    message_format_map = {"hl7v2": "Hl7v2", "ccda": "Ccda", "json": "Json"}
+) -> dict:
+    """
+    Given a message in either HL7 v2 (pipe-delimited flat file) or HL7 v3 (XML),
+    attempt to convert that message into FHIR format (JSON) for further processing
+    using the FHIR server. The FHIR server will respond with a status code of 400 if
+    the message itself is invalid, such as containing improperly formatted timestamps,
+    and if that occurs that an empty dictionary is returned so the pipeline knows to
+    store the original message in a separate container. Otherwise, the FHIR data is
+    returned.
 
-    message_type_map = {
-        "adt_a01": "ADT_A01",
-        "oml_o21": "OML_O21",
-        "oru_r01": "ORU_R01",
-        "vxu_v04": "VXU_V04",
-        "ccd": "CCD",
-        "ccda": "CCD",
-        "consultationnote": "ConsultationNote",
-        "dischargesummary": "DischargeSummary",
-        "historyandphysical": "HistoryandPhysical",
-        "operativenote": "OperativeNote",
-        "procedurenote": "ProcedureNote",
-        "progressnote": "ProgressNote",
-        "referralnote": "ReferralNote",
-        "transfersummary": "TransferSummary",
-        "examplepatient": "ExamplePatient",
-        "stu3chargeitem": "Stu3ChargeItem",
-    }
-
-    template_map = {
-        "Hl7v2": "microsofthealth/fhirconverter:default",
-        "Ccda": "microsofthealth/ccdatemplates:default",
-        "Json": "microsofthealth/jsontemplates:default",
-    }
-
-    input_data_type = message_format_map.get(message_format.lower())
-    root_template = message_type_map.get(message_type.lower())
-    template_collection = template_map.get(
-        input_data_type, "microsofthealth/hl7v2templates:default"
-    )
-
-    if input_data_type is None or root_template is None:
-        raise Exception("Unknown file format or message type")
-
+    :param message The raw message that needs to be converted to FHIR. Must be HL7
+    v2 or HL7 v3
+    :param input_data_type The data type of the message. Must be one of Hl7v2 or Ccda
+    :param root_template The core template that should be used when attempting to
+    convert the message to FHIR. More data can be found here:
+    https://docs.microsoft.com/en-us/azure/healthcare-apis/azure-api-for-fhir/convert-data
+    :param template_collection Further specification of which template to use. More
+    information can be found here:
+    https://docs.microsoft.com/en-us/azure/healthcare-apis/azure-api-for-fhir/convert-data
+    :param access_token A Bearer token used to authenticate with the FHIR server
+    :param fhir_url A URL that points to the location of the FHIR server
+    """
     url = f"{fhir_url}/$convert-data"
     data = {
         "resourceType": "Parameters",
@@ -129,9 +147,11 @@ def convert_message_to_fhir(
             {"name": "rootTemplate", "valueString": root_template},
         ],
     }
-
     response = requests.post(
         url=url, json=data, headers={"Authorization": f"Bearer {access_token}"}
     )
 
-    return response
+    if response.status_code != 200:
+        return {}
+
+    return response.json()

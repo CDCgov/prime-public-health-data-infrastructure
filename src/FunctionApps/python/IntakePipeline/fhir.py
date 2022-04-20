@@ -5,7 +5,6 @@ import logging
 import pathlib
 import requests
 from requests.adapters import HTTPAdapter
-import uuid
 from urllib3 import Retry
 
 from typing import Iterator, IO, Tuple
@@ -58,20 +57,24 @@ def read_fhir_bundles(
                 break
 
 
-def store_bundle(container_url: str, prefix: str, bundle: dict, datatype: str) -> None:
-    """Store the given bundle in the output container, in FHIR format"""
+def generate_filename(blob_name: str, message_index: int) -> str:
+    fname = blob_name.split("/")[-1]
+    fname, _ = fname.rsplit(".", 1)
+    return f"{fname}-{message_index}"
+
+
+def store_data(
+    container_url: str, prefix: str, filename: str, bundle_type: str, bundle: dict
+) -> None:
+    """
+    Store the given data, which is either a FHIR bundle or an HL7 message in the
+    appropriate output container
+    """
     client = get_blob_client(container_url)
     blob = client.get_blob_client(
-        str(pathlib.Path(prefix) / datatype / f"{uuid.uuid4()}.fhir")
+        str(pathlib.Path(prefix) / bundle_type / filename)
     )
     blob.upload_blob(json.dumps(bundle).encode("utf-8"))
-
-
-def store_message(container_url: str, prefix: str, filename: str, message: str) -> None:
-    """Store a message that failed to convert to FHIR in the output container"""
-    client = get_blob_client(container_url)
-    blob = client.get_blob_client(str(pathlib.Path(prefix) / f"{filename}"))
-    blob.upload_blob(message)
 
 
 class AzureFhirserverCredentialManager:
@@ -130,7 +133,7 @@ def upload_bundle_to_fhir_server(
     fhirserver_cred_manager: AzureFhirserverCredentialManager, fhir_json: dict
 ):
     """Import a FHIR resource to the FHIR server.
-    The submissions may Bundles or individual FHIR resources.
+    The submissions may be Bundles or individual FHIR resources.
 
     :param AzureFhirserverCredentialManager fhirserver_cred_manager: Credential manager.
     :param dict fhir_json: FHIR resource in json format.
