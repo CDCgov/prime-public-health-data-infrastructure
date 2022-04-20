@@ -62,7 +62,7 @@ def run_pipeline(
             valid_output_path,
             f"{message_mappings['filename']}.fhir",
             message_mappings["bundle_type"],
-            bundle,
+            bundle=bundle,
         )
         upload_bundle_to_fhir_server(cred_manager, bundle)
     else:
@@ -71,7 +71,7 @@ def run_pipeline(
             invalid_output_path,
             f"{message_mappings['filename']}.hl7",
             message_mappings["bundle_type"],
-            bundle,
+            message=message,
         )
 
 

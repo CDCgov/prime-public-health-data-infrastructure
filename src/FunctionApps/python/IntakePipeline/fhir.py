@@ -64,7 +64,12 @@ def generate_filename(blob_name: str, message_index: int) -> str:
 
 
 def store_data(
-    container_url: str, prefix: str, filename: str, bundle_type: str, bundle: dict
+    container_url: str,
+    prefix: str,
+    filename: str,
+    bundle_type: str,
+    bundle: dict = None,
+    message: str = None,
 ) -> None:
     """
     Store the given data, which is either a FHIR bundle or an HL7 message in the
@@ -72,7 +77,10 @@ def store_data(
     """
     client = get_blob_client(container_url)
     blob = client.get_blob_client(str(pathlib.Path(prefix) / bundle_type / filename))
-    blob.upload_blob(json.dumps(bundle).encode("utf-8"))
+    if bundle is not None:
+        blob.upload_blob(json.dumps(bundle).encode("utf-8"))
+    elif message is not None:
+        blob.upload_blob(bytes(message, "utf-8"))
 
 
 class AzureFhirserverCredentialManager:
