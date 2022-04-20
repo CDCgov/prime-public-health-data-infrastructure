@@ -71,9 +71,7 @@ def store_data(
     appropriate output container
     """
     client = get_blob_client(container_url)
-    blob = client.get_blob_client(
-        str(pathlib.Path(prefix) / bundle_type / filename)
-    )
+    blob = client.get_blob_client(str(pathlib.Path(prefix) / bundle_type / filename))
     blob.upload_blob(json.dumps(bundle).encode("utf-8"))
 
 
