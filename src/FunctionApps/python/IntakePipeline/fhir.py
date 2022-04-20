@@ -1,13 +1,10 @@
 from datetime import datetime, timezone
-import io
 import json
 import logging
 import pathlib
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3 import Retry
-
-from typing import Iterator, IO, Tuple
 
 from azure.core.credentials import AccessToken
 from azure.identity import DefaultAzureCredential
@@ -18,43 +15,6 @@ def get_blob_client(container_url: str) -> ContainerClient:
     """Use whatever creds Azure can find to authenticate with the storage container"""
     creds = DefaultAzureCredential()
     return ContainerClient.from_container_url(container_url, credential=creds)
-
-
-def get_blobs(container_url: str, container_prefix: str) -> Iterator[Tuple[str, IO]]:
-    """Grabs blob files from the container as an iterator referencing tuples with
-    the following content.
-    datatype (str) The datatype derived from the container name.  The container name
-    must have the following format:
-    <container_prefix><datatype>/<filename>
-    bytes (BytesIO) Actual content of the container.
-    """
-    client = get_blob_client(container_url)
-    for props in client.list_blobs(name_starts_with=container_prefix):
-        logging.info(f"reading blob {props.name}")
-        if props.size > 0:
-            name_without_prefix = (props.name).lstrip(container_prefix)
-            datatype = name_without_prefix.split("/", 1)[0]
-            # If it's an actual file, download it and yield out the individual records
-            blob_client = client.get_blob_client(props)
-            yield (datatype, io.BytesIO(blob_client.download_blob().content_as_bytes()))
-    return
-
-
-def read_fhir_bundles(
-    container_url: str, container_prefix: str
-) -> Iterator[Tuple[str, dict]]:
-    """Reads FHIR bundle dicts and returns an iterator referencing tuples containing
-    the following information:
-    datatype (str) The datatype (e.g. ELR, ECR, VXU)
-    bytes (BytesIO) Actual content of the container
-    """
-    for datatype, fp in get_blobs(container_url, container_prefix):
-        for line in fp:
-            try:
-                yield datatype, json.loads(line)
-            except Exception:
-                logging.exception("failed to read json contents in line, skipping file")
-                break
 
 
 def generate_filename(blob_name: str, message_index: int) -> str:
