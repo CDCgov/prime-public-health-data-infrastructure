@@ -54,7 +54,7 @@ def run_pipeline(
         fhir_url=fhir_url,
     )
 
-    if len(bundle) > 0:
+    if bundle:
         transform_bundle(geocoder, bundle)
         add_patient_identifier(salt, bundle)
         store_data(
