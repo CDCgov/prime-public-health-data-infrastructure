@@ -92,7 +92,7 @@ def get_file_type_mappings(blob_name: str) -> Dict[str, str]:
         root_template = "VXU_V04"
         input_data_type = "Hl7v2"
         template_collection = "microsofthealth/fhirconverter:default"
-    elif filetype == "eICR":
+    elif filetype == "eicr":
         bundle_type = "ECR"
         root_template = "CCD"
         input_data_type = "Ccda"
