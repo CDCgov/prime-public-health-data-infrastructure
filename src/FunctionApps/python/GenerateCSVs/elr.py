@@ -18,7 +18,7 @@ def extract_loinc_lab(observation: dict) -> List[str]:
         obs_date = observation.get("effectiveDateTime")
         try:
             result = observation["valueCodeableConcept"]["coding"][0]["display"]
-        except:
+        except KeyError:
             result = ""
         return [code.get("code"), result, obs_date]
     return []

@@ -136,7 +136,7 @@ def get_race_ethnicity(pt_rsc: dict) -> List[str]:
             ):
                 try:
                     race = extension["extension"][0]["valueCoding"]["code"]
-                except:
+                except KeyError:
                     race = ""
             elif (
                 extension["url"]
@@ -144,7 +144,7 @@ def get_race_ethnicity(pt_rsc: dict) -> List[str]:
             ):
                 try:
                     ethnicity = extension["extension"][0]["valueCoding"]["code"]
-                except:
+                except KeyError:
                     ethnicity = ""
 
     return [race, ethnicity]
