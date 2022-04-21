@@ -49,7 +49,7 @@ def test_upload_bundle_to_fhir_server(mock_fhir_post):
             ],
         },
         "some-token",
-        "https://some-fhir-url"
+        "https://some-fhir-url",
     )
 
     mock_fhir_post.assert_called_with(
