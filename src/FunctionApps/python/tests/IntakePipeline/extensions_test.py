@@ -65,19 +65,19 @@ def test_add_extensions_to_patient(patched_geocode, bundle):
         ],
         "extension": [
             {
-                "url": "http://usds.gov/fhir/phdi/StructureDefinition/family-name-was-standardized",
+                "url": "http://usds.gov/fhir/phdi/StructureDefinition/family-name-was-standardized",  # noqa
                 "valueBoolean": False,
             },
             {
-                "url": "http://usds.gov/fhir/phdi/StructureDefinition/given-name-was-standardized",
+                "url": "http://usds.gov/fhir/phdi/StructureDefinition/given-name-was-standardized",  # noqa
                 "valueBoolean": True,
             },
             {
-                "url": "http://usds.gov/fhir/phdi/StructureDefinition/phone-was-standardized",
+                "url": "http://usds.gov/fhir/phdi/StructureDefinition/phone-was-standardized",  # noqa
                 "valueBoolean": True,
             },
             {
-                "url": "http://usds.gov/fhir/phdi/StructureDefinition/address-was-standardized",
+                "url": "http://usds.gov/fhir/phdi/StructureDefinition/address-was-standardized",  # noqa
                 "valueBoolean": True,
             },
         ],

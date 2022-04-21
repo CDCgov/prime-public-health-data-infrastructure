@@ -26,7 +26,7 @@ def process_name(name: dict, patient: dict, add_std_extension=False) -> None:
             raw_family = name["family"]
             patient["extension"].append(
                 {
-                    "url": "http://usds.gov/fhir/phdi/StructureDefinition/family-name-was-standardized",
+                    "url": "http://usds.gov/fhir/phdi/StructureDefinition/family-name-was-standardized",  # noqa
                     "valueBoolean": raw_family != std_family,
                 }
             )
@@ -41,7 +41,7 @@ def process_name(name: dict, patient: dict, add_std_extension=False) -> None:
             )
             patient["extension"].append(
                 {
-                    "url": "http://usds.gov/fhir/phdi/StructureDefinition/given-name-was-standardized",
+                    "url": "http://usds.gov/fhir/phdi/StructureDefinition/given-name-was-standardized",  # noqa
                     "valueBoolean": any_diffs,
                 }
             )
@@ -79,7 +79,7 @@ def transform_bundle(
             )
             patient["extension"].append(
                 {
-                    "url": "http://usds.gov/fhir/phdi/StructureDefinition/phone-was-standardized",
+                    "url": "http://usds.gov/fhir/phdi/StructureDefinition/phone-was-standardized",  # noqa
                     "valueBoolean": any_diffs,
                 }
             )
@@ -104,7 +104,7 @@ def transform_bundle(
                 address["state"] = geocoded.state
                 address["postalCode"] = geocoded.zipcode
                 if add_std_extension:
-                    std_one_line = f"{geocoded.address} {geocoded.city}, {geocoded.state} {geocoded.zipcode}"
+                    std_one_line = f"{geocoded.address} {geocoded.city}, {geocoded.state} {geocoded.zipcode}"  # noqa
                     std_addresses.append(std_one_line)
 
                 if "extension" not in address:
@@ -112,7 +112,7 @@ def transform_bundle(
 
                 address["extension"].append(
                     {
-                        "url": "http://hl7.org/fhir/StructureDefinition/geolocation",
+                        "url": "http://hl7.org/fhir/StructureDefinition/geolocation",  # noqa
                         "extension": [
                             {"url": "latitude", "valueDecimal": geocoded.lat},
                             {"url": "longitude", "valueDecimal": geocoded.lng},
@@ -128,7 +128,7 @@ def transform_bundle(
             )
             patient["extension"].append(
                 {
-                    "url": "http://usds.gov/fhir/phdi/StructureDefinition/address-was-standardized",
+                    "url": "http://usds.gov/fhir/phdi/StructureDefinition/address-was-standardized",  # noqa
                     "valueBoolean": any_dffs,
                 }
             )
