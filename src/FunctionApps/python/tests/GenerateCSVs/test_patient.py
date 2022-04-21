@@ -13,7 +13,7 @@ def test_parse_patient_resource():
         open(pathlib.Path(__file__).parent / "assets" / "patient_bundle_empty.json")
     )
 
-    assert parse_patient_resource(patient) == [
+    assert parse_patient_resource(patient, add_std_extension=False) == [
         "292561276fcdefab6a2a1545abf7aa9bf30906ba6f0d4f8faff652efc3b4ab3c",
         "JANE",
         "DOE",
@@ -28,4 +28,4 @@ def test_parse_patient_resource():
         "2054-5",
         "2186-5",
     ]
-    assert parse_patient_resource(patient_empty) == [""] * 13
+    assert parse_patient_resource(patient_empty, add_std_extension=False) == [""] * 13

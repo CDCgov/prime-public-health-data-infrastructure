@@ -1,43 +1,23 @@
-import json
-import pathlib
 import pytest
-
 from unittest import mock
 
-from IntakePipeline.transform import (
-    find_patient_resources,
-    transform_bundle,
-    process_name,
-)
+import json
+import pathlib
 
 from phdi_transforms.geo import GeocodeResult
 
+from IntakePipeline.transform import find_patient_resources, transform_bundle
+
 
 @pytest.fixture()
-def combined_bundle():
+def bundle():
     return json.load(
         open(pathlib.Path(__file__).parent / "assets" / "patient_bundle.json")
     )
 
 
-def test_find_patient_record(combined_bundle):
-    patients = find_patient_resources(combined_bundle)
-    assert len(patients) == 1
-    assert patients[0].get("resource").get("id") == "some-uuid"
-
-
 @mock.patch("IntakePipeline.transform.geocode")
-def test_transform_missing_line(patched_geocode, combined_bundle):
-    combined_bundle["entry"][1]["resource"]["address"] = [
-        {"state": "VA", "use": "home"}
-    ]
-
-    transform_bundle(mock.Mock(), combined_bundle, add_std_extension=False)
-    patched_geocode.assert_called()
-
-
-@mock.patch("IntakePipeline.transform.geocode")
-def test_transform_bundle(patched_geocode, combined_bundle):
+def test_add_extensions_to_patient(patched_geocode, bundle):
     patched_geocode.return_value = GeocodeResult(
         key="123 Fake St New York, NY 10001",
         address=["123 FAKE ST", "UNIT 3"],
@@ -51,13 +31,12 @@ def test_transform_bundle(patched_geocode, combined_bundle):
         county_name="no idea",
         precision="close-ish",
     )
-
-    incoming = find_patient_resources(combined_bundle)[0]
+    patient = find_patient_resources(bundle)[0]
 
     expected = {
         "resourceType": "Patient",
         "id": "some-uuid",
-        "identifier": incoming.get("resource").get("identifier"),
+        "identifier": patient.get("resource").get("identifier"),
         "name": [{"family": "DOE", "given": ["JOHN", "DANGER"], "use": "official"}],
         "telecom": [
             {"system": "phone", "use": "home", "value": None},
@@ -84,20 +63,25 @@ def test_transform_bundle(patched_geocode, combined_bundle):
                 "use": "home",
             }
         ],
+        "extension": [
+            {
+                "url": "http://usds.gov/fhir/phdi/StructureDefinition/family-name-was-standardized",
+                "valueBoolean": False,
+            },
+            {
+                "url": "http://usds.gov/fhir/phdi/StructureDefinition/given-name-was-standardized",
+                "valueBoolean": True,
+            },
+            {
+                "url": "http://usds.gov/fhir/phdi/StructureDefinition/phone-was-standardized",
+                "valueBoolean": True,
+            },
+            {
+                "url": "http://usds.gov/fhir/phdi/StructureDefinition/address-was-standardized",
+                "valueBoolean": True,
+            },
+        ],
     }
 
-    transform_bundle(mock.Mock(), combined_bundle, add_std_extension=False)
-    assert combined_bundle.get("entry")[1].get("resource") == expected
-    patched_geocode.assert_called()
-
-
-def test_process_name():
-    """Name may or may not contain the 'given' key"""
-    n1 = {"family": "Doe", "given": ["John"], "use": "official"}
-    n2 = {"family": "Donut", "use": "breakfast"}
-
-    process_name(n1, {}, add_std_extension=False)
-    process_name(n2, {}, add_std_extension=False)
-
-    assert n1 == {"family": "DOE", "given": ["JOHN"], "use": "official"}
-    assert n2 == {"family": "DONUT", "use": "breakfast"}
+    transform_bundle(mock.Mock(), bundle, add_std_extension=True)
+    assert bundle.get("entry")[1].get("resource") == expected

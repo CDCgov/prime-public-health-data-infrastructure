@@ -19,6 +19,8 @@ from IntakePipeline.conversion import (
 from config import get_required_config
 from phdi_transforms.geo import get_smartystreets_client
 
+COMPUTE_STANDARDIZATION_METRICS = False
+
 
 def run_pipeline(
     message: str,
