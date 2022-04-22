@@ -10,7 +10,6 @@ from IntakePipeline.fhir import (
     store_data,
     generate_filename,
     get_fhirserver_cred_manager,
-    AzureFhirserverCredentialManager,
 )
 from IntakePipeline.conversion import (
     convert_batch_messages_to_list,
@@ -29,7 +28,6 @@ def run_pipeline(
     message_mappings: Dict[str, str],
     fhir_url: str,
     access_token: str,
-    cred_manager: AzureFhirserverCredentialManager,
 ) -> None:
     """
     This function takes in a single message and runs it through the Data
@@ -75,7 +73,7 @@ def run_pipeline(
                 + f"{message_mappings['filename']}.fhir"
             )
 
-        upload_bundle_to_fhir_server(cred_manager, bundle)
+        upload_bundle_to_fhir_server(bundle, access_token, fhir_url)
     else:
         try:
             store_data(
@@ -109,8 +107,6 @@ def main(blob: func.InputStream) -> func.HttpResponse:
 
         for i, message in enumerate(messages):
             message_mappings["filename"] = generate_filename(blob.name, i)
-            run_pipeline(
-                message, message_mappings, fhir_url, access_token.token, cred_manager
-            )
+            run_pipeline(message, message_mappings, fhir_url, access_token.token)
     except Exception as exception:
         _logger.exception(exception)
