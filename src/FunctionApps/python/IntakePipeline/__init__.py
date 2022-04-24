@@ -1,4 +1,5 @@
 import azure.functions as func
+import logging
 
 from azure.core.exceptions import ResourceExistsError
 from typing import Dict
@@ -17,10 +18,7 @@ from IntakePipeline.conversion import (
     get_file_type_mappings,
 )
 from config import get_required_config
-from phdilogs import init_logger
 from phdi_transforms.geo import get_smartystreets_client
-
-_logger = init_logger()
 
 
 def run_pipeline(
@@ -68,7 +66,7 @@ def run_pipeline(
                 bundle=bundle,
             )
         except ResourceExistsError:
-            _logger.warning(
+            logging.warning(
                 "Attempted to store preexisting resource: "
                 + f"{message_mappings['filename']}.fhir"
             )
@@ -84,14 +82,14 @@ def run_pipeline(
                 message=message,
             )
         except ResourceExistsError:
-            _logger.warning(
+            logging.warning(
                 "Attempted to store preexisting resource: "
                 + f"{message_mappings['filename']}.{message_mappings['file_suffix']}"
             )
 
 
 def main(blob: func.InputStream) -> func.HttpResponse:
-    _logger.debug("Entering intake pipeline ")
+    logging.debug("Entering intake pipeline ")
 
     fhir_url = get_required_config("FHIR_URL")
     cred_manager = get_fhirserver_cred_manager(fhir_url)
@@ -109,4 +107,4 @@ def main(blob: func.InputStream) -> func.HttpResponse:
             message_mappings["filename"] = generate_filename(blob.name, i)
             run_pipeline(message, message_mappings, fhir_url, access_token.token)
     except Exception as exception:
-        _logger.exception(exception)
+        logging.exception(exception)

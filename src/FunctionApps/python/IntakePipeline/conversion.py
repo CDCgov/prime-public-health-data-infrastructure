@@ -1,9 +1,7 @@
+import logging
 import re
 import requests
 from typing import List, Dict
-from phdilogs import init_logger
-
-_logger = init_logger()
 
 
 def clean_message(message: str, delimiter: str = "\n") -> str:
@@ -181,14 +179,14 @@ def convert_message_to_fhir(
         except Exception:
             # ; If an exception occurs while parsing FHIR JSON,
             # Log the full response content
-            _logger.debug(
+            logging.debug(
                 "Received response was not "
                 + "OperationOutcome FHIR resource in JSON format."
             )
             error_info = f"HTTP Code: {response.status_code}, "
-            +f"Response Content {str(response.content)}"
+            +f"Response Content {response.content}"
 
-        _logger.warning(f"Error during $convert-data -- {error_info}")
+        logging.error(f"Error during $convert-data -- {error_info}")
 
         return {}
 

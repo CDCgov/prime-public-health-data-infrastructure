@@ -33,7 +33,7 @@ hs_err_pid*
 .venv
 
 # Azure Functions
-local.settings.json
+*local.settings.json
 bin/
 obj/
 extensions.csproj
