@@ -163,7 +163,7 @@ def convert_message_to_fhir(
         try:
             response_json = response.json()
 
-            logging.info(str(response_json))
+            logging.info("non-200 response from fhir converter: " + str(response_json))
 
             # If it's FHIR, unpack the response
             if response_json["resourceType"] == "OperationOutcome":
@@ -192,7 +192,7 @@ def convert_message_to_fhir(
                 + f"Response Content {decoded_response}"
             )
 
-        logging.error(f"Error during $convert-data -- {error_info}")
+        logging.exception(f"Error during $convert-data -- {error_info}")
 
         return {}
 

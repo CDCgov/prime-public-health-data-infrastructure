@@ -89,7 +89,7 @@ def run_pipeline(
             )
 
 
-def main(blob: func.InputStream) -> func.HttpResponse:
+def main(blob: func.InputStream) -> None:
     logging.debug("Entering intake pipeline ")
 
     fhir_url = get_required_config("FHIR_URL")
