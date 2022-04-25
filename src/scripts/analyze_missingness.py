@@ -5,7 +5,7 @@ import pandas as pd
 from tabulate import tabulate
 
 
-def get_blob_client(url: str, container: str, file: str) -> StringIO:
+def get_blob_data(url: str, container: str, file: str) -> StringIO:
     """
     Use whatever credentials Azure can find to create a blob client and download the
     blob's content as text. In the case where the blob is a CSV the output may be passed
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     # Load data and link patient records.
     print("Loading data...")
     pre_linkage = pd.read_csv(
-        get_blob_client(STORAGE_ACCOUNT_URL, CONTAINER_NAME, CSV_FULL_NAME)
+        get_blob_data(STORAGE_ACCOUNT_URL, CONTAINER_NAME, CSV_FULL_NAME)
     )
     data_by_hash = pre_linkage.groupby("patientHash")
     post_linkage = data_by_hash.apply(
