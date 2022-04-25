@@ -113,6 +113,7 @@ def get_file_type_mappings(blob_name: str) -> Dict[str, str]:
 
 def convert_message_to_fhir(
     message: str,
+    filename: str,
     input_data_type: str,
     root_template: str,
     template_collection: str,
@@ -162,14 +163,20 @@ def convert_message_to_fhir(
         try:
             response_json = response.json()
 
+            logging.info(str(response_json))
+
             # If it's FHIR, unpack the response
-            if response_json.resourceType == "OperationOutcome":
-                for issue in response_json.issue:
+            if response_json["resourceType"] == "OperationOutcome":
+                for issue in response_json["issue"]:
+                    issue_severity = issue.get("severity")
+                    issue_code = issue.get("code")
+                    issue_diagnostics = issue.get("diagnostics")
                     single_error_info = (
-                        f"HTTP Code: {response.status_code}  "
-                        + f"FHIR Severity {issue.severity}  "
-                        + f"Code: {issue.code}  "
-                        + f"Diagnostics: {issue.diagnostics}"
+                        f"Error processing: {filename}  "\
+                        + f"HTTP Code: {response.status_code}  "\
+                        + f"FHIR Severity: {issue_severity}  "\
+                        + f"Code: {issue_code}  "\
+                        + f"Diagnostics: {issue_diagnostics}"
                     )
                     if error_info == "":
                         error_info = single_error_info
@@ -179,12 +186,9 @@ def convert_message_to_fhir(
         except Exception:
             # ; If an exception occurs while parsing FHIR JSON,
             # Log the full response content
-            logging.debug(
-                "Received response was not "
-                + "OperationOutcome FHIR resource in JSON format."
-            )
-            error_info = f"HTTP Code: {response.status_code}, "
-            +f"Response Content {response.content}"
+            decoded_response = response.content.decode("utf-8")
+            error_info = f"HTTP Code: {response.status_code}, "\
+            + f"Response Content {decoded_response}"
 
         logging.error(f"Error during $convert-data -- {error_info}")
 

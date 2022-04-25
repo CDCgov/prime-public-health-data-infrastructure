@@ -47,6 +47,7 @@ def run_pipeline(
 
     bundle = convert_message_to_fhir(
         message=message,
+        filename=message_mappings["filename"],
         input_data_type=message_mappings["input_data_type"],
         root_template=message_mappings["root_template"],
         template_collection=message_mappings["template_collection"],
