@@ -116,9 +116,9 @@ if __name__ == "__main__":
     )
     print("Results computed.")
     print("\nNumber of patient records as a function of linkage:")
-    print("\n" + tabulate(patients.items(), headers=["#", "patients"]))
+    print("\n" + tabulate(patients.items(), headers=["#", "patients"]) + "\n")
     print(
-        "\nNumber of records missing fields key for PH Equity as a functions of linkage:"
+        "Number of records missing fields key for PH Equity as a functions of linkage:"
     )
     print(
         "\n" + tabulate(missing_equity_data, headers=missing_equity_data.keys()) + "\n"
