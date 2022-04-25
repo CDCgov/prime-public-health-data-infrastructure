@@ -6,7 +6,7 @@ import pathlib
 
 from phdi_transforms.geo import GeocodeResult
 
-from IntakePipeline.transform import find_patient_resources, transform_bundle
+from IntakePipeline.transform import transform_bundle
 
 
 @pytest.fixture()
