@@ -31,7 +31,6 @@ def test_add_extensions_to_patient(patched_geocode, bundle):
         county_name="no idea",
         precision="close-ish",
     )
-    patient = find_patient_resources(bundle)[0]
 
     expected_extensions = [
         {
