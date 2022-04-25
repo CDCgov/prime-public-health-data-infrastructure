@@ -107,5 +107,5 @@ def main(blob: func.InputStream) -> func.HttpResponse:
         for i, message in enumerate(messages):
             message_mappings["filename"] = generate_filename(blob.name, i)
             run_pipeline(message, message_mappings, fhir_url, access_token.token)
-    except Exception as exception:
+    except Exception:
         logging.exception("Exception occurred during IntakePipeline processing.")

@@ -79,6 +79,7 @@ def test_convert_message_to_fhir_success(mock_fhir_post):
     message = "MSH|blah|foo|test\nPID|some^text|blah\nOBX|foo||||bar^baz&foobar"
     response = convert_message_to_fhir(
         message,
+        "some-filename-0",
         "Hl7v2",
         "VXU_V04",
         "microsofthealth/fhirconverter:default",
@@ -115,6 +116,7 @@ def test_convert_message_to_fhir_failure(mock_fhir_post):
     message = "MSH|blah|foo|test\nPID|some^text|blah\nOBX|foo||||bar^baz&foobar"
     response = convert_message_to_fhir(
         message,
+        "some-filename-0",
         "Hl7v2",
         "VXU_V04",
         "microsofthealth/fhirconverter:default",

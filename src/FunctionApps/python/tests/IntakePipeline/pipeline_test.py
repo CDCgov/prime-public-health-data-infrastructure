@@ -15,6 +15,7 @@ TEST_ENV = {
 }
 
 MESSAGE_MAPPINGS = {
+    "file_suffix": "hl7",
     "bundle_type": "VXU",
     "root_template": "VXU_V04",
     "input_data_type": "Hl7v2",
@@ -48,6 +49,7 @@ def test_pipeline_valid_message(
     patched_get_geocoder.assert_called_with("smarty-auth-id", "smarty-auth-token")
     patched_converter.assert_called_with(
         message="MSH|Hello World",
+        filename="some-filename-1",
         input_data_type=MESSAGE_MAPPINGS["input_data_type"],
         root_template=MESSAGE_MAPPINGS["root_template"],
         template_collection=MESSAGE_MAPPINGS["template_collection"],
@@ -91,6 +93,7 @@ def test_pipeline_invalid_message(
     patched_get_geocoder.assert_called_with("smarty-auth-id", "smarty-auth-token")
     patched_converter.assert_called_with(
         message="MSH|Hello World",
+        filename="some-filename-1",
         input_data_type=MESSAGE_MAPPINGS["input_data_type"],
         root_template=MESSAGE_MAPPINGS["root_template"],
         template_collection=MESSAGE_MAPPINGS["template_collection"],

@@ -172,10 +172,10 @@ def convert_message_to_fhir(
                     issue_code = issue.get("code")
                     issue_diagnostics = issue.get("diagnostics")
                     single_error_info = (
-                        f"Error processing: {filename}  "\
-                        + f"HTTP Code: {response.status_code}  "\
-                        + f"FHIR Severity: {issue_severity}  "\
-                        + f"Code: {issue_code}  "\
+                        f"Error processing: {filename}  "
+                        + f"HTTP Code: {response.status_code}  "
+                        + f"FHIR Severity: {issue_severity}  "
+                        + f"Code: {issue_code}  "
                         + f"Diagnostics: {issue_diagnostics}"
                     )
                     if error_info == "":
@@ -187,8 +187,10 @@ def convert_message_to_fhir(
             # ; If an exception occurs while parsing FHIR JSON,
             # Log the full response content
             decoded_response = response.content.decode("utf-8")
-            error_info = f"HTTP Code: {response.status_code}, "\
-            + f"Response Content {decoded_response}"
+            error_info = (
+                f"HTTP Code: {response.status_code}, "
+                + f"Response Content {decoded_response}"
+            )
 
         logging.error(f"Error during $convert-data -- {error_info}")
 
