@@ -33,55 +33,26 @@ def test_add_extensions_to_patient(patched_geocode, bundle):
     )
     patient = find_patient_resources(bundle)[0]
 
-    expected = {
-        "resourceType": "Patient",
-        "id": "some-uuid",
-        "identifier": patient.get("resource").get("identifier"),
-        "name": [{"family": "DOE", "given": ["JOHN", "DANGER"], "use": "official"}],
-        "telecom": [
-            {"system": "phone", "use": "home", "value": None},
-            {"system": "email", "value": "johndanger@doe.net"},
-        ],
-        "birthDate": "1983-02-01",
-        "gender": "female",
-        "address": [
-            {
-                "extension": [
-                    {
-                        "url": "http://hl7.org/fhir/StructureDefinition/geolocation",
-                        "extension": [
-                            {"url": "latitude", "valueDecimal": 45.123},
-                            {"url": "longitude", "valueDecimal": -70.234},
-                        ],
-                    },
-                ],
-                "line": ["123 FAKE ST", "UNIT 3"],
-                "city": "NEW YORK",
-                "state": "NY",
-                "postalCode": "10001",
-                "country": "USA",
-                "use": "home",
-            }
-        ],
-        "extension": [
-            {
-                "url": "http://usds.gov/fhir/phdi/StructureDefinition/family-name-was-standardized",  # noqa
-                "valueBoolean": False,
-            },
-            {
-                "url": "http://usds.gov/fhir/phdi/StructureDefinition/given-name-was-standardized",  # noqa
-                "valueBoolean": True,
-            },
-            {
-                "url": "http://usds.gov/fhir/phdi/StructureDefinition/phone-was-standardized",  # noqa
-                "valueBoolean": True,
-            },
-            {
-                "url": "http://usds.gov/fhir/phdi/StructureDefinition/address-was-standardized",  # noqa
-                "valueBoolean": True,
-            },
-        ],
-    }
+    expected_extensions = [
+        {
+            "url": "http://usds.gov/fhir/phdi/StructureDefinition/family-name-was-standardized",  # noqa
+            "valueBoolean": False,
+        },
+        {
+            "url": "http://usds.gov/fhir/phdi/StructureDefinition/given-name-was-standardized",  # noqa
+            "valueBoolean": True,
+        },
+        {
+            "url": "http://usds.gov/fhir/phdi/StructureDefinition/phone-was-standardized",  # noqa
+            "valueBoolean": True,
+        },
+        {
+            "url": "http://usds.gov/fhir/phdi/StructureDefinition/address-was-standardized",  # noqa
+            "valueBoolean": True,
+        },
+    ]
 
-    transform_bundle(mock.Mock(), bundle, add_std_extension=True)
-    assert bundle.get("entry")[1].get("resource") == expected
+    transform_bundle(mock.Mock(), bundle)
+    assert (
+        bundle.get("entry")[1].get("resource").get("extension") == expected_extensions
+    )

@@ -32,7 +32,7 @@ def test_transform_missing_line(patched_geocode, combined_bundle):
         {"state": "VA", "use": "home"}
     ]
 
-    transform_bundle(mock.Mock(), combined_bundle, add_std_extension=False)
+    transform_bundle(mock.Mock(), combined_bundle)
     patched_geocode.assert_called()
 
 
@@ -86,7 +86,12 @@ def test_transform_bundle(patched_geocode, combined_bundle):
         ],
     }
 
-    transform_bundle(mock.Mock(), combined_bundle, add_std_extension=False)
+    transform_bundle(mock.Mock(), combined_bundle)
+
+    # This test specifically doesn't check for the value of computed
+    # extensions, so remove that from the comparison of interest
+    # See extensions_test.py for checking standardization values
+    combined_bundle.get("entry")[1].get("resource").pop("extension")
     assert combined_bundle.get("entry")[1].get("resource") == expected
     patched_geocode.assert_called()
 
@@ -96,8 +101,8 @@ def test_process_name():
     n1 = {"family": "Doe", "given": ["John"], "use": "official"}
     n2 = {"family": "Donut", "use": "breakfast"}
 
-    process_name(n1, {}, add_std_extension=False)
-    process_name(n2, {}, add_std_extension=False)
+    process_name(n1, {"extension": []})
+    process_name(n2, {"extension": []})
 
     assert n1 == {"family": "DOE", "given": ["JOHN"], "use": "official"}
     assert n2 == {"family": "DONUT", "use": "breakfast"}

@@ -1,7 +1,5 @@
 from typing import List
 
-from IntakePipeline import COMPUTE_STANDARDIZATION_METRICS
-
 PATIENT_COLUMNS = [
     "patientHash",
     "givenName",
@@ -16,21 +14,17 @@ PATIENT_COLUMNS = [
     "longitude",
     "race",
     "ethnicity",
+    "standardizedFirstName",
+    "standardizedLastName",
+    "standardizedPhone",
+    "standardizedAddress",
 ]
 
-if COMPUTE_STANDARDIZATION_METRICS:
-    PATIENT_COLUMNS += [
-        "standardizedFirstName",
-        "standardizedLastName",
-        "standardizedPhone",
-        "standardizedAddress",
-    ]
 
-
-def parse_patient_resource(pt_rsc: dict, add_std_extension=False) -> List[str]:
+def parse_patient_resource(pt_rsc: dict) -> List[str]:
     """
-    Given a FHIR patient resource return whose form depends on whether or not
-    we care about tracking metrics around standardization. If no, the form is:
+    Given a FHIR patient resource, return a list whose form depends on whether or
+    not we care about tracking metrics around standardization. If no, the form is:
     [<patientHash>,<givenName>,<familyName>,<birthDate>,<gender>,<street>,<city>,
     <state>,<postalCode>,<latitude>,<longitude>,<race>,<ethnicity>].
 
@@ -46,9 +40,8 @@ def parse_patient_resource(pt_rsc: dict, add_std_extension=False) -> List[str]:
         + [pt_rsc["resource"].get("gender", "")]
         + get_address(pt_rsc)
         + get_race_ethnicity(pt_rsc)
+        + get_std_extensions(pt_rsc)
     )
-    if add_std_extension:
-        patient_resource += get_std_extensions(pt_rsc)
     return patient_resource
 
 
@@ -59,29 +52,23 @@ def get_std_extensions(pt_rsc: dict) -> List[str]:
     quality via standardization.
     """
     standardized_fields = {
-        "first": False,
-        "last": False,
-        "phone": False,
-        "address": False,
+        "first": "",
+        "last": "",
+        "phone": "",
+        "address": "",
     }
     if "extension" in pt_rsc:
         for entry in pt_rsc["extension"]:
             entry_type = entry["url"].split("/")[-1]
             if entry_type == "family-name-was-standardized":
-                standardized_fields["last"] = entry["valueBoolean"]
+                standardized_fields["last"] = entry.get("valueBoolean")
             elif entry_type == "given-name-was-standardized":
-                standardized_fields["first"] = entry["valueBoolean"]
+                standardized_fields["first"] = entry.get("valueBoolean")
             elif entry_type == "phone-was-standardized":
-                standardized_fields["phone"] = entry["valueBoolean"]
+                standardized_fields["phone"] = entry.get("valueBoolean")
             elif entry_type == "address-was-standardized":
-                standardized_fields["address"] = entry["valueBoolean"]
-        return [
-            standardized_fields["first"],
-            standardized_fields["last"],
-            standardized_fields["phone"],
-            standardized_fields["address"],
-        ]
-    return []
+                standardized_fields["address"] = entry.get("valueBoolean")
+    return list(standardized_fields.values())
 
 
 def get_id(pt_rsc: dict) -> List[str]:
