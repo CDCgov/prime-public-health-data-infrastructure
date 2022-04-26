@@ -18,18 +18,34 @@ def get_blob_data(url: str, container: str, file: str) -> StringIO:
     return StringIO(blob_client.download_blob().content_as_text())
 
 
-def collect_values_in_sets(group: pd.DataFrame, columns_and_values: dict) -> pd.Series:
+def record_combination_func(x: pd.Series) -> str:
     """
-    Given a dataframe and dictionary whose keys specify columns of interests and values
-    are sets of acceptable values for the corresponding columns return a series
-    containing the set of all acceptable values for each column of interest.
+    Aggregation function applied behind the scenes when performing
+    de-duplicating linkage. Automatically filters for blank, null,
+    and NaN values to facilitate squashing duplicates down into one
+    consolidated record, such that, for any column X:
+      - if records 1, ..., n-1 are empty in X and record n is not,
+        then n(X) is used as a single value
+      - if some number of records 1, ..., j <= n have the same value
+        in X and all other records are blank in X, then the value
+        of the matching columns 1, ..., j is used as a singleton
+      - if some number of non-empty in X records 1, ..., j <= n have
+        different values in X, then all values 1(X), ..., j(X) are
+        concatenated into a list of values delimited by commas
     """
-    sets = {}
-    for column in columns_and_values.keys():
-        sets[column] = {
-            value for value in group[column] if value in columns_and_values[column]
-        }
-    return pd.Series(sets, index=columns_and_values.keys())
+    non_nans = set([x for x in x.astype(str).to_list() if x != ""])
+    return ",".join(non_nans)
+
+
+def filter_for_valid_values(df: pd.DataFrame, values_by_column: dict[str, set[str]]):
+    """
+    Given a dataframe and a dictionary mapping columns to allowed values,
+    filter the df such that the provided columns contain only values
+    that are pre-defined as valid.
+    """
+    for col in values_by_column:
+        df[col] = df[col].map(lambda x: x if x in values_by_column[col] else "")
+    return df
 
 
 def count_patients(pre_linkage: pd.DataFrame, post_linkage: pd.DataFrame) -> dict:
@@ -102,10 +118,17 @@ if __name__ == "__main__":
     pre_linkage = pd.read_csv(
         get_blob_data(STORAGE_ACCOUNT_URL, CONTAINER_NAME, CSV_FULL_NAME)
     )
-    data_by_hash = pre_linkage.groupby("patientHash")
-    post_linkage = data_by_hash.apply(
-        collect_values_in_sets, columns_and_values=equity_fields
+    pre_linkage.drop(
+        columns=[
+            c
+            for c in pre_linkage.columns
+            if not c in list(equity_fields.keys()) + ["patientHash"]
+        ],
+        inplace=True,
     )
+    pre_linkage = filter_for_valid_values(pre_linkage, equity_fields)
+    data_by_hash = pre_linkage.groupby("patientHash")
+    post_linkage = data_by_hash.agg(record_combination_func).reset_index()
     print("Data loaded and linked.")
 
     # Compute results and print.
