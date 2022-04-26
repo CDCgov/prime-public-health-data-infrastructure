@@ -122,7 +122,7 @@ if __name__ == "__main__":
         columns=[
             c
             for c in pre_linkage.columns
-            if not c in list(equity_fields.keys()) + ["patientHash"]
+            if c not in list(equity_fields.keys()) + ["patientHash"]
         ],
         inplace=True,
     )
