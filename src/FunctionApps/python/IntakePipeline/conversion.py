@@ -192,7 +192,7 @@ def convert_message_to_fhir(
                 + f"Response Content {decoded_response}"
             )
 
-        logging.exception(f"Error during $convert-data -- {error_info}")
+        logging.error(f"Error during $convert-data -- {error_info}")
 
         return {}
 
