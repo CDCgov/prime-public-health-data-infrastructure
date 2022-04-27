@@ -145,7 +145,7 @@ def test_convert_message_to_fhir_failure(mock_fhir_post):
 
 
 @mock.patch("requests.post")
-@mock.patch("logging.exception")
+@mock.patch("logging.error")
 def test_log_fhir_operationoutcome(mock_log, mock_fhir_post):
     mock_fhir_post.return_value = mock.Mock(
         status_code=400,
@@ -199,7 +199,7 @@ def test_log_fhir_operationoutcome(mock_log, mock_fhir_post):
 
 
 @mock.patch("requests.post")
-@mock.patch("logging.exception")
+@mock.patch("logging.error")
 def test_log_generic_error(mock_log, mock_fhir_post):
     mock_fhir_post.return_value = mock.Mock(status_code=400, content=b"some-error")
 
