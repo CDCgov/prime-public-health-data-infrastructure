@@ -1,6 +1,3 @@
-from azure.identity import DefaultAzureCredential
-from azure.storage.blob import BlobClient
-from io import StringIO
 import pandas as pd
 import pathlib
 from tabulate import tabulate
