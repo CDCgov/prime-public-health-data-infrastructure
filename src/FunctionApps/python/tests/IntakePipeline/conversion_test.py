@@ -1,26 +1,65 @@
-from unittest import mock
+import pathlib
 import pytest
 
+from unittest import mock
 from IntakePipeline.conversion import (
+    clean_batch,
     clean_message,
     convert_batch_messages_to_list,
     convert_message_to_fhir,
     get_file_type_mappings,
+    normalize_hl7_datetime,
 )
 
 
-def test_clean_message():
+def test_clean_batch():
     TEST_STRING1 = "\r\nHello\nWorld\r\n"
     TEST_STRING2 = "\nHello\r\nW\r\norld"
     TEST_STRING3 = "Hello World"
     TEST_STRING4 = "\u000bHello World\u001c"
     TEST_STRING5 = "\u000bHello\r\nWorld\u001c"
 
-    assert clean_message(TEST_STRING1) == "Hello\nWorld"
-    assert clean_message(TEST_STRING2) == "Hello\nW\norld"
-    assert clean_message(TEST_STRING3) == "Hello World"
-    assert clean_message(TEST_STRING4) == "Hello World"
-    assert clean_message(TEST_STRING5) == "Hello\nWorld"
+    assert clean_batch(TEST_STRING1) == "Hello\nWorld"
+    assert clean_batch(TEST_STRING2) == "Hello\nW\norld"
+    assert clean_batch(TEST_STRING3) == "Hello World"
+    assert clean_batch(TEST_STRING4) == "Hello World"
+    assert clean_batch(TEST_STRING5) == "Hello\nWorld"
+
+
+def test_clean_message():
+    message_1 = open(
+        pathlib.Path(__file__).parent / "assets" / "FileSingleMessageLongDate.hl7"
+    ).read()
+    message_2 = open(
+        pathlib.Path(__file__).parent / "assets" / "FileSingleMessageLongTZ.hl7"
+    ).read()
+
+    assert clean_message(message_1).startswith(
+        r"MSH|^~\&|WIR11.3.2^^|WIR^^||WIRPH^^|20200514010000|"
+        + r"|VXU^V04|2020051411020600|P^|2.4^^|||ER"
+    )
+    assert clean_message(message_2).startswith(
+        r"MSH|^~\&|WIR11.3.2^^|WIR^^||WIRPH^^|20200514010000-0400|"
+        + r"|VXU^V04|2020051411020600|P^|2.4^^|||ER"
+    )
+
+
+def test_normalize_hl7_datetime():
+    datetime_1 = "20200514010000"
+    datetime_2 = "202005140100005555"
+    datetime_3 = "20200514"
+    datetime_4 = "20200514.123456"
+    datetime_5 = "20200514+0400000"
+    datetime_6 = "20200514.123456-070000"
+    datetime_7 = "20200514010000.1234-0700"
+
+    assert normalize_hl7_datetime(datetime_1) == "20200514010000"
+    assert normalize_hl7_datetime(datetime_2) == "20200514010000"
+    assert normalize_hl7_datetime(datetime_3) == "20200514"
+    assert normalize_hl7_datetime(datetime_4) == "20200514.1234"
+    assert normalize_hl7_datetime(datetime_5) == "20200514+0400"
+    assert normalize_hl7_datetime(datetime_6) == "20200514.1234-0700"
+    assert normalize_hl7_datetime(datetime_7) == "20200514010000.1234-0700"
 
 
 def test_convert_batch_messages_to_list():

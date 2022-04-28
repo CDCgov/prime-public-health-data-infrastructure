@@ -173,8 +173,8 @@ def convert_message_to_fhir(
     store the original message in a separate container. Otherwise, the FHIR data is
     returned.
 
-    HL7v2 messages are cleaned (minor corrections made) via the clean_message function prior
-    to conversion.
+    HL7v2 messages are cleaned (minor corrections made) via the clean_message function
+    prior to conversion.
 
     :param message The raw message that needs to be converted to FHIR. Must be HL7
     v2 or HL7 v3
