@@ -31,8 +31,28 @@ def identify_covid_cases(
     """
     Given a data frame containing a single patient's COVID labs and an aggregation
     function, review the labs for possible COVID cases and return a list containing a
-    for each identified case. Data for fields specific to the patient and not the
+    series for each identified case. Data for fields specific to the patient and not the
     infection result from aggregating accross all labs.
+
+    Case Identification Process:
+    1.  Check for positive labs:
+        a.  If positive labs are found at least one case has been identified.
+        b.  The collection date of the earliest positive lab is set as the earliest
+            positive specimen collection date for the case.
+        c.  Determine case status:
+            i.  If there are any positive PCRs in the 90 day period starting on the
+                earliest positive specimen collection date then the status is confirmed.
+            ii. If there are no positive PCRs in the 90 window this implies that there
+                are only positive antigen tests and the case status is probable.
+        d. Check for positive labs more than 90 days after the initial positive test.
+            i.  If present an additional infection has been identified resulting in
+                another case. Repeat steps b-d using the collection date of the first
+                lab outside the 90 day window as the new earliest positive specimen
+                collection date.
+            ii. If not present then all covid cases for the patient have been
+                identified.
+    2.  If there are no positive labs than the patient has not been infected and no
+        cases are identified.
 
     **** WARNING ****
 
