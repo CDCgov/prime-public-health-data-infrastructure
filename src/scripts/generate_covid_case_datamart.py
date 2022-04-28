@@ -1,0 +1,111 @@
+import pandas as pd
+import pathlib
+import json
+from typing import List, Callable
+from utils import read_blob, record_combination_func, write_blob
+
+
+def standardize_lab_result(result: str) -> str:
+    """
+    Given a covid test result and dictionary whose keys (POSITIVE, NEGATIVE, and
+    INCONCLUSIVE) represent standard results and whose values are lists containing
+    non-standard results that map to the associated standard result then return a
+    standardized result. Return null is no standard result could not be found.
+    """
+    standard = json.loads(
+        open(
+            pathlib.Path(__file__).parent / "assets" / "covid_lab_results_standard.json"
+        ).read()
+    )
+    result = result.upper()
+    for standard_result, non_standard_results in standard.items():
+        if result in non_standard_results:
+            return standard_result
+
+    return ""
+
+
+def identify_covid_cases(
+    patient_labs: pd.DataFrame, agg_function: Callable
+) -> List[pd.Series]:
+    """
+    Given a data frame containing a single patient's COVID labs and an aggregation
+    function, review the labs for possible COVID cases and return a list containing a
+    for each identified case. Data for fields specific to the patient and not the
+    infection result from aggregating accross all labs.
+
+    **** WARNING ****
+
+    As currently written this function applies an approximation of the official CDC/CTSE
+    COIVD case defintion. In its current form this function is intended as a proof of
+    concept for development purposes.
+
+    Known Limitations:
+    1.  Suspect cases resulting from antibody tests are not considered.
+    2.  No check has been implemented for a negative PCR within 48 hours of a positive
+        Antigen that would negate the case.
+    3.  No consideration has been given to how the case definition has changed over the
+        course of the pandemic.
+    """
+    case_list = []
+    patient_labs.sort_values(by=["effectiveDateTime"], ascending=True)
+    positive_labs = patient_labs.loc[patient_labs.result == "POSITIVE"].reset_index()
+    remaining_labs = len(positive_labs)
+    while remaining_labs > 0:
+        collection_date = positive_labs.effectiveDateTime[0]
+        current_infection_labs = positive_labs.loc[
+            positive_labs.effectiveDateTime.map(lambda x: (x - collection_date).days)
+            <= 90
+        ]
+        if "pcr" in current_infection_labs.type.to_list():
+            status = "confirmed"
+        else:
+            status = "probable"
+        case = patient_labs.agg(record_combination_func)
+        case["effectiveDateTime"] = collection_date
+        case["status"] = status
+        case_list.append(case)
+        positive_labs = positive_labs.loc[
+            positive_labs.effectiveDateTime.map(lambda x: (x - collection_date).days)
+            > 90
+        ].reset_index()
+        remaining_labs = len(positive_labs)
+    return case_list
+
+
+if __name__ == "__main__":
+
+    # Set values the specify a blob to load.
+    STORAGE_ACCOUNT_URL = "https://pitestdatasa.blob.core.windows.net"
+    CONTAINER_NAME = "bronze"
+    ELR_FILE_NAME = "csv-test/elr.csv"
+    COVID_CASE_DATAMART_FILENAME = "datamart-test/covid_case_datamart.csv"
+
+    # Load data.
+    labs = pd.read_csv(read_blob(STORAGE_ACCOUNT_URL, CONTAINER_NAME, ELR_FILE_NAME))
+    covid_loincs = pd.read_csv(
+        pathlib.Path(__file__).parent / "assets" / "covid_loinc_reference.csv"
+    )
+
+    # Clean and standardize data.
+    covid_labs = pd.merge(labs, covid_loincs, how="inner", on="loincCode")
+    covid_labs = covid_labs.loc[covid_labs.type.isin(["pcr", "ag"])]
+    covid_labs.drop(["loincCode", "notes"], axis=1, inplace=True)
+    covid_labs.result = covid_labs.result.map(standardize_lab_result)
+    covid_labs.effectiveDateTime = pd.to_datetime(covid_labs.effectiveDateTime)
+
+    # Find COVID cases and generate datamart.
+    case_list = []
+    for hash in covid_labs.patientHash:
+        patient_labs = covid_labs.loc[covid_labs.patientHash == hash]
+        cases = identify_covid_cases(patient_labs, record_combination_func)
+        case_list.extend(cases)
+
+    covid_case_datamart = pd.concat(case_list, axis=1).T
+    covid_case_datamart.drop(["result", "type"], axis=1, inplace=True)
+    write_blob(
+        covid_case_datamart.to_csv(encoding="utf-8", index=False),
+        STORAGE_ACCOUNT_URL,
+        CONTAINER_NAME,
+        COVID_CASE_DATAMART_FILENAME,
+    )
