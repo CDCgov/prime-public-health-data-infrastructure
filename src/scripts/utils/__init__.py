@@ -28,7 +28,7 @@ def read_blob(url: str, container: str, file: str) -> StringIO:
 
 def write_blob(data: str, url: str, container: str, file: str):
     """
-    Given a string of data to be written to a blob, rse whatever credentials Azure can
+    Given a string of data to be written to a blob, use whatever credentials Azure can
     find to create a blob client and write the data.
     """
     blob_client = get_blob_client(url, container, file)

@@ -95,7 +95,7 @@ def identify_covid_cases(
 
 if __name__ == "__main__":
 
-    # Set values the specify a blob to load.
+    # Set values that specify a blob to load.
     STORAGE_ACCOUNT_URL = "https://pitestdatasa.blob.core.windows.net"
     CONTAINER_NAME = "bronze"
     ELR_FILE_NAME = "csv-test/elr.csv"
