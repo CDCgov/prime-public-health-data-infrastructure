@@ -1,18 +1,62 @@
 import logging
 import re
 import requests
+import hl7
 from typing import List, Dict
 
 
-def clean_message(message: str, delimiter: str = "\n") -> str:
-    cleaned_message = re.sub("[\r\n]+", delimiter, message)
+def clean_message(message: str) -> str:
+    parsed_message = None
+    try:
+        parsed_message = hl7.parse(message)
+
+        # MSH-7
+        cleansed_datetime = normalize_hl7_datetime(parsed_message[0][7][0])
+        parsed_message[0][7][0] = cleansed_datetime
+
+    except Exception:
+        logging.exception(
+            "Exception occurred while cleaning message.  "
+            + "Passing through original message."
+        )
+
+        return message
+
+    return str(parsed_message)
+
+
+def normalize_hl7_datetime(hl7_datetime: str) -> str:
+    hl7_datetime_parts = re.match(
+        r"(\d+)(\.)?(\d+)?([+-])?(\d+)?", hl7_datetime
+    ).groups()
+
+    # Date Base
+    normalized_datetime = hl7_datetime_parts[0][:14]  # First 14 digits
+
+    # Date Decimal
+    if hl7_datetime_parts[2]:
+        normalized_datetime += (
+            hl7_datetime_parts[1] + hl7_datetime_parts[2][:4]
+        )  # . plus first 4 digits
+
+    # Date Timezone
+    if hl7_datetime_parts[4] and len(hl7_datetime_parts[4]) >= 4:
+        normalized_datetime += (
+            hl7_datetime_parts[3] + hl7_datetime_parts[4][:4]
+        )  # +/- plus 4 digits
+
+    return normalized_datetime
+
+
+def clean_batch(batch: str, delimiter: str = "\n") -> str:
+    cleansed_batch = re.sub("[\r\n]+", delimiter, batch)
 
     # These are unicode for vertical tab and file separator, respectively
     # \u000b appears before every MSH segment, and \u001c appears at the
     # end of the message in some of the data we've been receiving, so
     # we're explicitly removing them here.
-    cleaned_message = re.sub("[\u000b\u001c]", "", cleaned_message).strip()
-    return cleaned_message
+    cleansed_batch = re.sub("[\u000b\u001c]", "", cleansed_batch).strip()
+    return cleansed_batch
 
 
 # This method was adopted from PRIME ReportStream, which can be found here:
@@ -39,8 +83,8 @@ def convert_batch_messages_to_list(content: str, delimiter: str = "\n") -> List[
     them in a message
     """
 
-    cleaned_message = clean_message(content)
-    message_lines = cleaned_message.split(delimiter)
+    cleaned_batch = clean_batch(content)
+    message_lines = cleaned_batch.split(delimiter)
     next_message = ""
     output = []
 
@@ -129,6 +173,9 @@ def convert_message_to_fhir(
     store the original message in a separate container. Otherwise, the FHIR data is
     returned.
 
+    HL7v2 messages are cleaned (minor corrections made) via the clean_message function prior
+    to conversion.
+
     :param message The raw message that needs to be converted to FHIR. Must be HL7
     v2 or HL7 v3
     :param input_data_type The data type of the message. Must be one of Hl7v2 or Ccda
@@ -141,6 +188,9 @@ def convert_message_to_fhir(
     :param access_token A Bearer token used to authenticate with the FHIR server
     :param fhir_url A URL that points to the location of the FHIR server
     """
+    if input_data_type == "Hl7v2":
+        message = clean_message(message)
+
     url = f"{fhir_url}/$convert-data"
     data = {
         "resourceType": "Parameters",
