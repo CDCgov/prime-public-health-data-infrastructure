@@ -1,3 +1,4 @@
+import hl7
 import pathlib
 import pytest
 
@@ -9,6 +10,7 @@ from IntakePipeline.conversion import (
     convert_message_to_fhir,
     get_file_type_mappings,
     normalize_hl7_datetime,
+    normalize_hl7_datetime_segment,
 )
 
 
@@ -35,16 +37,38 @@ def test_clean_message():
     ).read()
 
     assert clean_message(message_1).startswith(
-        r"MSH|^~\&|WIR11.3.2^^|WIR^^||WIRPH^^|20200514010000|"
-        + r"|VXU^V04|2020051411020600|P^|2.4^^|||ER"
+        "MSH|^~\\&|WIR11.3.2^^|WIR^^||WIRPH^^|20200514010000|"
+        + "|VXU^V04|2020051411020600|P^|2.4^^|||ER\r"
+        + "PID|||3054790^^^^SR^~^^^^PI^||ZTEST^PEDIARIX^^^^^^|"
+        + "HEPB^DTAP^^^^^^|20180808000000|M|||||||||||||||||||||"
     )
     assert clean_message(message_2).startswith(
-        r"MSH|^~\&|WIR11.3.2^^|WIR^^||WIRPH^^|20200514010000-0400|"
-        + r"|VXU^V04|2020051411020600|P^|2.4^^|||ER"
+        "MSH|^~\\&|WIR11.3.2^^|WIR^^||WIRPH^^|20200514010000-0400|"
+        + "|VXU^V04|2020051411020600|P^|2.4^^|||ER"
+    )
+
+
+def test_normalize_hl7_datetime_segment():
+    message_1 = (
+        open(pathlib.Path(__file__).parent / "assets" / "FileSingleMessageLongDate.hl7")
+        .read()
+        .replace("\n", "\r")
+    )
+
+    message_1_parsed = hl7.parse(message_1)
+
+    normalize_hl7_datetime_segment(message_1_parsed, "PID", [7])
+
+    assert str(message_1_parsed).startswith(
+        "MSH|^~\\&|WIR11.3.2^^|WIR^^||WIRPH^^|202005140100001234567890|"
+        + "|VXU^V04|2020051411020600|P^|2.4^^|||ER\r"
+        + "PID|||3054790^^^^SR^~^^^^PI^||ZTEST^PEDIARIX^^^^^^|"
+        + "HEPB^DTAP^^^^^^|20180808000000|M|||||||||||||||||||||"
     )
 
 
 def test_normalize_hl7_datetime():
+    datetime_0 = ""
     datetime_1 = "20200514010000"
     datetime_2 = "202005140100005555"
     datetime_3 = "20200514"
@@ -52,7 +76,9 @@ def test_normalize_hl7_datetime():
     datetime_5 = "20200514+0400000"
     datetime_6 = "20200514.123456-070000"
     datetime_7 = "20200514010000.1234-0700"
+    datetime_8 = "not-a-date"
 
+    assert normalize_hl7_datetime(datetime_0) == ""
     assert normalize_hl7_datetime(datetime_1) == "20200514010000"
     assert normalize_hl7_datetime(datetime_2) == "20200514010000"
     assert normalize_hl7_datetime(datetime_3) == "20200514"
@@ -60,6 +86,7 @@ def test_normalize_hl7_datetime():
     assert normalize_hl7_datetime(datetime_5) == "20200514+0400"
     assert normalize_hl7_datetime(datetime_6) == "20200514.1234-0700"
     assert normalize_hl7_datetime(datetime_7) == "20200514010000.1234-0700"
+    assert normalize_hl7_datetime(datetime_8) == "not-a-date"
 
 
 def test_convert_batch_messages_to_list():
@@ -115,7 +142,7 @@ def test_convert_message_to_fhir_success(mock_fhir_post):
         status_code=200, json=lambda: {"hello": "world"}
     )
 
-    message = "MSH|blah|foo|test\nPID|some^text|blah\nOBX|foo||||bar^baz&foobar"
+    message = "MSH|blah|foo|test\nPID|some^text|blah\nOBX|foo||||bar^baz&foobar\n"
     response = convert_message_to_fhir(
         message,
         "some-filename-0",
@@ -131,7 +158,7 @@ def test_convert_message_to_fhir_success(mock_fhir_post):
         json={
             "resourceType": "Parameters",
             "parameter": [
-                {"name": "inputData", "valueString": message},
+                {"name": "inputData", "valueString": message.replace("\n", "\r")},
                 {"name": "inputDataType", "valueString": "Hl7v2"},
                 {
                     "name": "templateCollectionReference",
@@ -149,11 +176,10 @@ def test_convert_message_to_fhir_success(mock_fhir_post):
 @mock.patch("requests.post")
 def test_convert_message_to_fhir_failure(mock_fhir_post):
     mock_fhir_post.return_value = mock.Mock(
-        status_code=400,
-        text='{ "resourceType": "Bundle", "entry": [{"hello": "world"}] }',
+        status_code=400, json=lambda: {"hello": "world"}
     )
 
-    message = "MSH|blah|foo|test\nPID|some^text|blah\nOBX|foo||||bar^baz&foobar"
+    message = "MSH|blah|foo|test\nPID|some^text|blah\nOBX|foo||||bar^baz&foobar\n"
     response = convert_message_to_fhir(
         message,
         "some-filename-0",
@@ -169,7 +195,47 @@ def test_convert_message_to_fhir_failure(mock_fhir_post):
         json={
             "resourceType": "Parameters",
             "parameter": [
-                {"name": "inputData", "valueString": message},
+                {"name": "inputData", "valueString": message.replace("\n", "\r")},
+                {"name": "inputDataType", "valueString": "Hl7v2"},
+                {
+                    "name": "templateCollectionReference",
+                    "valueString": "microsofthealth/fhirconverter:default",
+                },
+                {"name": "rootTemplate", "valueString": "VXU_V04"},
+            ],
+        },
+        headers={"Authorization": "Bearer some-token"},
+    )
+
+    assert response == {}
+
+
+@mock.patch("requests.post")
+@mock.patch("logging.error")
+def test_log_fhir_operationoutcome(mock_log, mock_fhir_post):
+    mock_fhir_post.return_value = mock.Mock(
+        status_code=400,
+        text='{ "resourceType": "Bundle", "entry": [{"hello": "world"}] }',
+    )
+
+    message = "MSH|blah|foo|test\nPID|some^text|blah\nOBX|foo||||bar^baz&foobar\n"
+
+    response = convert_message_to_fhir(
+        message,
+        "some-filename-0",
+        "Hl7v2",
+        "VXU_V04",
+        "microsofthealth/fhirconverter:default",
+        "some-token",
+        "some-fhir-url",
+    )
+
+    mock_fhir_post.assert_called_with(
+        url="some-fhir-url/$convert-data",
+        json={
+            "resourceType": "Parameters",
+            "parameter": [
+                {"name": "inputData", "valueString": message.replace("\n", "\r")},
                 {"name": "inputDataType", "valueString": "Hl7v2"},
                 {
                     "name": "templateCollectionReference",
@@ -231,7 +297,7 @@ def test_log_generic_error(mock_log, mock_fhir_post):
 def test_generic_error(mock_log, mock_fhir_post):
     mock_fhir_post.return_value = mock.Mock(status_code=400, text="some-error")
 
-    message = "MSH|blah|foo|test\nPID|some^text|blah\nOBX|foo||||bar^baz&foobar"
+    message = "MSH|blah|foo|test\nPID|some^text|blah\nOBX|foo||||bar^baz&foobar\n"
 
     response = convert_message_to_fhir(
         message,
@@ -248,7 +314,7 @@ def test_generic_error(mock_log, mock_fhir_post):
         json={
             "resourceType": "Parameters",
             "parameter": [
-                {"name": "inputData", "valueString": message},
+                {"name": "inputData", "valueString": message.replace("\n", "\r")},
                 {"name": "inputDataType", "valueString": "Hl7v2"},
                 {
                     "name": "templateCollectionReference",

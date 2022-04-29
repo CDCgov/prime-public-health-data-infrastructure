@@ -6,13 +6,57 @@ from typing import List, Dict
 
 
 def clean_message(message: str) -> str:
-    parsed_message = None
+    """Prepare a message for conversion by adjusting problematic fields 
+    to conform to Azure's expectations.
+    * Convert segment terminators from \n to \r
+    * Normalize datetime fields 
+    """
+    parsed_message = ""
     try:
-        parsed_message = hl7.parse(message)
+        # Conversion from \n to \r EOL characters is needed for hl7 
+        # module, and doesn't hurt the Azure converter
+        parsed_message = hl7.parse(message.replace("\n","\r"))
 
-        # MSH-7
-        cleansed_datetime = normalize_hl7_datetime(parsed_message[0][7][0])
-        parsed_message[0][7][0] = cleansed_datetime
+        # Normalize Dates
+        # MSH-7 - Message date/time
+        normalize_hl7_datetime_segment(parsed_message, "MSH", [7])
+
+        # PID-7 - DOB
+        normalize_hl7_datetime_segment(parsed_message, "PID", [7])
+
+        # PV1-44 - Admisstion Date
+        # PV1-45 - Discharge Date
+        normalize_hl7_datetime_segment(parsed_message, "PV1", [44,45])
+
+        # ORC-9 Date/time of transaction
+        # ORC-15 Order effective date/time
+        # ORC-27 Filler's expected availability date/time
+        normalize_hl7_datetime_segment(parsed_message, "ORC", [9,15,27])
+
+        # OBR-7 Observation date/time
+        # OBR-8 Observation end date/time
+        # OBR-22 Status change date/time
+        # OBR-36 Scheduled date/time
+        normalize_hl7_datetime_segment(parsed_message, "OBR", [7,8,22,36]) 
+
+        # OBX-12 Effective date/time of reference range
+        # OBX-14 Date/time of observation
+        # OBX-19 Date/time of analysis
+        normalize_hl7_datetime_segment(parsed_message, "OBX", [12,14,19])
+        
+        # TQ1-7 Start date/time
+        # TQ1-8 End date/time
+        normalize_hl7_datetime_segment(parsed_message, "TQ1", [7,8])
+        
+        # SPM-18 Specimen received date/time
+        # SPM-19 Specimen expiration date/time
+        normalize_hl7_datetime_segment(parsed_message, "SPM", [18,19])
+
+        # RXA-3 Date/time start of administration
+        # RXA-4 Date/time end of administration
+        # RXA-16 Substance expiration date
+        # RXA-22 System entry date/time
+        normalize_hl7_datetime_segment(parsed_message, "RXA", [3,4,16,22])
 
     except Exception:
         logging.exception(
@@ -25,24 +69,48 @@ def clean_message(message: str) -> str:
     return str(parsed_message)
 
 
+def normalize_hl7_datetime_segment(message: list, segment_id: str, field_list: list):
+    """ Utility function to apply datetime normalization to multiple fields in a segment. """
+    try:
+        for segment in message.segments(segment_id):
+            for field_num in field_list:
+                if len(segment) > field_num and segment[field_num][0] != "":
+                    cleansed_datetime = normalize_hl7_datetime(segment[field_num][0])
+                    segment[field_num][0] = cleansed_datetime
+    except KeyError:
+        logging.debug(f"Segment {segment_id} not found in message.")
+
 def normalize_hl7_datetime(hl7_datetime: str) -> str:
-    hl7_datetime_parts = re.match(
-        r"(\d+)(\.)?(\d+)?([+-])?(\d+)?", hl7_datetime
-    ).groups()
+    """ Break up datetime-formatted fields into the following parts:
+    <integer 8 or more digits>[.<integer 1 or more digits>][+/-<integer 4 or more digits>]
+    
+    Each group of integers is truncated to conform to the HL7 specification:
+    first integer group: max 14 digits
+    following decimal point: max 4 digits
+    following +/- (timezone): 4 digits
+    """
+    hl7_datetime_match = re.match(
+        r"(\d{8}\d*)(\.\d+)?([+-]\d+)?", hl7_datetime
+    )
+    
+    if not hl7_datetime_match:
+        return hl7_datetime
+
+    hl7_datetime_parts = hl7_datetime_match.groups()
 
     # Date Base
     normalized_datetime = hl7_datetime_parts[0][:14]  # First 14 digits
 
     # Date Decimal
-    if hl7_datetime_parts[2]:
+    if hl7_datetime_parts[1]:
         normalized_datetime += (
-            hl7_datetime_parts[1] + hl7_datetime_parts[2][:4]
+            hl7_datetime_parts[1][:5]
         )  # . plus first 4 digits
 
     # Date Timezone
-    if hl7_datetime_parts[4] and len(hl7_datetime_parts[4]) >= 4:
+    if hl7_datetime_parts[2] and len(hl7_datetime_parts[2]) >= 5:
         normalized_datetime += (
-            hl7_datetime_parts[3] + hl7_datetime_parts[4][:4]
+            hl7_datetime_parts[2][:5]
         )  # +/- plus 4 digits
 
     return normalized_datetime
