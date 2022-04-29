@@ -5,18 +5,13 @@ from typing import List, Callable
 from utils import read_blob, record_combination_func, write_blob
 
 
-def standardize_lab_result(result: str) -> str:
+def standardize_lab_result(result: str, standard: dict) -> str:
     """
     Given a covid test result and dictionary whose keys (POSITIVE, NEGATIVE, and
     INCONCLUSIVE) represent standard results and whose values are lists containing
     non-standard results that map to the associated standard result then return a
-    standardized result. Return null is no standard result could not be found.
+    standardized result. Return null if no standard result could not be found.
     """
-    standard = json.loads(
-        open(
-            pathlib.Path(__file__).parent / "assets" / "covid_lab_results_standard.json"
-        ).read()
-    )
     result = result.upper()
     for standard_result, non_standard_results in standard.items():
         if result in non_standard_results:
@@ -110,8 +105,15 @@ if __name__ == "__main__":
     # Clean and standardize data.
     covid_labs = pd.merge(labs, covid_loincs, how="inner", on="loincCode")
     covid_labs = covid_labs.loc[covid_labs.type.isin(["pcr", "ag"])]
-    covid_labs.drop(["loincCode", "notes"], axis=1, inplace=True)
-    covid_labs.result = covid_labs.result.map(standardize_lab_result)
+    covid_labs.drop(columns=["loincCode", "notes"], inplace=True)
+    standard_results = json.loads(
+        open(
+            pathlib.Path(__file__).parent / "assets" / "covid_lab_results_standard.json"
+        ).read()
+    )
+    covid_labs.result = covid_labs.result.map(
+        lambda x: (standardize_lab_result(x, standard_results))
+    )
     covid_labs.effectiveDateTime = pd.to_datetime(covid_labs.effectiveDateTime)
 
     # Find COVID cases and generate datamart.
@@ -122,7 +124,8 @@ if __name__ == "__main__":
         case_list.extend(cases)
 
     covid_case_datamart = pd.concat(case_list, axis=1).T
-    covid_case_datamart.drop(["result", "type"], axis=1, inplace=True)
+    covid_case_datamart.drop(columns=["result", "type"], inplace=True)
+    breakpoint()
     write_blob(
         covid_case_datamart.to_csv(encoding="utf-8", index=False),
         STORAGE_ACCOUNT_URL,
