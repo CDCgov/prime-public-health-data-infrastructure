@@ -116,8 +116,15 @@ if __name__ == "__main__":
 
     # Load data and link patient records.
     print("Loading data...")
-    pre_linkage = pd.read_csv(
-        get_blob_data(STORAGE_ACCOUNT_URL, CONTAINER_NAME, CSV_FULL_NAME)
+    pre_linkage_elr = pd.read_csv("../FunctionApps/python/elr.csv", dtype="object")
+    pre_linkage_ecr = pd.read_csv("../FunctionApps/python/ecr.csv", dtype="object")
+    pre_linkage_vxu = pd.read_csv("../FunctionApps/python/vxu.csv", dtype="object")
+    pre_linkage_ecr.rename(columns={"observationLoincCode": "loincCode"}, inplace=True)
+    pre_linkage_ecr.rename(
+        columns={"immunizationVaccineCode": "vaccineCode"}, inplace=True
+    )
+    pre_linkage_vxu.rename(
+        columns={"immunizationVaccineCode": "vaccineCode"}, inplace=True
     )
 
     # Use known COVID LOINC codes to filter out all rows corresponding to observation
@@ -126,16 +133,31 @@ if __name__ == "__main__":
     covid_loincs = pd.read_csv(
         pathlib.Path(__file__).parent / "assets" / "covid_loinc_reference.csv"
     )
+    # Use known COVID vaccine related codes as described in
+    # https://build.fhir.org/ig/HL7/fhir-COVID19Library-ig/branches/master/ValueSet-covid19-cvx-codes-value-set.html
+    # to filter out any non-covid vaccines
+    covid_vax_codes = pd.read_csv(
+        pathlib.Path(__file__).parent / "assets" / "covid_vax_codes.csv", dtype="object"
+    )
 
-    pre_linkage_covid = pre_linkage.merge(covid_loincs, on="loincCode", how="inner")
+    pre_linkage_elr = pre_linkage_elr.merge(covid_loincs, on="loincCode", how="inner")
+    pre_linkage_vxu = pre_linkage_vxu.merge(
+        covid_vax_codes, on="vaccineCode", how="inner"
+    )
+    for dtype in [pre_linkage_elr, pre_linkage_ecr, pre_linkage_vxu]:
+        dtype.drop(
+            columns=[
+                c
+                for c in dtype.columns
+                if c
+                # not in list(equity_fields.keys()) + ["patientHash"] + ["occurrenceDateTime"]
+                not in list(equity_fields.keys()) + ["patientHash"]
+            ],
+            inplace=True,
+        )
 
-    pre_linkage_covid.drop(
-        columns=[
-            c
-            for c in pre_linkage_covid.columns
-            if c not in list(equity_fields.keys()) + ["patientHash"]
-        ],
-        inplace=True,
+    pre_linkage_covid = pd.concat(
+        [pre_linkage_elr, pre_linkage_ecr, pre_linkage_vxu], ignore_index=True
     )
     pre_linkage_covid = filter_for_valid_values(pre_linkage_covid, equity_fields)
     data_by_hash = pre_linkage_covid.groupby("patientHash")
@@ -149,11 +171,9 @@ if __name__ == "__main__":
         pre_linkage_covid, post_linkage_covid, equity_fields
     )
     print("Results computed.")
-    print("\nNumber of patient records as a function of linkage:")
+    print("\nNumber of patient records before and after record linkage:")
     print("\n" + tabulate(patients.items(), headers=["#", "patients"]) + "\n")
-    print(
-        "Number of records missing fields key for PH Equity as a functions of linkage:"
-    )
+    print("Number of records missing a PH equity field, before and after linkage:")
     print(
         "\n" + tabulate(missing_equity_data, headers=missing_equity_data.keys()) + "\n"
     )
