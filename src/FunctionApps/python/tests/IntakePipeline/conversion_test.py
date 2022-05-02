@@ -191,8 +191,7 @@ def test_log_fhir_operationoutcome(mock_log, mock_fhir_post):
     )
 
     mock_log.assert_called_with(
-        "Error during $convert-data -- Error processing: some-filename-0  "
-        + "HTTP Code: 400  FHIR Severity: fatal  Code: code-invalid  Diagnostics: None"
+        "HTTP 400 code encountered on $convert-data for some-filename-0"
     )
 
     assert response == {}
@@ -233,7 +232,7 @@ def test_log_generic_error(mock_log, mock_fhir_post):
     )
 
     mock_log.assert_called_with(
-        "Error during $convert-data -- HTTP Code: 400, Response Content some-error"
+        "HTTP 400 code encountered on $convert-data for some-filename-0"
     )
 
     assert response == {}
