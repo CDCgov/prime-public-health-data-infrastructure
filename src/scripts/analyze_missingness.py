@@ -107,6 +107,7 @@ if __name__ == "__main__":
     )
 
     pre_linkage_elr = pre_linkage_elr.merge(covid_loincs, on="loincCode", how="inner")
+    pre_linkage_ecr = pre_linkage_ecr.merge(covid_loincs, on="loincCode", how="inner")
     pre_linkage_vxu = pre_linkage_vxu.merge(
         covid_vax_codes, on="vaccineCode", how="inner"
     )
