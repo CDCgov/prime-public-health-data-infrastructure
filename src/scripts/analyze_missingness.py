@@ -1,7 +1,7 @@
 import pandas as pd
 import pathlib
 from tabulate import tabulate
-from utils import read_blob, record_combination_func
+from utils import record_combination_func
 
 
 def filter_for_valid_values(df: pd.DataFrame, values_by_column: dict[str, set[str]]):
@@ -115,9 +115,7 @@ if __name__ == "__main__":
             columns=[
                 c
                 for c in dtype.columns
-                if c
-                # not in list(equity_fields.keys()) + ["patientHash"] + ["occurrenceDateTime"]
-                not in list(equity_fields.keys()) + ["patientHash"]
+                if c not in list(equity_fields.keys()) + ["patientHash"]
             ],
             inplace=True,
         )
