@@ -156,11 +156,11 @@ def convert_message_to_fhir(
     )
 
     if response.status_code != 200:
-        logging.error(f"Error code {str(response.status_code)} received while processing {filename}")
+        logging.error(f"HTTP {str(response.status_code)} code encountered on $convert-data for {filename}")
 
         error_info = {
             "http_status_code": response.status_code,
-            "response content": response.text,
+            "response_content": response.text,
         }
 
         return error_info
