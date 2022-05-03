@@ -50,8 +50,10 @@ def test_pipeline_valid_message(
     patched_patient_id,
     patched_transform,
 ):
-    patched_converter.return_value = {"resourceType": "Bundle",
-    "entry": [{"hello": "world"}]}
+    patched_converter.return_value = {
+        "resourceType": "Bundle",
+        "entry": [{"hello": "world"}],
+    }
 
     patched_geocoder = mock.Mock()
     patched_get_geocoder.return_value = patched_geocoder
@@ -68,19 +70,23 @@ def test_pipeline_valid_message(
         access_token="some-token",
         fhir_url="some-fhir-url",
     )
-    patched_transform.assert_called_with(patched_geocoder, {"resourceType": "Bundle",
-    "entry": [{"hello": "world"}]})
-    patched_patient_id.assert_called_with(TEST_ENV["HASH_SALT"], {"resourceType": "Bundle",
-    "entry": [{"hello": "world"}]})
-    patched_upload.assert_called_with({"resourceType": "Bundle",
-    "entry": [{"hello": "world"}]}, "some-token", "some-fhir-url")
+    patched_transform.assert_called_with(
+        patched_geocoder, {"resourceType": "Bundle", "entry": [{"hello": "world"}]}
+    )
+    patched_patient_id.assert_called_with(
+        TEST_ENV["HASH_SALT"], {"resourceType": "Bundle", "entry": [{"hello": "world"}]}
+    )
+    patched_upload.assert_called_with(
+        {"resourceType": "Bundle", "entry": [{"hello": "world"}]},
+        "some-token",
+        "some-fhir-url",
+    )
     patched_store.assert_called_with(
         "some-url",
         "output/valid/path",
         f"{MESSAGE_MAPPINGS['filename']}.fhir",
         MESSAGE_MAPPINGS["bundle_type"],
-        message_json={"resourceType": "Bundle",
-    "entry": [{"hello": "world"}]},
+        message_json={"resourceType": "Bundle", "entry": [{"hello": "world"}]},
     )
 
 
@@ -99,8 +105,10 @@ def test_pipeline_invalid_message(
     patched_patient_id,
     patched_transform,
 ):
-    patched_converter.return_value = {"http_status_code": 400,
-        "response_content": "some-error"}
+    patched_converter.return_value = {
+        "http_status_code": 400,
+        "response_content": "some-error",
+    }
 
     patched_geocoder = mock.Mock()
     patched_get_geocoder.return_value = patched_geocoder
@@ -120,21 +128,26 @@ def test_pipeline_invalid_message(
     patched_transform.assert_not_called()
     patched_patient_id.assert_not_called()
     patched_upload.assert_not_called()
-    patched_store.assert_has_calls([
-        mock.call("some-url",
-        "output/invalid/path",
-        f"{MESSAGE_MAPPINGS['filename']}.hl7",
-        MESSAGE_MAPPINGS["bundle_type"],
-        message="MSH|Hello World",
-        ),
-        mock.call("some-url",
-        "output/invalid/path",
-        f"{MESSAGE_MAPPINGS['filename']}.hl7.convert-resp",
-        MESSAGE_MAPPINGS["bundle_type"],
-        message_json={"http_status_code": 400,
-        "response_content": "some-error"},
-        )
-    ]
+    patched_store.assert_has_calls(
+        [
+            mock.call(
+                "some-url",
+                "output/invalid/path",
+                f"{MESSAGE_MAPPINGS['filename']}.hl7",
+                MESSAGE_MAPPINGS["bundle_type"],
+                message="MSH|Hello World",
+            ),
+            mock.call(
+                "some-url",
+                "output/invalid/path",
+                f"{MESSAGE_MAPPINGS['filename']}.hl7.convert-resp",
+                MESSAGE_MAPPINGS["bundle_type"],
+                message_json={
+                    "http_status_code": 400,
+                    "response_content": "some-error",
+                },
+            ),
+        ]
     )
 
 
@@ -155,16 +168,11 @@ def test_pipeline_partial_invalid_message(
     partial_failure_message,
 ):
     patched_converter.side_effect = [
-        {"resourceType": "Bundle",
-    "entry": [{"hello": "world"}]},
-        {"resourceType": "Bundle",
-    "entry": [{"hello": "world"}]},
-        {"http_status_code": 400,
-        "response_content": "\"some-error\""},
-        {"resourceType": "Bundle",
-    "entry": [{"hello": "world"}]},
-        {"resourceType": "Bundle",
-    "entry": [{"hello": "world"}]},
+        {"resourceType": "Bundle", "entry": [{"hello": "world"}]},
+        {"resourceType": "Bundle", "entry": [{"hello": "world"}]},
+        {"http_status_code": 400, "response_content": '"some-error"'},
+        {"resourceType": "Bundle", "entry": [{"hello": "world"}]},
+        {"resourceType": "Bundle", "entry": [{"hello": "world"}]},
     ]
 
     patched_geocoder = mock.Mock()
@@ -263,16 +271,14 @@ def test_pipeline_partial_invalid_message(
                 "output/valid/path",
                 "some-filename-0.fhir",
                 "VXU",
-                message_json={"resourceType": "Bundle",
-    "entry": [{"hello": "world"}]},
+                message_json={"resourceType": "Bundle", "entry": [{"hello": "world"}]},
             ),
             mock.call(
                 "some-url",
                 "output/valid/path",
                 "some-filename-1.fhir",
                 "VXU",
-                message_json={"resourceType": "Bundle",
-    "entry": [{"hello": "world"}]},
+                message_json={"resourceType": "Bundle", "entry": [{"hello": "world"}]},
             ),
             mock.call(
                 "some-url",
@@ -286,24 +292,24 @@ def test_pipeline_partial_invalid_message(
                 "output/invalid/path",
                 "some-filename-2.hl7.convert-resp",
                 "VXU",
-                message_json={"http_status_code": 400,
-        "response_content": "\"some-error\""},
+                message_json={
+                    "http_status_code": 400,
+                    "response_content": '"some-error"',
+                },
             ),
             mock.call(
                 "some-url",
                 "output/valid/path",
                 "some-filename-3.fhir",
                 "VXU",
-                message_json={"resourceType": "Bundle",
-    "entry": [{"hello": "world"}]},
+                message_json={"resourceType": "Bundle", "entry": [{"hello": "world"}]},
             ),
             mock.call(
                 "some-url",
                 "output/valid/path",
                 "some-filename-4.fhir",
                 "VXU",
-                message_json={"resourceType": "Bundle",
-    "entry": [{"hello": "world"}]},
+                message_json={"resourceType": "Bundle", "entry": [{"hello": "world"}]},
             ),
         ]
     )

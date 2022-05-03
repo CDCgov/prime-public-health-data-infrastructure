@@ -145,14 +145,15 @@ def test_log_generic_error(mock_log, mock_fhir_post):
         "HTTP 400 code encountered on $convert-data for some-filename-0"
     )
 
-    assert response == {"http_status_code": 400,
-        "response_content": "some-error"}
+    assert response == {"http_status_code": 400, "response_content": "some-error"}
 
 
 @mock.patch("requests.post")
 @mock.patch("logging.error")
 def test_log_special_char_error(mock_log, mock_fhir_post):
-    mock_fhir_post.return_value = mock.Mock(status_code=400, text="some-error with \" special \' characters \n")
+    mock_fhir_post.return_value = mock.Mock(
+        status_code=400, text="some-error with \" special ' characters \n"
+    )
 
     message = "MSH|blah|foo|test\nPID|some^text|blah\nOBX|foo||||bar^baz&foobar"
 
@@ -187,8 +188,11 @@ def test_log_special_char_error(mock_log, mock_fhir_post):
         "HTTP 400 code encountered on $convert-data for some-filename-0"
     )
 
-    assert response == {"http_status_code": 400,
-        "response_content": "some-error with \" special \' characters \n"}
+    assert response == {
+        "http_status_code": 400,
+        "response_content": "some-error with \" special ' characters \n",
+    }
+
 
 def test_get_filetype_mappings_valid_files():
     TEST_STRING1 = "decrypted/ELR/some-file.hl7"
