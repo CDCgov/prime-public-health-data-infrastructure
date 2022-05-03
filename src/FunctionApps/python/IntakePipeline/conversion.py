@@ -156,12 +156,13 @@ def convert_message_to_fhir(
     )
 
     if response.status_code != 200:
+        logging.error("Error code " + str(response.status_code) + " received while ")
 
-        logging.error(
-            f"HTTP {response.status_code} code encountered "
-            + f"on $convert-data for {filename}"
-        )
+        error_info = {
+            "http_status_code": response.status_code,
+            "response content": response.text,
+        }
 
-        return {}
+        return error_info
 
     return response.json()
