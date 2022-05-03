@@ -19,17 +19,10 @@ def extract_loinc_lab(observation: dict) -> List[str]:
         return []
     if "loinc" in code["system"]:
         obs_date = observation.get("effectiveDateTime")
-        result = ""
-        if "valueCodeableConcept" in observation:
-            try:
-                result = observation["valueCodeableConcept"]["coding"][0]["display"]
-            except KeyError:
-                result = ""
-        elif "valueString" in observation:
-            try:
-                result = observation["valueString"]
-            except KeyError:
-                result = ""
+        try:
+            result = observation["valueCodeableConcept"]["coding"][0]["display"]
+        except KeyError:
+            result = observation.get("valueString", "")
         return [code.get("code"), result, obs_date]
     return []
 

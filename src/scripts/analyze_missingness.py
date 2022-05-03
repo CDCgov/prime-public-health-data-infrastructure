@@ -83,11 +83,11 @@ def find_one_patient_per_report(df: pd.DataFrame) -> pd.DataFrame:
     prev_hash = None
     idxs_to_keep = []
     for row in df.index:
-        if prev_hash == None or df["patientHash"][row] != prev_hash:
+        if prev_hash is None or df["patientHash"][row] != prev_hash:
             idxs_to_keep.append(row)
             prev_hash = df["patientHash"][row]
     new_df = df.loc[idxs_to_keep, :]
-    new_df.reset_index()
+    new_df.reset_index(drop=True)
     return new_df
 
 
