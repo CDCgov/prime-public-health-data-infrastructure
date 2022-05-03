@@ -155,6 +155,15 @@ def test_log_generic_error(mock_log, mock_fhir_post):
     mock_fhir_post.return_value = mock.Mock(status_code=400, text="some-error")
 
     message = "MSH|blah|foo|test\nPID|some^text|blah\nOBX|foo||||bar^baz&foobar"
+    convert_message_to_fhir(
+        message,
+        "some-filename-0",
+        "Hl7v2",
+        "VXU_V04",
+        "microsofthealth/fhirconverter:default",
+        "some-token",
+        "some-fhir-url",
+    )
 
     mock_fhir_post.assert_called_with(
         url="some-fhir-url/$convert-data",
