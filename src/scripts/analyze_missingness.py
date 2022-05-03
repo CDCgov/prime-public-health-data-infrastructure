@@ -67,6 +67,30 @@ def count_records_missing_data(
     return results
 
 
+def find_one_patient_per_report(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    ECR and VXU data sets, as they've been given to us, contain a
+    patient's entire case or vaccination history, respectively. This
+    means when we convert to FHIR, all individual observations are split
+    into separate messages, which the CSV generator parses as separate
+    rows. The effect is that one patient could appear multiple times
+    in a CSV for covid-related reasons, even if in the data they formed
+    a single concrete unit. This function is a quick and dirty hack
+    to work around this by preserving only the first instance of a
+    patient's hash in the data set. It is useful PURELY for determining
+    how many records our hash actually linked.
+    """
+    prev_hash = None
+    idxs_to_keep = []
+    for row in df.index:
+        if prev_hash == None or df["patientHash"][row] != prev_hash:
+            idxs_to_keep.append(row)
+            prev_hash = df["patientHash"][row]
+    new_df = df.loc[idxs_to_keep, :]
+    new_df.reset_index()
+    return new_df
+
+
 if __name__ == "__main__":
 
     # Set values the specify a blob to load.
@@ -108,9 +132,11 @@ if __name__ == "__main__":
 
     pre_linkage_elr = pre_linkage_elr.merge(covid_loincs, on="loincCode", how="inner")
     pre_linkage_ecr = pre_linkage_ecr.merge(covid_loincs, on="loincCode", how="inner")
+    pre_linkage_ecr = find_one_patient_per_report(pre_linkage_ecr)
     pre_linkage_vxu = pre_linkage_vxu.merge(
         covid_vax_codes, on="vaccineCode", how="inner"
     )
+    pre_linkage_vxu = find_one_patient_per_report(pre_linkage_vxu)
     for dtype in [pre_linkage_elr, pre_linkage_ecr, pre_linkage_vxu]:
         dtype.drop(
             columns=[
@@ -120,7 +146,6 @@ if __name__ == "__main__":
             ],
             inplace=True,
         )
-
     pre_linkage_covid = pd.concat(
         [pre_linkage_elr, pre_linkage_ecr, pre_linkage_vxu], ignore_index=True
     )

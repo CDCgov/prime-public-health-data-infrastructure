@@ -19,6 +19,7 @@ def extract_loinc_lab(observation: dict) -> List[str]:
         return []
     if "loinc" in code["system"]:
         obs_date = observation.get("effectiveDateTime")
+        result = ""
         if "valueCodeableConcept" in observation:
             try:
                 result = observation["valueCodeableConcept"]["coding"][0]["display"]
