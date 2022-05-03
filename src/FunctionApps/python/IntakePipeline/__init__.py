@@ -65,7 +65,7 @@ def run_pipeline(
                 valid_output_path,
                 f"{message_mappings['filename']}.fhir",
                 message_mappings["bundle_type"],
-                bundle=bundle,
+                message_json=bundle,
             )
         except ResourceExistsError:
             logging.warning(
@@ -82,7 +82,7 @@ def run_pipeline(
                 invalid_output_path,
                 f"{message_mappings['filename']}.{message_mappings['file_suffix']}",
                 message_mappings["bundle_type"],
-                message=json.dumps(message),
+                message=message,
             )
         except ResourceExistsError:
             logging.warning(
@@ -97,7 +97,7 @@ def run_pipeline(
                 f"{message_mappings['filename']}.{message_mappings['file_suffix']}"
                 + ".convert-resp",
                 message_mappings["bundle_type"],
-                bundle=response,
+                message_json=response,
             )
         except ResourceExistsError:
             logging.warning(

@@ -156,7 +156,7 @@ def convert_message_to_fhir(
     )
 
     if response.status_code != 200:
-        logging.error("Error code " + str(response.status_code) + " received while ")
+        logging.error(f"Error code {str(response.status_code)} received while processing {filename}")
 
         error_info = {
             "http_status_code": response.status_code,
