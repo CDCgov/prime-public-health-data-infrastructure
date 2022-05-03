@@ -160,7 +160,7 @@ def test_pipeline_partial_invalid_message(
         {"resourceType": "Bundle",
     "entry": [{"hello": "world"}]},
         {"http_status_code": 400,
-        "response_content": "some-error"},
+        "response_content": "\"some-error\""},
         {"resourceType": "Bundle",
     "entry": [{"hello": "world"}]},
         {"resourceType": "Bundle",
@@ -287,7 +287,7 @@ def test_pipeline_partial_invalid_message(
                 "some-filename-2.hl7.convert-resp",
                 "VXU",
                 message_json={"http_status_code": 400,
-        "response_content": "some-error"},
+        "response_content": "\"some-error\""},
             ),
             mock.call(
                 "some-url",

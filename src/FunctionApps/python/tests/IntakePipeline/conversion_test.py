@@ -149,6 +149,47 @@ def test_log_generic_error(mock_log, mock_fhir_post):
         "response_content": "some-error"}
 
 
+@mock.patch("requests.post")
+@mock.patch("logging.error")
+def test_log_special_char_error(mock_log, mock_fhir_post):
+    mock_fhir_post.return_value = mock.Mock(status_code=400, text="some-error with \" special \' characters \n")
+
+    message = "MSH|blah|foo|test\nPID|some^text|blah\nOBX|foo||||bar^baz&foobar"
+
+    response = convert_message_to_fhir(
+        message,
+        "some-filename-0",
+        "Hl7v2",
+        "VXU_V04",
+        "microsofthealth/fhirconverter:default",
+        "some-token",
+        "some-fhir-url",
+    )
+
+    mock_fhir_post.assert_called_with(
+        url="some-fhir-url/$convert-data",
+        json={
+            "resourceType": "Parameters",
+            "parameter": [
+                {"name": "inputData", "valueString": message},
+                {"name": "inputDataType", "valueString": "Hl7v2"},
+                {
+                    "name": "templateCollectionReference",
+                    "valueString": "microsofthealth/fhirconverter:default",
+                },
+                {"name": "rootTemplate", "valueString": "VXU_V04"},
+            ],
+        },
+        headers={"Authorization": "Bearer some-token"},
+    )
+
+    mock_log.assert_called_with(
+        "HTTP 400 code encountered on $convert-data for some-filename-0"
+    )
+
+    assert response == {"http_status_code": 400,
+        "response_content": "some-error with \" special \' characters \n"}
+
 def test_get_filetype_mappings_valid_files():
     TEST_STRING1 = "decrypted/ELR/some-file.hl7"
     TEST_STRING2 = "decrypted/VXU/some-file.hl7"
