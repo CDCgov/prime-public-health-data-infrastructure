@@ -38,7 +38,7 @@ def test_clean_message():
 
     assert clean_message(message_1).startswith(
         "MSH|^~\\&|WIR11.3.2^^|WIR^^||WIRPH^^|20200514010000|"
-        + "|VXU^V04|2020051411020600|P^|2.4^^|||ER\r"
+        + "|VXU^V04|2020051411020600|P^|2.4^^|||ER\n"
         + "PID|||3054790^^^^SR^~^^^^PI^||ZTEST^PEDIARIX^^^^^^|"
         + "HEPB^DTAP^^^^^^|20180808000000|M|||||||||||||||||||||"
     )
@@ -139,7 +139,8 @@ def test_convert_batch_messages_to_list():
 @mock.patch("requests.post")
 def test_convert_message_to_fhir_success(mock_fhir_post):
     mock_fhir_post.return_value = mock.Mock(
-        status_code=200, json=lambda: {"hello": "world"}
+        status_code=200,
+        json=lambda: {"resourceType": "Bundle", "entry": [{"hello": "world"}]},
     )
 
     message = "MSH|blah|foo|test\nPID|some^text|blah\nOBX|foo||||bar^baz&foobar\n"
@@ -158,7 +159,7 @@ def test_convert_message_to_fhir_success(mock_fhir_post):
         json={
             "resourceType": "Parameters",
             "parameter": [
-                {"name": "inputData", "valueString": message.replace("\n", "\r")},
+                {"name": "inputData", "valueString": message},
                 {"name": "inputDataType", "valueString": "Hl7v2"},
                 {
                     "name": "templateCollectionReference",
@@ -170,7 +171,7 @@ def test_convert_message_to_fhir_success(mock_fhir_post):
         headers={"Authorization": "Bearer some-token"},
     )
 
-    assert response == {"hello": "world"}
+    assert response == {"resourceType": "Bundle", "entry": [{"hello": "world"}]}
 
 
 @mock.patch("requests.post")
@@ -196,7 +197,7 @@ def test_convert_message_to_fhir_failure(mock_fhir_post):
         json={
             "resourceType": "Parameters",
             "parameter": [
-                {"name": "inputData", "valueString": message.replace("\n", "\r")},
+                {"name": "inputData", "valueString": message},
                 {"name": "inputDataType", "valueString": "Hl7v2"},
                 {
                     "name": "templateCollectionReference",
@@ -220,7 +221,7 @@ def test_convert_message_to_fhir_failure(mock_fhir_post):
 def test_log_fhir_operationoutcome(mock_log, mock_fhir_post):
     mock_fhir_post.return_value = mock.Mock(
         status_code=400,
-        text='{ "resourceType": "Bundle", "entry": [{"hello": "world"}] }',
+        text='{ "resourceType": "OperationOutcome", "diagnostics": "some-error" }',
     )
 
     message = "MSH|blah|foo|test\nPID|some^text|blah\nOBX|foo||||bar^baz&foobar\n"
@@ -240,7 +241,7 @@ def test_log_fhir_operationoutcome(mock_log, mock_fhir_post):
         json={
             "resourceType": "Parameters",
             "parameter": [
-                {"name": "inputData", "valueString": message.replace("\n", "\r")},
+                {"name": "inputData", "valueString": message},
                 {"name": "inputDataType", "valueString": "Hl7v2"},
                 {
                     "name": "templateCollectionReference",
@@ -254,8 +255,8 @@ def test_log_fhir_operationoutcome(mock_log, mock_fhir_post):
 
     assert response == {
         "http_status_code": 400,
-        "response_content": '{ "resourceType": "Bundle", "entry": '
-        + '[{"hello": "world"}] }',
+        "response_content": '{ "resourceType": "OperationOutcome", '
+        + '"diagnostics": "some-error" }',
     }
 
 
@@ -280,7 +281,7 @@ def test_log_generic_error(mock_log, mock_fhir_post):
         json={
             "resourceType": "Parameters",
             "parameter": [
-                {"name": "inputData", "valueString": message.replace("\n", "\r")},
+                {"name": "inputData", "valueString": message},
                 {"name": "inputDataType", "valueString": "Hl7v2"},
                 {
                     "name": "templateCollectionReference",
@@ -319,7 +320,7 @@ def test_generic_error(mock_log, mock_fhir_post):
         json={
             "resourceType": "Parameters",
             "parameter": [
-                {"name": "inputData", "valueString": message.replace("\n", "\r")},
+                {"name": "inputData", "valueString": message},
                 {"name": "inputDataType", "valueString": "Hl7v2"},
                 {
                     "name": "templateCollectionReference",
@@ -358,7 +359,7 @@ def test_error_with_special_chars(mock_log, mock_fhir_post):
         json={
             "resourceType": "Parameters",
             "parameter": [
-                {"name": "inputData", "valueString": message.replace("\n", "\r")},
+                {"name": "inputData", "valueString": message},
                 {"name": "inputDataType", "valueString": "Hl7v2"},
                 {
                     "name": "templateCollectionReference",
