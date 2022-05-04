@@ -176,7 +176,8 @@ def test_convert_message_to_fhir_success(mock_fhir_post):
 @mock.patch("requests.post")
 def test_convert_message_to_fhir_failure(mock_fhir_post):
     mock_fhir_post.return_value = mock.Mock(
-        status_code=400, json=lambda: {"hello": "world"}
+        status_code=400,
+        text='{ "resourceType": "Bundle", "entry": [{"hello": "world"}] }',
     )
 
     message = "MSH|blah|foo|test\nPID|some^text|blah\nOBX|foo||||bar^baz&foobar\n"
@@ -207,7 +208,11 @@ def test_convert_message_to_fhir_failure(mock_fhir_post):
         headers={"Authorization": "Bearer some-token"},
     )
 
-    assert response == {}
+    assert response == {
+        "http_status_code": 400,
+        "response_content": '{ "resourceType": "Bundle", "entry": '
+        + '[{"hello": "world"}] }',
+    }
 
 
 @mock.patch("requests.post")
@@ -259,7 +264,7 @@ def test_log_fhir_operationoutcome(mock_log, mock_fhir_post):
 def test_log_generic_error(mock_log, mock_fhir_post):
     mock_fhir_post.return_value = mock.Mock(status_code=400, text="some-error")
 
-    message = "MSH|blah|foo|test\nPID|some^text|blah\nOBX|foo||||bar^baz&foobar"
+    message = "MSH|blah|foo|test\nPID|some^text|blah\nOBX|foo||||bar^baz&foobar\n"
     convert_message_to_fhir(
         message,
         "some-filename-0",
@@ -275,7 +280,7 @@ def test_log_generic_error(mock_log, mock_fhir_post):
         json={
             "resourceType": "Parameters",
             "parameter": [
-                {"name": "inputData", "valueString": message},
+                {"name": "inputData", "valueString": message.replace("\n", "\r")},
                 {"name": "inputDataType", "valueString": "Hl7v2"},
                 {
                     "name": "templateCollectionReference",
@@ -336,7 +341,7 @@ def test_error_with_special_chars(mock_log, mock_fhir_post):
         status_code=400, text="some-error with \" special ' characters \n"
     )
 
-    message = "MSH|blah|foo|test\nPID|some^text|blah\nOBX|foo||||bar^baz&foobar"
+    message = "MSH|blah|foo|test\nPID|some^text|blah\nOBX|foo||||bar^baz&foobar\n"
 
     response = convert_message_to_fhir(
         message,
@@ -353,7 +358,7 @@ def test_error_with_special_chars(mock_log, mock_fhir_post):
         json={
             "resourceType": "Parameters",
             "parameter": [
-                {"name": "inputData", "valueString": message},
+                {"name": "inputData", "valueString": message.replace("\n", "\r")},
                 {"name": "inputDataType", "valueString": "Hl7v2"},
                 {
                     "name": "templateCollectionReference",
