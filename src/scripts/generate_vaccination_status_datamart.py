@@ -20,6 +20,9 @@ def determine_covid_vax_status(patient_immunizations: pd.DataFrame) -> pd.Series
         "pfizer_pediatric": [218],
         "adult_boosters": [207, 221, 208, 217],
         "pfizer_12to17_boosters": [208, 217],
+    }
+
+    vax_sequence_specs = {
         "moderna_range": range(28, 56 + 1),
         "pfizer_range": range(21, 56 + 1),
         "jj_booster_delay": 56,
@@ -58,7 +61,7 @@ def determine_covid_vax_status(patient_immunizations: pd.DataFrame) -> pd.Series
                     idx,
                     patient_immunizations,
                     vax_codes["moderna_adult"],
-                    vax_codes["moderna_range"],
+                    vax_sequence_specs["moderna_range"],
                 )
                 initial_vax_type = "moderna"
                 next_dose_idx = idx + 2
@@ -72,7 +75,7 @@ def determine_covid_vax_status(patient_immunizations: pd.DataFrame) -> pd.Series
                     idx,
                     patient_immunizations,
                     vax_codes["pfizer_adult"],
-                    vax_codes["pfizer_range"],
+                    vax_sequence_specs["pfizer_range"],
                 )
                 initial_vax_type = "pfizer"
                 next_dose_idx = idx + 2
@@ -85,7 +88,7 @@ def determine_covid_vax_status(patient_immunizations: pd.DataFrame) -> pd.Series
                     idx,
                     patient_immunizations,
                     vax_codes["pfizer_pediatric"],
-                    vax_codes["pfizer_range"],
+                    vax_sequence_specs["pfizer_range"],
                 )
                 initial_vax_type = "pfizer"
                 next_dose_idx = idx + 2
@@ -104,7 +107,7 @@ def determine_covid_vax_status(patient_immunizations: pd.DataFrame) -> pd.Series
                     patient_immunizations.occurrenceDateTime[next_dose_idx]
                     - vaccination.occurrenceDateTime
                 ).days
-                > vax_codes[initial_vax_type + "_booster_delay"]
+                > vax_sequence_specs[initial_vax_type + "_booster_delay"]
             ):
                 boosted_date = patient_immunizations.occurrenceDateTime[next_dose_idx]
                 break
@@ -116,7 +119,7 @@ def determine_covid_vax_status(patient_immunizations: pd.DataFrame) -> pd.Series
                     patient_immunizations.occurrenceDateTime[next_dose_idx]
                     - vaccination.occurrenceDataTime
                 ).days
-                > vax_codes[initial_vax_type + "_booster_delay"]
+                > vax_sequence_specs[initial_vax_type + "_booster_delay"]
             ):
                 boosted_date = patient_immunizations.occurrenceDateTime[next_dose_idx]
                 break
