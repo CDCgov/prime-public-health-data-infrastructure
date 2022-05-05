@@ -50,7 +50,7 @@ def determine_covid_vax_status(patient_immunizations: pd.DataFrame) -> pd.Series
                 next_dose_idx = idx + 1
 
             # Moderna ages 18+
-            if (
+            elif (
                 vaccination.vaccineCode in vax_codes["moderna_adult"]
                 and current_dose_age >= 18
             ):
@@ -64,7 +64,7 @@ def determine_covid_vax_status(patient_immunizations: pd.DataFrame) -> pd.Series
                 next_dose_idx = idx + 2
 
             # Pfizer ages 12 +
-            if (
+            elif (
                 vaccination.vaccineCode in vax_codes["pfizer_adult"]
                 and current_dose_age > 12
             ):
@@ -78,7 +78,7 @@ def determine_covid_vax_status(patient_immunizations: pd.DataFrame) -> pd.Series
                 next_dose_idx = idx + 2
 
             # Pfizer ages 5 to <12
-            if vaccination.vaccineCode in vax_codes[
+            elif vaccination.vaccineCode in vax_codes[
                 "pfizer_pediatric"
             ] and current_dose_age in range(5, 12):
                 vaccinated_date = check_mrna_status(
