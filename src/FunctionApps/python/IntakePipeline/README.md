@@ -24,6 +24,8 @@ The configuration values required to be set for the IntakePipeline function are 
 The IntakePipeline Azure Function orchestrates a series of actions, implemented in discrete Python building blocks, each of which is described below.  
 
 ## Conversion
+The conversion building block is responsible for converting from a raw input format (HL7 Version 2, or CCD) to FHIR.  This includes normalization as well as conversion of batch files and messages.
+
 ### Convert batch to list
 A batch file containing one or more messages is converted into a list of inidivdual messages.  Prior to conversion, the following normalization is applied:
 
@@ -83,3 +85,41 @@ For detailed information about mapping and transformation to FHIR, you can revie
 * Immunizations: [VXU_V04](https://github.com/microsoft/FHIR-Converter/blob/main/data/Templates/Hl7v2/VXU_V04.liquid)
 * Lab Results: [ORU_R01](https://github.com/microsoft/FHIR-Converter/blob/main/data/Templates/Hl7v2/ORU_R01.liquid)
 
+### Transform
+The transform building block is responsible for standardizing data field formatting.
+#### Transform Names
+Names are standardized by applying the following modifications:
+* Remove numeric digits
+* Trim whitespace
+* Make all-caps
+
+#### Transform Phone Numbers
+Phone numbers are standardized by applying the following modifications:
+* Remove non-numeric digits
+* Filter phone numbers that are not exactly 10 digits long
+
+#### Transform Address
+Addresses are standardized by making a lookup request to the SmartySheets API.  The request includes address lines, city, state, and postal code.  If a geocoded result is returned, the address is replaced with the geocoded result.  Longitude and latitude is also added as a FHIR extension.  If no geocoded result is found, the original remains, untransformed.
+
+### Linkage
+The linkage building block is responsible for grouping information for the same patient across different messages and data sources.
+
+#### Master Identifier Generation
+A master patient identifier is generated using a salted SHA-256 hash of the standardized patient name, birthdate and address.  The master patient identifier is added to the identifier array in the FHIR Patient resource.  
+
+### FHIR Server Storage
+The FHIR Server building block is responsible for uploading resources to the FHIR server.
+
+#### Upload to FHIR Server
+A [batch FHIR bundle](https://www.hl7.org/fhir/bundle.html#transaction) is submitted via HTTP POST to the configured FHIR server.
+
+### Blob Storage
+The Blob Storage building block is responsible for storing FHIR bundles for successfully processed messages to Blob storage.  Messages that failed to process successfully may be stored to a different blob location.
+
+#### Generate Blob Name
+Blob names are formatted as:
+`<Base Filename>-<Message Index>`
+The _"Base Filename"_ is the original filename without the file type suffix (ELR_YYYYMMDD_i.hl7 becomes ELR_YYYYMMDD_i).  Since input files may contain batches of multiple messages, the _"Message Index"_ is the zero-based index of the message within that file.
+
+#### Store Blob
+Blobs are stored according to the configured container URL and locations.

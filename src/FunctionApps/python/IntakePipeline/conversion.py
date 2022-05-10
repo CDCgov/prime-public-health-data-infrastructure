@@ -116,6 +116,9 @@ def normalize_hl7_datetime(hl7_datetime: str) -> str:
 
 
 def clean_batch(batch: str, delimiter: str = "\n") -> str:
+    """
+    Clean a batch file
+    """
     cleansed_batch = re.sub("[\r\n]+", delimiter, batch)
 
     # These are unicode for vertical tab and file separator, respectively
@@ -126,7 +129,7 @@ def clean_batch(batch: str, delimiter: str = "\n") -> str:
     return cleansed_batch
 
 
-# This method was adopted from PRIME ReportStream, which can be found here:
+# This method was adapted from PRIME ReportStream, which can be found here:
 # https://github.com/CDCgov/prime-reportstream/blob/194396582be02fcc51295089f20b0c2b90e7c830/prime-router/src/main/kotlin/serializers/Hl7Serializer.kt#L121
 def convert_batch_messages_to_list(content: str, delimiter: str = "\n") -> List[str]:
     """
