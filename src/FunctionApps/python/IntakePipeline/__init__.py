@@ -107,9 +107,9 @@ def run_pipeline(
 
 def main(blob: func.InputStream) -> None:
     """
-    Main entry point for the IntakePipeline Azure function.
-    This is responsible for splitting an incoming batch file (or individual message)
-    into a list of individual messages.  Each individual message is passed on to the
+    This is the main entry point for the IntakePipeline Azure function.
+    It is responsible for splitting an incoming batch file (or individual message)
+    into a list of individual messages.  Each individual message is passed to the
     processing pipeline.
     """
     logging.debug("Entering intake pipeline ")

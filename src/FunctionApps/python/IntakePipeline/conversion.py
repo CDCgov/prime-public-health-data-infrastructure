@@ -117,7 +117,11 @@ def normalize_hl7_datetime(hl7_datetime: str) -> str:
 
 def clean_batch(batch: str, delimiter: str = "\n") -> str:
     """
-    Clean a batch file
+    Clean a batch file by replacing Windows (CR-LF) newlines with the specified
+    newline delimiter (LF by default).
+
+    Also, strip vertical tab and file separator characters which can appear in
+    input batch file data.
     """
     cleansed_batch = re.sub("[\r\n]+", delimiter, batch)
 
