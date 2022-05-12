@@ -1,12 +1,11 @@
 import pytest
 from unittest import mock
-
 import json
 import pathlib
 
-from phdi_transforms.geo import GeocodeResult
-
-from IntakePipeline.transform import transform_bundle
+from phdi_building_blocks.geo import GeocodeResult, geocode_patient_address
+from phdi_building_blocks.name_standardization import standardize_patient_name
+from phdi_building_blocks.phone_standardization import standardize_patient_phone
 
 
 @pytest.fixture()
@@ -16,7 +15,7 @@ def bundle():
     )
 
 
-@mock.patch("IntakePipeline.transform.geocode")
+@mock.patch("phdi_building_blocks.geo.geocode")
 def test_add_extensions_to_patient(patched_geocode, bundle):
     patched_geocode.return_value = GeocodeResult(
         key="123 Fake St New York, NY 10001",
@@ -51,7 +50,9 @@ def test_add_extensions_to_patient(patched_geocode, bundle):
         },
     ]
 
-    transform_bundle(mock.Mock(), bundle)
+    standardize_patient_name(bundle)
+    standardize_patient_phone(bundle)
+    geocode_patient_address(bundle, mock.Mock())
     assert (
         bundle.get("entry")[1].get("resource").get("extension") == expected_extensions
     )
