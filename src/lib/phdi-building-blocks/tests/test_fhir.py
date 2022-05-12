@@ -1,9 +1,15 @@
-from datetime import datetime, timezone
 import os
+import pytest
+import polling
+import requests
 
+from datetime import datetime, timezone
 from unittest import mock
 
+
 from phdi_building_blocks.fhir import (
+    _compose_export_url,
+    export_from_fhir_server,
     store_data,
     get_fhirserver_cred_manager,
     upload_bundle_to_fhir_server,
@@ -103,3 +109,183 @@ def test_get_access_token_refresh(mock_get_token):
         [mock.call("https://fhir-url/.default"), mock.call("https://fhir-url/.default")]
     )
     assert token1.token == "my-token"
+
+
+@mock.patch("requests.get")
+def test_export_from_fhir_server(mock_get):
+    access_token = "my-token"
+    fhir_url = "https://fhir-url"
+
+    poll_step = 0.1
+    poll_timeout = 0.5
+
+    mock_export_response = mock.Mock()
+    mock_export_response.status_code = 202
+
+    mock_export_response.headers = {"Content-Location": "https://export-download-url"}
+
+    mock_export_download_response_accepted = mock.Mock()
+    mock_export_download_response_accepted.status_code = 202
+
+    mock_export_download_response_ok = mock.Mock()
+    mock_export_download_response_ok.status_code = 200
+    mock_export_download_response_ok.json.return_value = {
+        "output": [
+            {"type": "Patient", "url": "https://export-download-url/_Patient"},
+            {"type": "Observation", "url": "https://export-download-url/_Observation"},
+        ]
+    }
+
+    mock_get.side_effect = [
+        mock_export_response,
+        mock_export_download_response_accepted,
+        mock_export_download_response_accepted,
+        mock_export_download_response_accepted,
+        mock_export_download_response_ok,
+    ]
+
+    export_from_fhir_server(
+        access_token=access_token,
+        fhir_url=fhir_url,
+        poll_step=poll_step,
+        poll_timeout=poll_timeout,
+    )
+
+    mock_get.assert_has_calls(
+        [
+            mock.call(
+                f"{fhir_url}/$export",
+                headers={
+                    "Authorization": f"Bearer {access_token}",
+                    "Accept": "application/fhir+json",
+                    "Prefer": "respond-async",
+                },
+            ),
+            mock.call(
+                "https://export-download-url",
+                headers={
+                    "Authorization": f"Bearer {access_token}",
+                    "Accept": "application/fhir+ndjson",
+                },
+            ),
+            mock.call(
+                "https://export-download-url",
+                headers={
+                    "Authorization": f"Bearer {access_token}",
+                    "Accept": "application/fhir+ndjson",
+                },
+            ),
+            mock.call(
+                "https://export-download-url",
+                headers={
+                    "Authorization": f"Bearer {access_token}",
+                    "Accept": "application/fhir+ndjson",
+                },
+            ),
+            mock.call(
+                "https://export-download-url",
+                headers={
+                    "Authorization": f"Bearer {access_token}",
+                    "Accept": "application/fhir+ndjson",
+                },
+            ),
+        ]
+    )
+    assert mock_get.call_count == 5
+
+
+@mock.patch("requests.get")
+def test_export_from_fhir_server_timeout(mock_get):
+    access_token = "my-token"
+    fhir_url = "https://fhir-url"
+
+    poll_step = 0.1
+    poll_timeout = 0.5
+
+    mock_export_response = mock.Mock()
+    mock_export_response.status_code = 202
+
+    mock_export_response.headers = {"Content-Location": "https://export-download-url"}
+
+    mock_export_download_response_accepted = mock.Mock()
+    mock_export_download_response_accepted.status_code = 202
+
+    mock_get.side_effect = [
+        mock_export_response,
+        mock_export_download_response_accepted,
+        mock_export_download_response_accepted,
+        mock_export_download_response_accepted,
+        mock_export_download_response_accepted,
+        mock_export_download_response_accepted,
+        mock_export_download_response_accepted,
+    ]
+
+    with pytest.raises(polling.TimeoutException):
+        export_from_fhir_server(
+            access_token=access_token,
+            fhir_url=fhir_url,
+            poll_step=poll_step,
+            poll_timeout=poll_timeout,
+        )
+
+    assert mock_get.call_count == 7
+
+
+@mock.patch("requests.get")
+def test_export_from_fhir_server_error(mock_get):
+    access_token = "my-token"
+    fhir_url = "https://fhir-url"
+
+    poll_step = 0.1
+    poll_timeout = 0.5
+
+    mock_export_response = mock.Mock()
+    mock_export_response.status_code = 202
+
+    mock_export_response.headers = {"Content-Location": "https://export-download-url"}
+
+    mock_export_download_response_error = mock.Mock()
+    mock_export_download_response_error.status_code = 500
+
+    mock_get.side_effect = [
+        mock_export_response,
+        mock_export_download_response_error,
+    ]
+
+    with pytest.raises(requests.HTTPError):
+        export_from_fhir_server(
+            access_token=access_token,
+            fhir_url=fhir_url,
+            poll_step=poll_step,
+            poll_timeout=poll_timeout,
+        )
+
+    assert mock_get.call_count == 2
+
+
+def test_compose_export_url():
+    fhir_url = "https://fhir-url"
+    assert _compose_export_url(fhir_url) == f"{fhir_url}/$export"
+    assert _compose_export_url(fhir_url, "Patient") == f"{fhir_url}/Patient/$export"
+    assert (
+        _compose_export_url(fhir_url, "Group/group-id")
+        == f"{fhir_url}/Group/group-id/$export"
+    )
+    assert (
+        _compose_export_url(fhir_url, "Patient", "2022-01-01T00:00:00Z")
+        == f"{fhir_url}/Patient/$export?_since=2022-01-01T00:00:00Z"
+    )
+    assert (
+        _compose_export_url(
+            fhir_url, "Patient", "2022-01-01T00:00:00Z", "Patient,Observation"
+        )
+        == f"{fhir_url}/Patient/$export?_since=2022-01-01T00:00:00Z"
+        + "&_type=Patient,Observation"
+    )
+    assert (
+        _compose_export_url(fhir_url, "Patient", None, "Patient,Observation")
+        == f"{fhir_url}/Patient/$export?_type=Patient,Observation"
+    )
+
+    with pytest.raises(ValueError):
+        _compose_export_url(fhir_url, "InvalidExportScope")

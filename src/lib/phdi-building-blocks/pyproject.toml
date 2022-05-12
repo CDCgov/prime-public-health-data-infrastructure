@@ -8,6 +8,7 @@ authors = []
 python = "^3.9"
 smartystreets-python-sdk = "^4.10.6"
 pydantic = "^1.9.0"
+polling = "^0.3.2"
 
 [tool.poetry.dev-dependencies]
 Sphinx = "^4.4.0"
