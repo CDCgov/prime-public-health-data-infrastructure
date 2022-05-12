@@ -1,16 +1,19 @@
+import azure.storage.blob
 import io
 import json
 import logging
+import polling
 import requests
 
-from azure.storage.blob import download_blob_from_url
 from azure.identity import DefaultAzureCredential
 from requests.adapters import HTTPAdapter
 from typing import TextIO, Tuple
 from urllib3 import Retry
 
 
-def upload_bundle_to_fhir_server(bundle: dict, access_token: str, fhir_url: str):
+def upload_bundle_to_fhir_server(
+    bundle: dict, access_token: str, fhir_url: str
+) -> None:
     """Import a FHIR resource to the FHIR server.
     The submissions may be Bundles or individual FHIR resources.
 
@@ -42,45 +45,44 @@ def upload_bundle_to_fhir_server(bundle: dict, access_token: str, fhir_url: str)
 
 
 def export_from_fhir_server(
-    access_token: str, fhir_url: str, export_scope: str, since: str, resource_type: str
+    access_token: str,
+    fhir_url: str,
+    export_scope: str = "",
+    since: str = "",
+    resource_type: str = "",
+    poll_step: float = 30,
+    poll_timeout: float = 300,
 ) -> dict:
     """ """
-    retry_strategy = Retry(
-        total=3,
-        status_forcelist=[429, 500, 502, 503, 504],
-        allowed_methods=["HEAD", "GET", "OPTIONS"],
+    logging.debug("Initiating export from FHIR server.")
+    export_url = _compose_export_url(
+        fhir_url=fhir_url,
+        export_scope=export_scope,
+        since=since,
+        resource_type=resource_type,
     )
-    adapter = HTTPAdapter(max_retries=retry_strategy)
-    http = requests.Session()
-    http.mount("https://", adapter)
-    try:
-        export_url = _compose_export_url(
-            fhir_url=fhir_url,
-            export_scope=export_scope,
-            since=since,
-            resource_type=resource_type,
+    logging.debug(f"Composed export URL: {export_url}")
+    response = requests.get(
+        export_url,
+        headers={
+            "Authorization": f"Bearer {access_token}",
+            "Accept": "application/fhir+json",
+            "Prefer": "respond-async",
+        },
+    )
+    logging.info(f"Export request completed with status {response.status_code}")
+
+    if response.status_code == 202:
+
+        poll_response = _export_from_fhir_server_poll(
+            poll_url=response.headers.get("Content-Location"),
+            access_token=access_token,
+            poll_step=poll_step,
+            poll_timeout=poll_timeout,
         )
-        response = requests.get(
-            export_url,
-            headers={
-                "Authorization": f"Bearer {access_token}",
-                "Accept": "application/fhir+json",
-                "Prefer": "respond-async",
-            },
-        )
 
-        if response.status_code == 202:
-
-            poll_response = _export_fhir_server_poll(
-                response.headers.get("Content-Location")
-            )
-
-            if poll_response.status_code == 200:
-                return poll_response.json
-
-    except Exception:
-        logging.exception("Exception occurred while attempting export.")
-        return
+        if poll_response.status_code == 200:
+            return poll_response.json()
 
 
 def _compose_export_url(
@@ -102,34 +104,38 @@ def _compose_export_url(
         separator = "&"
 
     if resource_type:
-        export_url += f"{separator}_since={resource_type}"
+        export_url += f"{separator}_type={resource_type}"
         separator = "&"
 
     return export_url
 
 
-def _export_fhir_server_poll(poll_url: str, access_token: str) -> requests.Response:
-    http_session = requests.Session()
-    retry_strategy = Retry(
-        total=20,
-        backoff_factor=1,
-        status_forcelist=[202],
-        allowed_methods=["GET"],
-    )
-    http_session.mount("https://", HTTPAdapter(retry_strategy))
+def _export_from_fhir_server_poll(
+    poll_url: str, access_token: str, poll_step: float = 30, poll_timeout: float = 300
+) -> requests.Response:
+    def poll_call(export_url, access_token):
+        response = requests.get(
+            export_url,
+            headers={
+                "Authorization": f"Bearer {access_token}",
+                "Accept": "application/fhir+ndjson",
+            },
+        )
+        if response.status_code == 200:
+            return response
+        else:
+            return
 
-    response = http_session.get(
-        poll_url,
-        headers={
-            "Authorization": f"Bearer {access_token}",
-            "Accept": "application/fhir+json",
-            "Prefer": "respond-async",
-        },
+    response = polling.poll(
+        target=poll_call,
+        args=[poll_url, access_token],
+        step=poll_step,
+        timeout=poll_timeout,
     )
 
     # Handle error conditions
-    if response.status_code == 202:
-        raise requests.HTTPError(
+    if response is None:
+        raise requests.Timeout(
             f"Request timed out waiting for export request to `{poll_url}` to complete."
         )
     elif response.status_code != 200:
@@ -142,15 +148,21 @@ def _export_fhir_server_poll(poll_url: str, access_token: str) -> requests.Respo
     return response
 
 
-def download_from_export_response(export_response: dict) -> Tuple[str, TextIO]:
+def download_from_export_response(
+    export_response: dict, encoding: str = "utf-8"
+) -> Tuple[str, TextIO]:
     for export_entry in export_response.get("output", []):
         resource_type = export_entry.get("type")
         blob_url = export_entry.get("url")
         yield (resource_type, _download_blob(blob_url=blob_url))
 
 
-def _download_blob(blob_url: str) -> TextIO:
-    text_buffer = io.TextIOWrapper()
+def _download_blob(blob_url: str, encoding: str = "utf-8") -> TextIO:
+    bytes_buffer = io.BytesIO()
     cred = DefaultAzureCredential()
-    download_blob_from_url(blob_url=blob_url, output=text_buffer, credential=cred)
+    azure.storage.blob.download_blob_from_url(
+        blob_url=blob_url, output=bytes_buffer, credential=cred
+    )
+    text_buffer = io.TextIOWrapper(buffer=bytes_buffer, encoding=encoding, newline="\n")
+    text_buffer.seek(0)
     return text_buffer
