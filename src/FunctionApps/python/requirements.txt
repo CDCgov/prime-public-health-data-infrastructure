@@ -4,7 +4,6 @@ azure-functions
 azure-identity
 azure-storage-blob
 hl7
-phdi_transforms @ git+https://github.com/CDCgov/prime-public-health-data-infrastructure@main#subdirectory=src/lib/phdi-transforms
 phdi_building_blocks @ git+https://github.com/CDCgov/prime-public-health-data-infrastructure@fhir-server-export#subdirectory=src/lib/phdi-building-blocks
 requests
 smartystreets_python_sdk
