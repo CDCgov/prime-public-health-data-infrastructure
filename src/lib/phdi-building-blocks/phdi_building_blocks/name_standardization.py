@@ -19,7 +19,7 @@ def standardize_name(raw: str) -> str:
 def standardize_patient_name(
     bundle: dict, standardize: Callable = standardize_name
 ) -> dict:
-    """Given a FHIR bundle and a standardization function standardize the patient names
+    """Given a FHIR bundle and a standardization function, standardize the patient names
     in all patient resources in the bundle. By default the standardize_name function
     defined in this module is used, but the user is free to provide their own function
     specifying a standardization process as long as it accepts and returns a string."""
