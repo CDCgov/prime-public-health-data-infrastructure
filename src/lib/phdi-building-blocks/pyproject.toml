@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "phdi-transforms"
+name = "phdi-building-blocks"
 version = "0.1.0"
 description = ""
 authors = []

@@ -5,7 +5,7 @@ from typing import Callable
 def standardize_name(raw: str) -> str:
     """trim spaces and force uppercase
 
-    >>> transform_name(" JohN Doe ")
+    >>> standardize_name(" JohN Doe ")
     'JOHN DOE'
     """
 
@@ -31,7 +31,6 @@ def standardize_patient_name(
 
         # Transform names
         for name in patient.get("name", []):
-            process_name(name, patient)
             if "family" in name:
                 std_family = standardize(name["family"])
                 raw_family = name["family"]

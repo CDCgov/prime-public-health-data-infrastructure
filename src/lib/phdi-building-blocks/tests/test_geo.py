@@ -4,7 +4,7 @@ from smartystreets_python_sdk.us_street.candidate import Candidate
 from smartystreets_python_sdk.us_street.metadata import Metadata
 from smartystreets_python_sdk.us_street.components import Components
 
-from phdi_transforms.geo import geocode
+from phdi_building_blocks.geo import geocode
 
 
 def test_geocode():

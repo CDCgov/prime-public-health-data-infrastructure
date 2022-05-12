@@ -5,7 +5,7 @@ from typing import Callable
 def standardize_phone(raw: str) -> str:
     """Make sure it's 10 digits, remove everything else
 
-    >>> transform_phone("(555) 555-1212")
+    >>> standardize_phone("(555) 555-1212")
     '5555551212'
     """
 
