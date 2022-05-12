@@ -46,3 +46,4 @@ def standardize_patient_phone(
                 "valueBoolean": any_diffs,
             }
         )
+    return bundle
