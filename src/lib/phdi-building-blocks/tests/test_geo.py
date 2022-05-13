@@ -7,7 +7,11 @@ from smartystreets_python_sdk.us_street.candidate import Candidate
 from smartystreets_python_sdk.us_street.metadata import Metadata
 from smartystreets_python_sdk.us_street.components import Components
 
-from phdi_building_blocks.geo import geocode, geocode_patient_address, GeocodeResult
+from phdi_building_blocks.geo import (
+    geocode,
+    geocode_patient_address,
+    GeocodeResult,
+)
 
 
 def test_geocode():
@@ -59,6 +63,7 @@ def test_failed_geocode():
     """If it doesn't fill in results, return None"""
     assert geocode(mock.Mock(), "123 Nowhere St, Atlantis GA") is None
 
+
 @mock.patch("phdi_building_blocks.geo.geocode")
 def test_geocode_patient_address(patched_geocoder):
     raw_bundle = json.load(
@@ -100,7 +105,7 @@ def test_geocode_patient_address(patched_geocoder):
             "url": "http://usds.gov/fhir/phdi/StructureDefinition/address-was-standardized",  # noqa
             "valueBoolean": True,
         }
-    )        
+    )
     patched_geocoder.return_value = geocoded_response
 
     assert geocode_patient_address(raw_bundle, mock.Mock()) == standardized_bundle
