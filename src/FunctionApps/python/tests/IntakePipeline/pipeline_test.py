@@ -2,11 +2,6 @@ import pathlib
 import pytest
 from unittest import mock
 
-from phdi_building_blocks.geo import get_smartystreets_client, geocode_patient_address
-from phdi_building_blocks.name_standardization import standardize_patient_name
-
-from phdi_building_blocks.phone_standardization import standardize_patient_phone
-from phdi_building_blocks.linkage import add_patient_identifier
 from phdi_building_blocks.conversion import convert_batch_messages_to_list
 
 from IntakePipeline import run_pipeline
