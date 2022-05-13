@@ -40,14 +40,14 @@ MESSAGE_MAPPINGS = {
 }
 
 
-@mock.patch("phdi_building_blocks.name_standardization.standardize_patient_name")
-@mock.patch("phdi_building_blocks.phone_standardization.standardize_patient_phone")
-@mock.patch("phdi_building_blocks.geo.geocode_patient_address")
-@mock.patch("phdi_building_blocks.linkage.add_patient_identifier")
-@mock.patch("phdi_building_blocks.fhir.upload_bundle_to_fhir_server")
-@mock.patch("phdi_building_blocks.fhir.store_data")
-@mock.patch("phdi_building_blocks.geo.get_smartystreets_client")
-@mock.patch("phdi_building_blocks.conversion.convert_message_to_fhir")
+@mock.patch("IntakePipeline.standardize_patient_name")
+@mock.patch("IntakePipeline.standardize_patient_phone")
+@mock.patch("IntakePipeline.geocode_patient_address")
+@mock.patch("IntakePipeline.add_patient_identifier")
+@mock.patch("IntakePipeline.upload_bundle_to_fhir_server")
+@mock.patch("IntakePipeline.store_data")
+@mock.patch("IntakePipeline.get_smartystreets_client")
+@mock.patch("IntakePipeline.convert_message_to_fhir")
 @mock.patch.dict("os.environ", TEST_ENV)
 def test_pipeline_valid_message(
     patched_converter,
@@ -107,14 +107,14 @@ def test_pipeline_valid_message(
     )
 
 
-@mock.patch("phdi_building_blocks.name_standardization.standardize_patient_name")
-@mock.patch("phdi_building_blocks.phone_standardization.standardize_patient_phone")
-@mock.patch("phdi_building_blocks.geo.geocode_patient_address")
-@mock.patch("phdi_building_blocks.linkage.add_patient_identifier")
-@mock.patch("phdi_building_blocks.fhir.upload_bundle_to_fhir_server")
-@mock.patch("phdi_building_blocks.fhir.store_data")
-@mock.patch("phdi_building_blocks.geo.get_smartystreets_client")
-@mock.patch("phdi_building_blocks.conversion.convert_message_to_fhir")
+@mock.patch("IntakePipeline.standardize_patient_name")
+@mock.patch("IntakePipeline.standardize_patient_phone")
+@mock.patch("IntakePipeline.geocode_patient_address")
+@mock.patch("IntakePipeline.add_patient_identifier")
+@mock.patch("IntakePipeline.upload_bundle_to_fhir_server")
+@mock.patch("IntakePipeline.store_data")
+@mock.patch("IntakePipeline.get_smartystreets_client")
+@mock.patch("IntakePipeline.convert_message_to_fhir")
 @mock.patch.dict("os.environ", TEST_ENV)
 def test_pipeline_invalid_message(
     patched_converter,
@@ -174,14 +174,14 @@ def test_pipeline_invalid_message(
     )
 
 
-@mock.patch("phdi_building_blocks.name_standardization.standardize_patient_name")
-@mock.patch("phdi_building_blocks.phone_standardization.standardize_patient_phone")
-@mock.patch("phdi_building_blocks.geo.geocode_patient_address")
-@mock.patch("phdi_building_blocks.linkage.add_patient_identifier")
-@mock.patch("phdi_building_blocks.fhir.upload_bundle_to_fhir_server")
-@mock.patch("phdi_building_blocks.fhir.store_data")
-@mock.patch("phdi_building_blocks.geo.get_smartystreets_client")
-@mock.patch("phdi_building_blocks.conversion.convert_message_to_fhir")
+@mock.patch("IntakePipeline.standardize_patient_name")
+@mock.patch("IntakePipeline.standardize_patient_phone")
+@mock.patch("IntakePipeline.geocode_patient_address")
+@mock.patch("IntakePipeline.add_patient_identifier")
+@mock.patch("IntakePipeline.upload_bundle_to_fhir_server")
+@mock.patch("IntakePipeline.store_data")
+@mock.patch("IntakePipeline.get_smartystreets_client")
+@mock.patch("IntakePipeline.convert_message_to_fhir")
 @mock.patch.dict("os.environ", TEST_ENV)
 def test_pipeline_partial_invalid_message(
     patched_converter,
