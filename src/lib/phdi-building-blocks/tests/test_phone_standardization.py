@@ -1,9 +1,11 @@
+import json
+import pathlib
+import copy
+
 from phdi_building_blocks.phone_standardization import (
     standardize_phone,
     standardize_patient_phone,
 )
-import json
-import pathlib
 
 
 def test_standardize_phone():
@@ -16,7 +18,7 @@ def test_standardize_patient_name():
     raw_bundle = json.load(
         open(pathlib.Path(__file__).parent / "assets" / "patient_bundle.json")
     )
-    standardized_bundle = raw_bundle.copy()
+    standardized_bundle = copy.deepcopy(raw_bundle.copy())
     patient = standardized_bundle["entry"][1]["resource"]
     patient["telecom"][0]["value"] = "1234567890"
     patient["extension"] = []
