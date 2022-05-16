@@ -53,6 +53,28 @@ locals {
       }
     ]
   ]))
+  bronze_additional_records_root_dirs = [
+      "decrypted",
+      "raw"
+  ]
+  bronze_additional_records_sub_dirs = [
+    "",
+    "/eICR",
+    "/ELR",
+    "/OtherFiles",
+    "/VEDSS",
+    "/VIIS",
+    "/VXU"
+  ]
+  # Nested loop over both lists, and flatten the result.
+  bronze_additional_records_mapping = distinct(flatten([
+    for bronze_additional_records_root_dir in local.bronze_additional_records_root_dirs : [
+      for bronze_additional_records_sub_dir in local.bronze_additional_records_sub_dirs : {
+        bronze_additional_record_sub_dir  = bronze_additional_record_sub_dir
+        bronze_additional_record_root_dir = bronze_additional_record_root_dir
+      }
+    ]
+  ]))
   silver_root_dirs = ["temp"]
   silver_sub_dirs = [
     ""
