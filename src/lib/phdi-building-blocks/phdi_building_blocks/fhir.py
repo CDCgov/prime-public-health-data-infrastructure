@@ -1,7 +1,6 @@
 from datetime import datetime, timezone
 import json
 import logging
-import pathlib
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3 import Retry
