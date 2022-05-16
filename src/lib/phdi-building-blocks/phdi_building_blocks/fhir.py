@@ -8,7 +8,6 @@ from urllib3 import Retry
 
 from azure.core.credentials import AccessToken
 from azure.identity import DefaultAzureCredential
-from azure.storage.blob import ContainerClient
 
 
 def generate_filename(blob_name: str, message_index: int) -> str:
