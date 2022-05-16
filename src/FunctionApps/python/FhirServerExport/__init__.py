@@ -9,8 +9,8 @@ from phdi_building_blocks import fhir
 def main(req: func.HttpRequest) -> func.HttpResponse:
     fhir_url = config.get_required_config("FHIR_URL")
 
-    poll_step = config.get_required_config("EXPORT_POLL_INTERVAL", 30)
-    poll_timeout = config.get_required_config("EXPORT_POLL_TIMEOUT", 300)
+    poll_step = float(config.get_required_config("EXPORT_POLL_INTERVAL", 30))
+    poll_timeout = float(config.get_required_config("EXPORT_POLL_TIMEOUT", 300))
 
     cred_manager = fhir.AzureFhirserverCredentialManager(fhir_url=fhir_url)
 
@@ -22,7 +22,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             fhir_url=fhir_url,
             export_scope=req.params.get("export_scope", ""),
             since=req.params.get("since", ""),
-            resource_type=req.params.get("type"),
+            resource_type=req.params.get("type", ""),
             poll_step=poll_step,
             poll_timeout=poll_timeout,
         )
@@ -36,13 +36,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         export_response
     ):
         logging.info(f"Processing resource file for type {resource_type}")
-        for i, line in enumerate(export_content):
+        for line_number, line in enumerate(export_content):
             try:
                 resource = json.loads(line)
                 process_resource(resource=resource)
             except Exception:
                 logging.exception(
-                    f"Failed to process resource {i} of type {resource_type}"
+                    f"Failed to process resource {line_number} of type {resource_type}"
                 )
 
     return func.HttpResponse(status_code=202)
