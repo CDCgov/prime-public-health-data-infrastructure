@@ -7,7 +7,6 @@ from phdi_building_blocks.fhir import (
     get_fhirserver_cred_manager,
     upload_bundle_to_fhir_server,
 )
-from phdi_building_blocks.azure_blob import store_data
 
 
 @mock.patch("requests.post")
