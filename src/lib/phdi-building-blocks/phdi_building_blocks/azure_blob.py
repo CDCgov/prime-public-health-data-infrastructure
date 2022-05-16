@@ -9,6 +9,7 @@ def get_blob_client(container_url: str) -> ContainerClient:
     creds = DefaultAzureCredential()
     return ContainerClient.from_container_url(container_url, credential=creds)
 
+
 def store_data(
     container_url: str,
     prefix: str,

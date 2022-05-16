@@ -17,6 +17,7 @@ def generate_filename(blob_name: str, message_index: int) -> str:
     fname, _ = fname.rsplit(".", 1)
     return f"{fname}-{message_index}"
 
+
 class AzureFhirserverCredentialManager:
     """Manager for handling Azure credentials for access to the FHIR server"""
 
