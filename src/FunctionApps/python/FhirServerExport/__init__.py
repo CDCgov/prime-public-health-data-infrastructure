@@ -16,15 +16,21 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     access_token = cred_manager.get_access_token()
 
-    export_response = fhir.export_from_fhir_server(
-        access_token=access_token,
-        fhir_url=fhir_url,
-        export_scope=req.params.get("export_scope", ""),
-        since=req.params.get("since", ""),
-        resource_type=req.params.get("type"),
-        poll_step=poll_step,
-        poll_timeout=poll_timeout,
-    )
+    try:
+        export_response = fhir.export_from_fhir_server(
+            access_token=access_token,
+            fhir_url=fhir_url,
+            export_scope=req.params.get("export_scope", ""),
+            since=req.params.get("since", ""),
+            resource_type=req.params.get("type"),
+            poll_step=poll_step,
+            poll_timeout=poll_timeout,
+        )
+        logging.debug(f"Export response received: {json.dumps(export_response)}")
+    except Exception as exception:
+        # Log and re-raise so it bubbles up as an execution failure
+        logging.exception("Error occurred while performing export operation.")
+        raise exception
 
     for resource_type, export_content in fhir.download_from_export_response(
         export_response
@@ -39,7 +45,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     f"Failed to process resource {i} of type {resource_type}"
                 )
 
-    return func.HttpResponse("test")
+    return func.HttpResponse(status_code=202)
 
 
 def process_resource(resource: dict):
