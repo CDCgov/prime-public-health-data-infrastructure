@@ -6,9 +6,10 @@ from azure.core.exceptions import ResourceExistsError
 
 from config import get_required_config
 
+from phdi_building_blocks.azure_blob import store_data
+
 from phdi_building_blocks.fhir import (
     upload_bundle_to_fhir_server,
-    store_data,
     generate_filename,
     get_fhirserver_cred_manager,
 )
