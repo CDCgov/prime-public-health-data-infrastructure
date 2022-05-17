@@ -1,15 +1,6 @@
-# Hard-code group id of CT-PRIMEIngestion-AZ-Owners
-# until runner permissions are given for azuread_group
-# ===============================
-#data "azuread_group" "owners" {
-#  display_name = var.data_access_group
-#}
-
-locals {
-  # data_access_group_id = data.azuread_group.owners.id
-  data_access_group_id = "0fd85c9a-0da3-4d00-b123-f44ef16469e7"
+data "azuread_group" "owners" {
+  display_name = var.data_access_group
 }
-# ===============================
 
 data "azuread_service_principal" "pitest" {
   display_name = var.data_access_sp
@@ -32,9 +23,7 @@ locals {
     { permissions = "rwx", id = var.adf_uuid, type = "user", scope = "default" },
     { permissions = "rwx", id = var.python_function_app_uuid, type = "user", scope = "access" },
     { permissions = "rwx", id = var.python_function_app_uuid, type = "user", scope = "default" },
-    { permissions = "r-x", id = var.infrastructure_function_app_uuid, type = "user", scope = "access" },
-    { permissions = "r-x", id = data.azuread_service_principal.pitest.id, type = "user", scope = "access" },
-    { permissions = "r-x", id = data.azuread_service_principal.pitest.id, type = "user", scope = "default" },
+    { permissions = "r-x", id = var.infrastructure_function_app_uuid, type = "user", scope = "access" }
   ]
 }
 
