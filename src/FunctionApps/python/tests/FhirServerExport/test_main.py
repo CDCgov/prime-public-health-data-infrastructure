@@ -8,8 +8,8 @@ from unittest import mock
 
 ENVIRONMENT = {
     "FHIR_URL": "https://some-fhir-url",
-    "EXPORT_POLL_INTERVAL": "0.1",
-    "EXPORT_POLL_TIMEOUT": "1",
+    "FHIR_EXPORT_POLL_INTERVAL": "0.1",
+    "FHIR_EXPORT_POLL_TIMEOUT": "1",
 }
 
 
