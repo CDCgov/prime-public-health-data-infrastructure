@@ -1,6 +1,15 @@
-data "azuread_group" "owners" {
-  display_name = var.data_access_group
+# Hard-code group id of CT-PRIMEIngestion-AZ-Owners
+# until runner permissions are given for azuread_group
+# ===============================
+#data "azuread_group" "owners" {
+#  display_name = var.data_access_group
+#}
+
+locals {
+  # data_access_group_id = data.azuread_group.owners.id
+  data_access_group_id = "0fd85c9a-0da3-4d00-b123-f44ef16469e7"
 }
+# ===============================
 
 data "azuread_service_principal" "pitest" {
   display_name = var.data_access_sp

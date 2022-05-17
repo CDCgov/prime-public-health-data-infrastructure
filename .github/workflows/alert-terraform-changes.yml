@@ -1,0 +1,69 @@
+name: Alert Terraform Changes
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "11 11 * * *"
+  push:
+    branches:
+      - josiahsiegel/tf/remove-default-fa
+
+jobs:
+  alert_tf_changes:
+    name: Check Terraform plan for ${{ matrix.env }}
+    strategy:
+      fail-fast: false
+      matrix:
+        env: [dev, test]
+    environment: ${{ matrix.env }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Out Changes
+        uses: actions/checkout@dcd71f646680f2efd8db4afa5ad64fdcba30e748
+
+      - name: Login to Azure and Terraform
+        uses: ./.github/actions/az-tf
+        with:
+          sp-creds: ${{ secrets.SERVICE_PRINCIPAL_CREDS }}
+
+      - name: Allow GitHub runner access
+        run: |
+          RUNNER_IP="$(dig +short myip.opendns.com @resolver1.opendns.com)/32"
+          az keyvault network-rule add -n pi${{ matrix.env }}-app-kv --ip-address "$RUNNER_IP" >/dev/null
+          echo "runner_ip=$RUNNER_IP" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Collect Terraform stats
+        uses: josiahsiegel/terraform-stats@c584876e16b9a2b898e7ad91d952647573d4bf75
+        id: stats1
+        with:
+          terraform-directory: operations/app/terraform/vars/${{ matrix.env }}
+
+      - name: Remove GitHub runner access
+        if: ${{ always() }}
+        run: az keyvault network-rule remove -n pi${{ matrix.env }}-app-kv --ip-address "${{ env.runner_ip }}" >/dev/null
+        shell: bash
+
+      - name: Format outputs for slack
+        if: steps.stats1.outputs.resource-changes > 0
+        run: |
+          echo "resource-changes=$(echo '${{ steps.stats1.outputs.resource-changes }}' \
+            | sed 's/\"/\\\"/g')" >> $GITHUB_ENV
+          echo "resource-drifts=$(echo '${{ steps.stats1.outputs.resource-drifts }}' \
+            | sed 's/\"/\\\"/g')" >> $GITHUB_ENV
+
+      - name: Send custom JSON data to Slack workflow
+        if: steps.stats1.outputs.resource-changes > 0
+        id: slack
+        uses: slackapi/slack-github-action@34c3fd73326693ef04728f8611669d918a2d781d
+        with:
+          payload: |
+            {
+              "change-count": "${{ steps.stats1.outputs.change-count }}",
+              "drift-count": "${{ steps.stats1.outputs.drift-count }}",
+              "resource-changes": "${{ env.resource-changes }}",
+              "resource-drifts": "${{ env.resource-drifts }}",
+              "env": "[PHDI](https://github.com/CDCgov/prime-public-health-data-infrastructure) ${{ matrix.env }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_DEVOPS }}
