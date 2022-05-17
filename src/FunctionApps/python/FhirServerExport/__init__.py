@@ -32,26 +32,4 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         logging.exception("Error occurred while performing export operation.")
         raise exception
 
-    for resource_type, export_content in fhir.download_from_export_response(
-        export_response
-    ):
-        logging.info(f"Processing resource file for type {resource_type}")
-        for line_number, line in enumerate(export_content):
-            try:
-                resource = json.loads(line)
-                process_resource(resource=resource)
-            except Exception:
-                logging.exception(
-                    f"Failed to process resource {line_number} of type {resource_type}"
-                )
-
     return func.HttpResponse(status_code=202)
-
-
-def process_resource(resource: dict):
-    if "resourceType" not in resource or "id" not in resource:
-        raise ValueError("Resource encountered without full information.")
-
-    logging.debug(
-        f"Processing resource {resource['id']} of type {resource['resourceType']}"
-    )

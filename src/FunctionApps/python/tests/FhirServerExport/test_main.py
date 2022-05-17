@@ -13,12 +13,11 @@ ENVIRONMENT = {
 }
 
 
-@mock.patch("FhirServerExport.process_resource")
 @mock.patch("FhirServerExport.fhir.download_from_export_response")
 @mock.patch("FhirServerExport.fhir.export_from_fhir_server")
 @mock.patch.object(AzureFhirserverCredentialManager, "get_access_token")
 @mock.patch.dict("os.environ", ENVIRONMENT)
-def test_main(mock_get_access_token, mock_export, mock_download, mock_process):
+def test_main(mock_get_access_token, mock_export, mock_download):
     logging.basicConfig(level=logging.DEBUG)
     req = mock.Mock()
     req.params = {
@@ -58,19 +57,6 @@ def test_main(mock_get_access_token, mock_export, mock_download, mock_process):
     )
     observation_response.seek(0)
 
-    mock_download.return_value = iter(
-        [
-            (
-                "Patient",
-                patient_response,
-            ),
-            (
-                "Observation",
-                observation_response,
-            ),
-        ]
-    )
-
     main(req)
 
     mock_export.assert_called_with(
@@ -81,19 +67,4 @@ def test_main(mock_get_access_token, mock_export, mock_download, mock_process):
         resource_type="",
         poll_step=0.1,
         poll_timeout=1.0,
-    )
-
-    mock_download.assert_called_with(export_return_value)
-
-    mock_process.assert_has_calls(
-        [
-            mock.call(resource={"resourceType": "Patient", "id": "patient-id1"}),
-            mock.call(resource={"resourceType": "Patient", "id": "patient-id2"}),
-            mock.call(
-                resource={"resourceType": "Observation", "id": "observation-id1"}
-            ),
-            mock.call(
-                resource={"resourceType": "Observation", "id": "observation-id2"}
-            ),
-        ]
     )
