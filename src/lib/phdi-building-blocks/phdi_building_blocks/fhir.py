@@ -217,7 +217,7 @@ def _compose_export_url(
 
 
 def __export_from_fhir_server_poll_call(
-    export_url: str, access_token: str
+    poll_url: str, access_token: str
 ) -> Union[requests.Response, None]:
     """Poll to see if the export files are ready.  If export is still in progress,
     and we should return null so polling continues.  If the response is 200, then
@@ -225,7 +225,7 @@ def __export_from_fhir_server_poll_call(
     either indicates an error or unexpected condition.  In this case raise an error.
     """
     response = requests.get(
-        export_url,
+        poll_url,
         headers={
             "Authorization": f"Bearer {access_token}",
             "Accept": "application/fhir+ndjson",
