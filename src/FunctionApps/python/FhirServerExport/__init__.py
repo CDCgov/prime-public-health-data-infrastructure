@@ -9,8 +9,8 @@ from phdi_building_blocks import fhir
 def main(req: func.HttpRequest) -> func.HttpResponse:
     fhir_url = config.get_required_config("FHIR_URL")
 
-    poll_step = float(config.get_required_config("EXPORT_POLL_INTERVAL", 30))
-    poll_timeout = float(config.get_required_config("EXPORT_POLL_TIMEOUT", 300))
+    poll_step = float(config.get_required_config("FHIR_EXPORT_POLL_INTERVAL", 30))
+    poll_timeout = float(config.get_required_config("FHIR_EXPORT_POLL_TIMEOUT", 300))
 
     cred_manager = fhir.AzureFhirserverCredentialManager(fhir_url=fhir_url)
 
