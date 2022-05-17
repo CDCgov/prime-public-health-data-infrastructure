@@ -32,7 +32,9 @@ locals {
     { permissions = "rwx", id = var.adf_uuid, type = "user", scope = "default" },
     { permissions = "rwx", id = var.python_function_app_uuid, type = "user", scope = "access" },
     { permissions = "rwx", id = var.python_function_app_uuid, type = "user", scope = "default" },
-    { permissions = "r-x", id = var.infrastructure_function_app_uuid, type = "user", scope = "access" }
+    { permissions = "r-x", id = var.infrastructure_function_app_uuid, type = "user", scope = "access" },
+    { permissions = "r-x", id = data.azuread_service_principal.pitest.id, type = "user", scope = "access" },
+    { permissions = "r-x", id = data.azuread_service_principal.pitest.id, type = "user", scope = "default" },
   ]
 }
 
