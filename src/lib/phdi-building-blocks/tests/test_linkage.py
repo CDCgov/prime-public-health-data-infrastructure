@@ -1,5 +1,4 @@
-from phdi_building_blocks.linkage import generate_hash_str
-from phdi_building_blocks.linkage import add_patient_identifier
+from phdi_building_blocks.linkage import generate_hash_str, add_patient_identifier
 
 
 def test_generate_hash():

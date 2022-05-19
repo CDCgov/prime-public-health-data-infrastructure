@@ -1,23 +1,17 @@
 import io
 import json
 import logging
-import pathlib
 import polling
 import requests
 
-from azure.core.credentials import AccessToken
-from azure.identity import DefaultAzureCredential
-from azure.storage.blob import ContainerClient, download_blob_from_url
 from datetime import datetime, timezone
 from requests.adapters import HTTPAdapter
-from typing import Tuple, TextIO, Union, Iterator
+from typing import Union, Iterator, Tuple, TextIO
 from urllib3 import Retry
 
-
-def get_blob_client(container_url: str) -> ContainerClient:
-    """Use whatever creds Azure can find to authenticate with the storage container"""
-    creds = DefaultAzureCredential()
-    return ContainerClient.from_container_url(container_url, credential=creds)
+from azure.core.credentials import AccessToken
+from azure.identity import DefaultAzureCredential
+from azure.storage.blob import download_blob_from_url
 
 
 def generate_filename(blob_name: str, message_index: int) -> str:
@@ -25,26 +19,6 @@ def generate_filename(blob_name: str, message_index: int) -> str:
     fname = blob_name.split("/")[-1]
     fname, _ = fname.rsplit(".", 1)
     return f"{fname}-{message_index}"
-
-
-def store_data(
-    container_url: str,
-    prefix: str,
-    filename: str,
-    bundle_type: str,
-    message_json: dict = None,
-    message: str = None,
-) -> None:
-    """
-    Store the given data, which is either a FHIR bundle or an HL7 message in the
-    appropriate output container
-    """
-    client = get_blob_client(container_url)
-    blob = client.get_blob_client(str(pathlib.Path(prefix) / bundle_type / filename))
-    if message_json is not None:
-        blob.upload_blob(json.dumps(message_json).encode("utf-8"), overwrite=True)
-    elif message is not None:
-        blob.upload_blob(bytes(message, "utf-8"), overwrite=True)
 
 
 class AzureFhirserverCredentialManager:
@@ -104,7 +78,7 @@ def upload_bundle_to_fhir_server(bundle: dict, access_token: str, fhir_url: str)
     The submissions may be Bundles or individual FHIR resources.
 
     :param dict bundle: FHIR bundle (type "batch") to post
-    :param AzureFhirserverCredentialManager fhirserver_cred_manager: Credential manager.
+    :param str access_token: FHIR Server access token.
     :param str method: HTTP method to use (currently PUT or POST supported)
     """
     retry_strategy = Retry(

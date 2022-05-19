@@ -1,5 +1,4 @@
 import io
-import os
 import pytest
 import polling
 import requests
@@ -7,40 +6,15 @@ import requests
 from datetime import datetime, timezone
 from unittest import mock
 
-
-from phdi_building_blocks.fhir import (
-    _compose_export_url,
-    download_from_export_response,
-    export_from_fhir_server,
-    store_data,
-    get_fhirserver_cred_manager,
-    upload_bundle_to_fhir_server,
-)
-
 from azure.identity import DefaultAzureCredential
 
-
-@mock.patch("phdi_building_blocks.fhir.get_blob_client")
-def test_store_bundle(mock_get_client):
-    mock_blob = mock.Mock()
-
-    mock_client = mock.Mock()
-    mock_client.get_blob_client.return_value = mock_blob
-
-    mock_get_client.return_value = mock_client
-
-    store_data(
-        "some-url",
-        "output/path",
-        "some-filename-1.fhir",
-        "some-bundle-type",
-        {"hello": "world"},
-    )
-
-    mock_client.get_blob_client.assert_called_with(
-        os.path.normpath("output/path/some-bundle-type/some-filename-1.fhir")
-    )
-    mock_blob.upload_blob.assert_called()
+from phdi_building_blocks.fhir import (
+    get_fhirserver_cred_manager,
+    upload_bundle_to_fhir_server,
+    export_from_fhir_server,
+    _compose_export_url,
+    download_from_export_response,
+)
 
 
 @mock.patch("requests.post")

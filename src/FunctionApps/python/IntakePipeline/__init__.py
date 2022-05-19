@@ -6,9 +6,10 @@ from azure.core.exceptions import ResourceExistsError
 
 from config import get_required_config
 
+from phdi_building_blocks.azure_blob import store_data
+
 from phdi_building_blocks.fhir import (
     upload_bundle_to_fhir_server,
-    store_data,
     generate_filename,
     get_fhirserver_cred_manager,
 )
@@ -19,8 +20,10 @@ from phdi_building_blocks.conversion import (
 )
 
 from phdi_building_blocks.geo import get_smartystreets_client, geocode_patient_address
-from phdi_building_blocks.name_standardization import standardize_patient_name
-from phdi_building_blocks.phone_standardization import standardize_patient_phone
+from phdi_building_blocks.standardize import (
+    standardize_patient_name,
+    standardize_patient_phone,
+)
 from phdi_building_blocks.linkage import add_patient_identifier
 
 

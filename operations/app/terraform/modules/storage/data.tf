@@ -9,7 +9,7 @@ data "azuread_service_principal" "pitest" {
 # storage account data containers and permissions
 # see docs/security/data-access.md for additional notes
 locals {
-  data_containers = ["bronze", "silver", "gold"]
+  data_containers = ["bronze", "bronze-additional-records", "silver", "gold"]
   data_ace_access = [
     { permissions = "---", id = null, type = "other", scope = "access" },
     { permissions = "---", id = null, type = "other", scope = "default" },
@@ -21,8 +21,6 @@ locals {
     { permissions = "rwx", id = null, type = "mask", scope = "default" },
     { permissions = "rwx", id = var.adf_uuid, type = "user", scope = "access" },
     { permissions = "rwx", id = var.adf_uuid, type = "user", scope = "default" },
-    { permissions = "rwx", id = var.pdi_function_app_uuid, type = "user", scope = "access" },
-    { permissions = "rwx", id = var.pdi_function_app_uuid, type = "user", scope = "default" },
     { permissions = "rwx", id = var.python_function_app_uuid, type = "user", scope = "access" },
     { permissions = "rwx", id = var.python_function_app_uuid, type = "user", scope = "default" },
     { permissions = "r-x", id = var.infrastructure_function_app_uuid, type = "user", scope = "access" }
