@@ -19,12 +19,15 @@ from phdi_building_blocks.conversion import (
     get_file_type_mappings,
 )
 
-from phdi_building_blocks.geo import get_smartystreets_client, geocode_patient_address
-from phdi_building_blocks.standardize import (
-    standardize_patient_name,
-    standardize_patient_phone,
+from phdi_building_blocks.geo import (
+    get_smartystreets_client,
+    geocode_patients_in_bundle,
 )
-from phdi_building_blocks.linkage import add_patient_identifier
+from phdi_building_blocks.standardize import (
+    standardize_patient_names_in_bundle,
+    standardize_all_phones_in_bundle,
+)
+from phdi_building_blocks.linkage import add_linking_identifier_to_patients_in_bundle
 
 
 def run_pipeline(
@@ -34,12 +37,21 @@ def run_pipeline(
     access_token: str,
 ) -> None:
     """
-    This function takes in a single message and attempts to convert, transform, and
-    store the output to blob storage and the FHIR server.
-
-    If the incoming message cannot be converted, it is stored to the configured
+    This function takes in a single message and attempts to convert it
+    to FHIR, transform and standardize it, and finally store the result
+    in a given blob storage container. The function also makes an
+    import upload to the FHIR server with the finalized bundle. If the
+    incoming message cannot be converted, it is stored to the configured
     invalid blob container and no further processing is done.
+    :param str message: The raw HL7 message to attempt conversion on
+    :param dict message_mappings: Dictionary having the appropriate
+    template mapping for the type of HL7 file being processed
+    :param str fhir_url: The url of the FHIR server to interact with
+    :param str access_token: The token that allows us to authenticate
+    with blob storage and the FHIR server
+    :return: None
     """
+    # Load various environment variables and the geocoding client
     salt = get_required_config("HASH_SALT")
     geocoder = get_smartystreets_client(
         get_required_config("SMARTYSTREETS_AUTH_ID"),
@@ -49,6 +61,7 @@ def run_pipeline(
     valid_output_path = get_required_config("VALID_OUTPUT_CONTAINER_PATH")
     invalid_output_path = get_required_config("INVALID_OUTPUT_CONTAINER_PATH")
 
+    # Attempt conversion to FHIR
     response = convert_message_to_fhir(
         message=message,
         filename=message_mappings["filename"],
@@ -59,20 +72,25 @@ def run_pipeline(
         fhir_url=fhir_url,
     )
 
+    # We got a valid conversion so apply desired standardizations
+    # sequentially and then add the linking identifier
     if response and response.get("resourceType") == "Bundle":
         bundle = response
-        standardize_patient_name(bundle)
-        standardize_patient_phone(bundle)
-        geocode_patient_address(bundle, geocoder)
+        standardized_bundle = standardize_patient_names_in_bundle(bundle)
+        standardized_bundle = standardize_all_phones_in_bundle(standardized_bundle)
+        standardized_bundle = geocode_patients_in_bundle(standardized_bundle, geocoder)
+        standardized_bundle = add_linking_identifier_to_patients_in_bundle(
+            standardized_bundle, salt
+        )
 
-        add_patient_identifier(bundle, salt)
+        # Now store the data in the desired container
         try:
             store_data(
                 container_url,
                 valid_output_path,
                 f"{message_mappings['filename']}.fhir",
                 message_mappings["bundle_type"],
-                message_json=bundle,
+                message_json=standardized_bundle,
             )
         except ResourceExistsError:
             logging.warning(
@@ -80,10 +98,14 @@ def run_pipeline(
                 + f"{message_mappings['filename']}.fhir"
             )
 
-        upload_bundle_to_fhir_server(bundle, access_token, fhir_url)
+        # Don't forget to import the bundle to the FHIR server as well
+        upload_bundle_to_fhir_server(standardized_bundle, access_token, fhir_url)
+
+    # For some reason, the HL7 message failed to convert
     else:
         try:
-            # Store invalid message
+            # First attempt is storing the message directly in the
+            # invalid messages container
             store_data(
                 container_url,
                 invalid_output_path,
@@ -97,7 +119,7 @@ def run_pipeline(
                 + f"{message_mappings['filename']}.{message_mappings['file_suffix']}"
             )
         try:
-            # Store response information
+            # Then, try to store the conversion response information
             store_data(
                 container_url,
                 invalid_output_path,
@@ -120,9 +142,12 @@ def main(blob: func.InputStream) -> None:
     It is responsible for splitting an incoming batch file (or individual message)
     into a list of individual messages.  Each individual message is passed to the
     processing pipeline.
+    :param func.InputStream blob: The blob that's about to go on
+    the journey of a lifetime
+    :return: None
     """
+    # Set up logging, retrieve configuration variables
     logging.debug("Entering intake pipeline ")
-
     fhir_url = get_required_config("FHIR_URL")
     cred_manager = get_fhirserver_cred_manager(fhir_url)
 
@@ -133,10 +158,13 @@ def main(blob: func.InputStream) -> None:
         messages = convert_batch_messages_to_list(
             blob.read().decode("utf-8", errors="ignore")
         )
-        message_mappings = get_file_type_mappings(blob.name)
 
+        # Once we have the file type mappings, run through all
+        # the blobs and send them down the pipeline
+        message_mappings = get_file_type_mappings(blob.name)
         for i, message in enumerate(messages):
             message_mappings["filename"] = generate_filename(blob.name, i)
             run_pipeline(message, message_mappings, fhir_url, access_token.token)
+
     except Exception:
         logging.exception("Exception occurred during IntakePipeline processing.")

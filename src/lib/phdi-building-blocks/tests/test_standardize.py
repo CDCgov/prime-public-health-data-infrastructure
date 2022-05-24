@@ -3,16 +3,16 @@ import pathlib
 import copy
 
 from phdi_building_blocks.standardize import (
-    standardize_name,
-    standardize_patient_name,
-    standardize_phone,
-    standardize_patient_phone,
+    non_numeric_caps_standardization,
+    standardize_patient_names_in_bundle,
+    phone_truncation_standardization,
+    standardize_all_phones_in_bundle,
 )
 
 
 def test_standardize_name():
-    assert "JOHN DOE" == standardize_name(" JOHN DOE ")
-    assert "JOHN DOE" == standardize_name(" John Doe3 ")
+    assert "JOHN DOE" == non_numeric_caps_standardization(" JOHN DOE ")
+    assert "JOHN DOE" == non_numeric_caps_standardization(" John Doe3 ")
 
 
 def test_standardize_patient_name():
@@ -26,23 +26,24 @@ def test_standardize_patient_name():
     patient["extension"] = []
     patient["extension"].append(
         {
-            "url": "http://usds.gov/fhir/phdi/StructureDefinition/family-name-was-standardized",  # noqa
+            "url": "http://usds.gov/fhir/phdi/StructureDefinition/given-name-was-standardized",  # noqa
             "valueBoolean": True,
         }
     )
     patient["extension"].append(
         {
-            "url": "http://usds.gov/fhir/phdi/StructureDefinition/given-name-was-standardized",  # noqa
+            "url": "http://usds.gov/fhir/phdi/StructureDefinition/family-name-was-standardized",  # noqa
             "valueBoolean": True,
         }
     )
-    assert standardize_patient_name(raw_bundle) == standardized_bundle
+    assert standardize_patient_names_in_bundle(raw_bundle) == standardized_bundle
 
 
 def test_standardize_phone():
-    assert "0123456789" == standardize_phone("0123456789")
-    assert "0123456789" == standardize_phone("(012)345-6789")
-    assert standardize_phone("345-6789") is None
+    assert "0123456789" == phone_truncation_standardization("0123456789")
+    assert "0123456789" == phone_truncation_standardization("(012)345-6789")
+    assert "0123456789" == phone_truncation_standardization("01234567899876543210")
+    assert phone_truncation_standardization("345-6789") is None
 
 
 def test_standardize_patient_phone():
@@ -59,4 +60,4 @@ def test_standardize_patient_phone():
             "valueBoolean": True,
         }
     )
-    assert standardize_patient_phone(raw_bundle) == standardized_bundle
+    assert standardize_all_phones_in_bundle(raw_bundle) == standardized_bundle

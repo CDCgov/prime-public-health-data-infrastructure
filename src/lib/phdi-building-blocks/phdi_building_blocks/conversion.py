@@ -6,11 +6,17 @@ from typing import List, Dict
 
 
 def clean_message(message: str) -> str:
-    """Prepare a message for conversion by adjusting problematic fields
-    to conform to Azure's expectations.
-    * Convert segment terminators from \n to \r
-    * Normalize datetime fields
-    * Convert segment terminators back from \r to \n
+    """
+    Prepare an HL7 message for conversion by normalizing / sanitizing
+    fields that are known to contain data in problematic formats. This
+    function helps to-be-converted messages conform to Azure's expectations.
+    Cleaning operations include:
+      * Convert segment terminators from \n to \r
+      * Normalize datetime fields
+      * Convert segment terminators back from \r to \n
+    :param str message: The raw HL7 message to sanitize
+    :return: The parsed, normalized message with delimiters removed
+    :rtype: str
     """
     parsed_message = ""
     try:
@@ -72,75 +78,102 @@ def clean_message(message: str) -> str:
     return str(parsed_message).replace("\r", "\n")
 
 
-def normalize_hl7_datetime_segment(message: list, segment_id: str, field_list: list):
-    """Utility function to apply datetime normalization
-    to multiple fields in a segment."""
+def normalize_hl7_datetime_segment(
+    message: list, segment_id: str, field_list: list
+) -> None:
+    """
+    Utility function used to apply datetime normalization
+    to multiple fields in a segment.
+    :param list message: The HL7 message, represented as a list
+      of indexable component strings (which is how the HL7 library
+      processes and returns messages)
+    :param str segment_id: The HL7-specified segment (ex. PID) to
+      normalize the fields of
+    :param list field_list: The list of fields contained in the
+      indexed message component, which are themselves indices to
+      data strings
+    :return: None
+    """
     try:
         for segment in message.segments(segment_id):
             for field_num in field_list:
                 if len(segment) > field_num and segment[field_num][0] != "":
-                    cleansed_datetime = normalize_hl7_datetime(segment[field_num][0])
-                    segment[field_num][0] = cleansed_datetime
+                    cleaned_datetime = normalize_hl7_datetime(segment[field_num][0])
+                    segment[field_num][0] = cleaned_datetime
     except KeyError:
         logging.debug(f"Segment {segment_id} not found in message.")
 
 
 def normalize_hl7_datetime(hl7_datetime: str) -> str:
-    """Break up datetime-formatted fields into the following parts:
+    """
+    Split HL7 datetime-formatted fields into the following parts:
     <integer 8+ digits>[.<integer 1+ digits>][+/-<integer 4+ digits>]
 
     Each group of integers is truncated to conform to the HL7 specification:
-    first integer group: max 14 digits
-    following decimal point: max 4 digits
-    following +/- (timezone): 4 digits
+      - first integer group: max 14 digits
+      - following decimal point: max 4 digits
+      - following +/- (timezone): 4 digits
+
+    This normalization facilitates downstream processing using, e.g.
+    Azure, which has particular requirements for dates.
+    :param str hl7_datetime: The raw datetime string to clean
+    :return: The cleaned datetime string appropriately segmented and
+      truncated
+    :rtype: str
     """
     hl7_datetime_match = re.match(r"(\d{8}\d*)(\.\d+)?([+-]\d+)?", hl7_datetime)
 
-    if not hl7_datetime_match:
-        return hl7_datetime
+    if hl7_datetime_match:
+        hl7_datetime_parts = hl7_datetime_match.groups()
 
-    hl7_datetime_parts = hl7_datetime_match.groups()
+        # Start with date base
+        normalized_datetime = hl7_datetime_parts[0][:14]  # First 14 digits
 
-    # Date Base
-    normalized_datetime = hl7_datetime_parts[0][:14]  # First 14 digits
+        # Add date decimal if present
+        if hl7_datetime_parts[1]:
+            normalized_datetime += hl7_datetime_parts[1][:5]  # . plus first 4 digits
 
-    # Date Decimal
-    if hl7_datetime_parts[1]:
-        normalized_datetime += hl7_datetime_parts[1][:5]  # . plus first 4 digits
+        # Add timezone information if present
+        if hl7_datetime_parts[2] and len(hl7_datetime_parts[2]) >= 5:
+            normalized_datetime += hl7_datetime_parts[2][:5]  # +/- plus 4 digits
 
-    # Date Timezone
-    if hl7_datetime_parts[2] and len(hl7_datetime_parts[2]) >= 5:
-        normalized_datetime += hl7_datetime_parts[2][:5]  # +/- plus 4 digits
-
-    return normalized_datetime
+        return normalized_datetime
+    return hl7_datetime
 
 
 def clean_batch(batch: str, delimiter: str = "\n") -> str:
     """
     Clean a batch file by replacing Windows (CR-LF) newlines with the specified
-    newline delimiter (LF by default).
-
-    Also, strip vertical tab and file separator characters which can appear in
-    input batch file data.
+    newline delimiter (LF by default). Also, strip vertical tab and file
+    separator characters which can appear in input batch file data.
+    :param str batch: The batch file data to clean
+    :param str delimiter: The newline character to standardize
+    :return: The batch data with newlines correctly substituted
+    :rtype: str
     """
-    cleansed_batch = re.sub("[\r\n]+", delimiter, batch)
+    cleaned_batch = re.sub("[\r\n]+", delimiter, batch)
 
     # These are unicode for vertical tab and file separator, respectively
     # \u000b appears before every MSH segment, and \u001c appears at the
     # end of the message in some of the data we've been receiving, so
     # we're explicitly removing them here.
-    cleansed_batch = re.sub("[\u000b\u001c]", "", cleansed_batch).strip()
-    return cleansed_batch
+    cleaned_batch = re.sub("[\u000b\u001c]", "", cleaned_batch).strip()
+    return cleaned_batch
 
 
 # This method was adapted from PRIME ReportStream, which can be found here:
 # https://github.com/CDCgov/prime-reportstream/blob/194396582be02fcc51295089f20b0c2b90e7c830/prime-router/src/main/kotlin/serializers/Hl7Serializer.kt#L121
 def convert_batch_messages_to_list(content: str, delimiter: str = "\n") -> List[str]:
     """
-    FHS is a "File Header Segment", which is used to head a file (group of batches)
-    FTS is a "File Trailer Segment", which defines the end of a file
-    BHS is "Batch Header Segment", which defines the start of a batch
-    BTS is "Batch Trailer Segment", which defines the end of a batch
+    Convert a batch file of messages into a list of strings representing
+    parts of the message. This function is based on the following header/tail
+    segments:
+
+      - FHS is a "File Header Segment", which is used to head a file
+        (group of batches)
+      - FTS is a "File Trailer Segment", which defines the end of a file
+      - BHS is "Batch Header Segment", which defines the start of a batch
+      - BTS is "Batch Trailer Segment", which defines the end of a batch
 
     The structure of an HL7 Batch looks like this:
     [FHS] (file header segment) { [BHS] (batch header segment)
@@ -154,7 +187,12 @@ def convert_batch_messages_to_list(content: str, delimiter: str = "\n") -> List[
     [FTS] (file trailer segment)
 
     We ignore lines that start with these since we don't want to include
-    them in a message
+    them in a message.
+
+    :param str content: the batch content to turn into a list
+    :param str delimiter: the character delimiting messages in the batch
+    :return: list of message strings
+    :rtype: List[str]
     """
 
     cleaned_batch = clean_batch(content)
@@ -163,28 +201,21 @@ def convert_batch_messages_to_list(content: str, delimiter: str = "\n") -> List[
     output = []
 
     for line in message_lines:
-        if line.startswith("FHS"):
-            continue
-        if line.startswith("BHS"):
-            continue
-        if line.startswith("BTS"):
-            continue
-        if line.startswith("FTS"):
-            continue
+        if not line.startswith(("FHS", "BHS", "BTS", "FTS")):
 
-        # If we reach a line that starts with MSH and we have
-        # content in nextMessage, then by definition we have
-        # a full message in next_message and need to append it
-        # to output. This will not trigger the first time we
-        # see a line with MSH since next_message will be empty
-        # at that time.
-        if next_message != "" and line.startswith("MSH"):
-            output.append(next_message)
-            next_message = ""
+            # If we reach a line that starts with MSH and we have
+            # content in nextMessage, then by definition we have
+            # a full message in next_message and need to append it
+            # to output. This will not trigger the first time we
+            # see a line with MSH since next_message will be empty
+            # at that time.
+            if next_message != "" and line.startswith("MSH"):
+                output.append(next_message)
+                next_message = ""
 
-        # Otherwise, continue to add the line of text to next_message
-        if line != "":
-            next_message += f"{line}\r"
+            # Otherwise, continue to add the line of text to next_message
+            if line != "":
+                next_message += f"{line}\r"
 
     # Since our loop only adds messages to output when it finds
     # a line that starts with MSH, the last message would never
@@ -196,6 +227,19 @@ def convert_batch_messages_to_list(content: str, delimiter: str = "\n") -> List[
 
 
 def get_file_type_mappings(blob_name: str) -> Dict[str, str]:
+    """
+    Determine the input data and the FHIR converter schema to apply to
+    a given message file based on the data stream the file comes from.
+    E.g., ECR data will require a different conversion standard than
+    VXU data (different root segments/templates, etc.).
+    :param str blob_name: The name of the blob to determine conversion
+    mappings for
+    :return: Mappings of key conversion variable to their appropriate
+    values for this data type
+    :rtype: Dict[str, str]
+    """
+
+    # Determine if the blob can be processed with our heuristics
     file_suffix = blob_name[-3:].lower()
     if file_suffix not in ("hl7", "xml"):
         raise Exception(f"invalid file extension for {blob_name}")
@@ -239,28 +283,32 @@ def convert_message_to_fhir(
     fhir_url: str,
 ) -> dict:
     """
-    Given a message in either HL7 v2 (pipe-delimited flat file) or HL7 v3 (XML),
-    attempt to convert that message into FHIR format (JSON) for further processing
-    using the FHIR server. The FHIR server will respond with a status code of 400 if
-    the message itself is invalid, such as containing improperly formatted timestamps,
-    and if that occurs that an empty dictionary is returned so the pipeline knows to
-    store the original message in a separate container. Otherwise, the FHIR data is
-    returned.
+    Given a message in either HL7 v2 (pipe-delimited flat file) or HL7 v3
+    (XML), attempt to convert that message into FHIR format (JSON) for
+    further processing using the FHIR server. The FHIR server will respond
+    with a status code of 400 if the message itself is invalid, such as
+    containing improperly formatted timestamps, and if that occurs then an
+    empty dictionary is returned so the pipeline knows to store the
+    original message in a separate container. Otherwise, the FHIR data is
+    returned. HL7v2 messages are cleaned (minor corrections made) via the
+    clean_message function prior to conversion.
 
-    HL7v2 messages are cleaned (minor corrections made) via the clean_message function
-    prior to conversion.
-
-    :param message The raw message that needs to be converted to FHIR. Must be HL7
-    v2 or HL7 v3
-    :param input_data_type The data type of the message. Must be one of Hl7v2 or Ccda
-    :param root_template The core template that should be used when attempting to
-    convert the message to FHIR. More data can be found here:
+    :param str message: The raw message that needs to be converted to FHIR.
+    Must be HL7v2 or HL7 v3
+    :param str input_data_type: The data type of the message. Must be one
+    of Hl7v2 or Ccda
+    :param str root_template: The core template that should be used when
+    attempting to convert the message to FHIR. More data can be found here:
     https://docs.microsoft.com/en-us/azure/healthcare-apis/azure-api-for-fhir/convert-data
-    :param template_collection Further specification of which template to use. More
-    information can be found here:
+    :param str template_collection: Further specification of which template
+    to use. More information can be found here:
     https://docs.microsoft.com/en-us/azure/healthcare-apis/azure-api-for-fhir/convert-data
-    :param access_token A Bearer token used to authenticate with the FHIR server
-    :param fhir_url A URL that points to the location of the FHIR server
+    :param str access_token: A Bearer token used to authenticate with the
+    FHIR server
+    :param str fhir_url: A URL that points to the location of the FHIR
+    server
+    :return: The converted message expressed in FHIR as a json dictionary
+    :rtype: Dict
     """
     if input_data_type == "Hl7v2":
         message = clean_message(message)

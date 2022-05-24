@@ -1,61 +1,87 @@
 import hashlib
+import copy
+from phdi_building_blocks.utils import find_patient_resources, get_one_line_address
 
 
-def add_patient_identifier(bundle: dict, salt_str: str) -> dict:
+def add_linking_identifier_to_patients_in_bundle(
+    bundle: dict, salt_str: str, overwrite: bool = True
+) -> dict:
     """
-    Given a FHIR resource bundle (defined as a dictionary of resources
-    containing at least one patient resource):
-      - identify the patient resource(s) in the bundle
+    Given a FHIR resource bundle:
+      - identify all patient resource(s) in the bundle
       - extract standardized name, DOB, and address information for each
       - compute a unique hash string based on these fields
       - add the hash string to the list of identifiers held in that
         patient resource
-    This function assumes data has been standardized already by the
-    silver transforms.
+    :param dict bundle: The FHIR bundle for whose patients to add a
+    linking identifier
+    :param str salt_str: The suffix string added to prevent being
+    able to reverse the hash into PII
+    :param bool overwrite: Whether to write the new standardizations
+    directly into the given bundle, changing the original data (True
+    is yes)
+    :return: The bundle of data with patients having unique identifiers
+    :rtype: dict
     """
+    # Copy the data if we don't want to overwrite the original
+    if not overwrite:
+        bundle = copy.deepcopy(bundle)
 
-    for resource in bundle["entry"]:
-        if resource["resource"]["resourceType"] == "Patient":
-            patient = resource["resource"]
+    for resource in find_patient_resources(bundle):
+        patient = resource.get("resource")
 
-            # Combine given and family name
-            recent_name = next(
-                (name for name in patient["name"] if name.get("use") == "official"),
-                patient["name"][0],
-            )
+        # Combine given and family name
+        recent_name = get_field_with_use(patient, "name", "official", 0)
+        name_parts = recent_name.get("given", []) + [recent_name.get("family")]
+        name_str = "-".join([n for n in name_parts if n])
 
-            name_parts = recent_name.get("given", []) + [recent_name.get("family")]
-            name_str = "-".join([n for n in name_parts if n])
+        # Compile one-line address string
+        address_line = ""
+        if "address" in patient:
+            address = get_field_with_use(patient, "address", "home", 0)
+            address_line = get_one_line_address(address)
 
-            # Compile one-line address string
-            address_line = ""
-            if "address" in patient:
-                address = next(
-                    (addr for addr in patient["address"] if addr.get("use") == "home"),
-                    patient["address"][0],
-                )
-                address_line = " ".join(address.get("line", []))
-                address_line += f" {address.get('city')}, {address.get('state')}"
-                if "postalCode" in address and address["postalCode"]:
-                    address_line += f" {address['postalCode']}"
+        # Generate and store unique hash code
+        link_str = name_str + "-" + patient["birthDate"] + "-" + address_line
+        hashcode = generate_hash_str(link_str, salt_str)
 
-            # Generate and store unique hash code
-            link_str = name_str + "-" + patient["birthDate"] + "-" + address_line
-            hashcode = generate_hash_str(link_str, salt_str)
+        if "identifier" not in patient:
+            patient["identifier"] = []
 
-            if "identifier" not in patient:
-                patient["identifier"] = []
+        patient["identifier"].append(
+            {
+                "value": hashcode,
+                # Note: this system value corresponds to the FHIR specification
+                # for a globally used / generated ID or UUID--the standard here
+                # is to make the use "temporary" even if it's not
+                "system": "urn:ietf:rfc:3986",
+                "use": "temp",
+            }
+        )
+    return bundle
 
-            patient["identifier"].append(
-                {
-                    "value": hashcode,
-                    # Note: this system value corresponds to the FHIR specification
-                    # for a globally used / generated ID or UUID--the standard here
-                    # is to make the use "temporary" even if it's not
-                    "system": "urn:ietf:rfc:3986",
-                    "use": "temp",
-                }
-            )
+
+def get_field_with_use(patient: dict, field: str, use: str, default_field: int) -> str:
+    """
+    For a given field (such as name or address), find the first-occuring
+    instance of the field in a given patient JSON dict such that the
+    instance is associated with a particular use. I.e. find the first
+    name for a patient that has an "official" use capacity. If no
+    instance of a field with the requested use case can be found, instead
+    return a specified default field.
+    :param dict patient: Patient from a FHIR bundle
+    :param str field: The field to extract
+    :param str use: The use the field must have to qualify
+    :param int default_field: The index of the field type to treat as
+    the default return type if no field with the requested use case is
+    found
+    :return: The requested use-case-type field
+    :rtype: str
+    """
+    return next(
+        (item for item in patient[field] if item.get("use") == use),
+        patient[field][default_field],
+    )
 
 
 def generate_hash_str(linking_identifier: str, salt_str: str) -> str:
@@ -63,6 +89,12 @@ def generate_hash_str(linking_identifier: str, salt_str: str) -> str:
     Given a string made of concatenated patient information, generate
     a hash for this string to serve as a "unique" identifier for the
     patient.
+    :param str linking_identifier: The concatenation of a patient's name,
+    address, and date of birth, delimited by dashes
+    :param str salt_str: The salt to concatenate onto the end to prevent
+    being able to reverse-engineer PII
+    :return: The unique patient hash
+    :rtype: str
     """
     hash_obj = hashlib.sha256()
     to_encode = (linking_identifier + salt_str).encode("utf-8")
