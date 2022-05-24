@@ -152,7 +152,7 @@ def standardize_country(
                          which type of standard country identifier to generate.
 
     Returns:
-        standard_country (str): Country in standardized form, or None if unable to 
+        standard_country (str): Country in standardized form, or None if unable to
         standardize.
     """
     standard_country = ""
@@ -163,9 +163,10 @@ def standardize_country(
     elif len(raw_country) == 3 and raw_country.isnumeric():
         standard_country = pycountry.countries.get(numeric=raw_country)
     elif len(raw_country) >= 4 and all(x.isalpha() or x.isspace() for x in raw_country):
-        possible_countries = pycountry.countries.search_fuzzy(raw_country)
-        if len(possible_countries) == 1:
-            standard_country = possible_countries[0]
+        raw_country = raw_country.strip().upper()
+        standard_country = pycountry.countries.get(name=raw_country)
+        if standard_country is None:
+            standard_country = pycountry.countries.get(official_name=raw_country)
 
     if standard_country != "":
         if code_type == "alpha_2":

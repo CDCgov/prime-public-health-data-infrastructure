@@ -70,6 +70,7 @@ def test_standardize_country():
     # assert standardize_country("US") == "US"
     # assert standardize_country("USA") == "US"
     assert standardize_country("United States of America") == "US"
+    assert standardize_country("United states ") == "US"
     assert standardize_country("US", "alpha_3") == "USA"
     assert standardize_country("USA", "numeric") == "840"
 
