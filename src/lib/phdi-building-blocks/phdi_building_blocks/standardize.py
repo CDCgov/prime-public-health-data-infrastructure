@@ -132,7 +132,7 @@ def standardize_phone(raw: str, countries: List = [None, "US"]) -> str:
 
 
 def standardize_country(
-    raw_country: str, code_type: Literal["alpha_2", "alpha_3", "numeric"] = "alpha_2"
+    raw: str, code_type: Literal["alpha_2", "alpha_3", "numeric"] = "alpha_2"
 ) -> str:
     """
     Given a country return it in a standard form as specified by code_type.
