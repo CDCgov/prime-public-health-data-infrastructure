@@ -152,7 +152,8 @@ def standardize_country(
                          which type of standard country identifier to generate.
 
     Returns:
-        standard_country (str): Country in standardized form, or None if unable to standardize.
+        standard_country (str): Country in standardized form, or None if unable to 
+        standardize.
     """
     standard_country = ""
     if len(raw_country) == 3 and raw_country.isalpha():
