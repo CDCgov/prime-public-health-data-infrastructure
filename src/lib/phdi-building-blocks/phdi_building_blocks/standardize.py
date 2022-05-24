@@ -119,6 +119,7 @@ def standardize_phone(raw: str, countries: List = [None, "US"]) -> str:
     for country in countries:
         try:
             standardized = phonenumbers.parse(raw, country)
+            break
         except phonenumbers.phonenumberutil.NumberParseException:
             continue
     if standardized != "":
@@ -136,34 +137,34 @@ def standardize_country(
     """
     Given a country return it in a standard form as specified by code_type.
 
-    :param str raw_country: Country to be standardized.
+    :param str raw: Country to be standardized.
     :param str code_type: A string equal to 'alpha_2', 'alpha_3', or 'numeric' to
     specify which type of standard country identifier to generate.
-    :return str standard_country: Country in standardized form, or None if unable to
+    :return str standard: Country in standardized form, or None if unable to
     standardize.
     """
-    standard_country = ""
-    if len(raw_country) == 3 and raw_country.isalpha():
-        standard_country = pycountry.countries.get(alpha_3=raw_country)
-    elif len(raw_country) == 2 and raw_country.isalpha():
-        standard_country = pycountry.countries.get(alpha_2=raw_country)
-    elif len(raw_country) == 3 and raw_country.isnumeric():
-        standard_country = pycountry.countries.get(numeric=raw_country)
-    elif len(raw_country) >= 4 and all(x.isalpha() or x.isspace() for x in raw_country):
-        raw_country = raw_country.strip().upper()
-        standard_country = pycountry.countries.get(name=raw_country)
-        if standard_country is None:
-            standard_country = pycountry.countries.get(official_name=raw_country)
+    standard = ""
+    raw = raw.strip().upper()
+    if len(raw) == 3:
+        standard = pycountry.countries.get(alpha_3=raw)
+    elif len(raw) == 2:
+        standard = pycountry.countries.get(alpha_2=raw)
+    elif len(raw) == 3:
+        standard = pycountry.countries.get(numeric=raw)
+    elif len(raw) >= 4:
+        standard = pycountry.countries.get(name=raw)
+        if standard is None:
+            standard = pycountry.countries.get(official_name=raw)
 
-    if standard_country != "":
+    if standard != "":
         if code_type == "alpha_2":
-            standard_country = standard_country.alpha_2
+            standard = standard.alpha_2
         elif code_type == "alpha_3":
-            standard_country = standard_country.alpha_3
+            standard = standard.alpha_3
         elif code_type == "numeric":
-            standard_country = standard_country.numeric
+            standard = standard.numeric
 
-    return standard_country
+    return standard
 
 
 def standardize_patient_phone(
