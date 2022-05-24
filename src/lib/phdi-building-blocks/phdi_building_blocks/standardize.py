@@ -69,16 +69,14 @@ def country_extractor(
     Given a FHIR resource yield a generator containing all of the counries found in the
     resource in a standard form sepcified by code_type.
 
-    Args:
-        resource (dict): A FHIR resource respresented as a dictionary.
-        code_type (str): A string equal to 'alpha_2', 'alpha_3', or 'numeric' to specify
-                         which type of standard country identifier to generate.
-    Returns:
-        countries (list): A list containing country codes as specified by code_type for
-        each country found in resource.
-
     We currently only handle extracting countries from patient resources, however as
     need arises is the future funcionality can be expanded.
+
+    :param dict resource: A FHIR resource respresented as a dictionary.
+    :param str code_type: A string equal to 'alpha_2', 'alpha_3', or 'numeric' to
+    specify which type of standard country identifier to generate.
+    :retrun list countries: A list containing country codes as specified by code_type
+    for each country found in resource.
     """
     countries = []
     resource_type = resource.get("resource").get("resourceType")
@@ -98,28 +96,20 @@ def standardize_phone(raw: str, countries: List = [None, "US"]) -> str:
     Phone number parsing process:
     A maximum of three attemtps are made to parse any phone number.
     First, we try to parse the phone number without any additional country information.
-    If this succeeds it must have been provided in a standard inernational format which
-    is the ideal case. If the first attempt fails and a FHIR resource associated with
-    the phone number and a country extraction function are provided we make a second
-    attempt to parse the phone number using any countries extracted from the resource.
-    Finally, in the case where the second attempt fails for a resource and country
-    extraction function are not provided we make a final attempt to parse the number
-    assuming it is American.
+    If this succeeds then the phone number must have been provided in a standard
+    inernational format which is the ideal case. If the first attempt fails and a list
+    of country codes indicating possible countries of origin for the phone number has
+    been provided we attempt to parse the phone number using that additional country
+    information from the resource. Finally, in the case where the second attempt fails
+    or a list of countries has not been provided we make a final attempt to parse the
+    number assuming it is American.
 
-    Args:
-        raw (str): Raw phone number to be standardized.
-
-        resource (dict): FHIR resource that the raw phone originated from that possibly
-                         contains information indicating which country the phone number
-                         is from.
-
-        countries (list): A list containing 2 letter ISO country codes for each country
-                          extracted from resource of the phone number to be standardized
-                          that might indicate it the phone numbers country of origin.
-    Returns:
-        standardized (str): The standardized phone number in E.164 format when the raw
-                            phone number was succesfully parsed and an emptry string
-                            otherwise.
+    :param str raw: Raw phone number to be standardized.
+    :param list countries: A list containing 2 letter ISO country codes for each country
+    extracted from resource of the phone number to be standardized that might indicate
+    it the phone numbers country of origin.
+    :return str standardized: The standardized phone number in E.164 format when the raw
+    phone number was succesfully parsed and an emptry string otherwise.
     """
 
     if countries != [None, "US"]:
@@ -146,14 +136,11 @@ def standardize_country(
     """
     Given a country return it in a standard form as specified by code_type.
 
-    Args:
-        raw_country (str): Country to be standardized.
-        code_type (str): A string equal to 'alpha_2', 'alpha_3', or 'numeric' to specify
-                         which type of standard country identifier to generate.
-
-    Returns:
-        standard_country (str): Country in standardized form, or None if unable to
-        standardize.
+    :param str raw_country: Country to be standardized.
+    :param str code_type: A string equal to 'alpha_2', 'alpha_3', or 'numeric' to
+    specify which type of standard country identifier to generate.
+    :return str standard_country: Country in standardized form, or None if unable to
+    standardize.
     """
     standard_country = ""
     if len(raw_country) == 3 and raw_country.isalpha():
