@@ -1,6 +1,6 @@
 import phonenumbers
 import pycountry
-from typing import Callable, Literal, Generator, List
+from typing import Callable, Literal, List
 
 from phdi_building_blocks.utils import find_patient_resources
 
