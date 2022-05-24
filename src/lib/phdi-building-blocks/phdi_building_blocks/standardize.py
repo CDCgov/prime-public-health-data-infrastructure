@@ -143,20 +143,20 @@ def standardize_country(
     :return str standard: Country in standardized form, or None if unable to
     standardize.
     """
-    standard = ""
+    standard = None
     raw = raw.strip().upper()
-    if len(raw) == 3:
-        standard = pycountry.countries.get(alpha_3=raw)
-    elif len(raw) == 2:
+    if len(raw) == 2:
         standard = pycountry.countries.get(alpha_2=raw)
     elif len(raw) == 3:
-        standard = pycountry.countries.get(numeric=raw)
+        standard = pycountry.countries.get(alpha_3=raw)
+        if standard is None:
+            standard = pycountry.countries.get(numeric=raw)
     elif len(raw) >= 4:
         standard = pycountry.countries.get(name=raw)
         if standard is None:
             standard = pycountry.countries.get(official_name=raw)
 
-    if standard != "":
+    if standard is not None:
         if code_type == "alpha_2":
             standard = standard.alpha_2
         elif code_type == "alpha_3":
