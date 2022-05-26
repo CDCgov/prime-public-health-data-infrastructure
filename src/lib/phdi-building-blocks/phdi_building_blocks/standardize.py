@@ -1,3 +1,7 @@
+import phonenumbers
+import pycountry
+from typing import Callable, Literal, List
+
 from phdi_building_blocks.utils import find_patient_resources
 from typing import Callable
 import copy
@@ -144,7 +148,107 @@ def add_name_change_metrics_values(
     )
 
 
-def phone_truncation_standardization(raw_phone: str) -> str:
+def country_extractor(
+    patient: dict, code_type: Literal["alpha_2", "alpha_3", "numeric"] = "alpha_2"
+) -> List[str]:
+    """
+    Given a patient, build a list containing all of the counries found in the
+    patient's addresses in a standard form sepcified by code_type.
+    :param dict patient: A patient from a FHIR resource
+    :param str code_type: A string equal to 'alpha_2', 'alpha_3', or 'numeric' to
+    specify which type of standard country identifier to generate
+    :return countries: A list containing country codes as specified by code_type
+    for each country found in resource
+    :rtype: List
+    """
+    countries = []
+    for address in patient.get("address"):
+        country = address.get("country")
+        countries.append(standardize_country(country, code_type))
+    return countries
+
+
+def phone_country_standardization(raw: str, countries: List = [None, "US"]) -> str:
+    """
+    Given a phone number and optionally an associated FHIR resource and country
+    extraction function if able to parse the phone number return it in the E.164
+    standardard international format. If the phone number is not parseable return none.
+
+    Phone number parsing process:
+    A maximum of three attemtps are made to parse any phone number.
+    First, we try to parse the phone number without any additional country information.
+    If this succeeds then the phone number must have been provided in a standard
+    inernational format which is the ideal case. If the first attempt fails and a list
+    of country codes indicating possible countries of origin for the phone number has
+    been provided we attempt to parse the phone number using that additional country
+    information from the resource. Finally, in the case where the second attempt fails
+    or a list of countries has not been provided we make a final attempt to parse the
+    number assuming it is American.
+
+    :param str raw: Raw phone number to be standardized.
+    :param list countries: A list containing 2 letter ISO country codes for each country
+    extracted from resource of the phone number to be standardized that might indicate
+    it the phone numbers country of origin.
+    :return str standardized: The standardized phone number in E.164 format when the raw
+    phone number was succesfully parsed and an emptry string otherwise.
+    """
+
+    if countries != [None, "US"]:
+        countries = [None] + countries + ["US"]
+
+    standardized = ""
+    for country in countries:
+        try:
+            standardized = phonenumbers.parse(raw, country)
+            break
+        except phonenumbers.phonenumberutil.NumberParseException:
+            continue
+    if standardized != "":
+        standardized = str(
+            phonenumbers.format_number(
+                standardized, phonenumbers.PhoneNumberFormat.E164
+            )
+        )
+    return standardized
+
+
+def standardize_country(
+    raw: str, code_type: Literal["alpha_2", "alpha_3", "numeric"] = "alpha_2"
+) -> str:
+    """
+    Given a country return it in a standard form as specified by code_type.
+
+    :param str raw: Country to be standardized.
+    :param str code_type: A string equal to 'alpha_2', 'alpha_3', or 'numeric' to
+    specify which type of standard country identifier to generate.
+    :return str standard: Country in standardized form, or None if unable to
+    standardize.
+    """
+    standard = None
+    raw = raw.strip().upper()
+    if len(raw) == 2:
+        standard = pycountry.countries.get(alpha_2=raw)
+    elif len(raw) == 3:
+        standard = pycountry.countries.get(alpha_3=raw)
+        if standard is None:
+            standard = pycountry.countries.get(numeric=raw)
+    elif len(raw) >= 4:
+        standard = pycountry.countries.get(name=raw)
+        if standard is None:
+            standard = pycountry.countries.get(official_name=raw)
+
+    if standard is not None:
+        if code_type == "alpha_2":
+            standard = standard.alpha_2
+        elif code_type == "alpha_3":
+            standard = standard.alpha_3
+        elif code_type == "numeric":
+            standard = standard.numeric
+
+    return standard
+
+
+def phone_truncation_standardization(raw_phone: str, *args) -> str:
     """
     Truncate a given phone number string to exactly ten digits, after
     removing any special characters. For example,
@@ -194,6 +298,10 @@ def standardize_all_phones_in_bundle(
             standardize_phone_numbers_for_patient(
                 patient, phone_truncation_standardization, add_phone_metrics
             )
+        elif standardization_mode == "country":
+            standardize_phone_numbers_for_patient(
+                patient, phone_country_standardization, add_phone_metrics
+            )
         else:
             raise ValueError("Invalid standardization mode supplied.")
     return bundle
@@ -224,7 +332,8 @@ def standardize_phone_numbers_for_patient(
         if telecom.get("system") == "phone" and "value" in telecom:
 
             # Transform the number and check if it's different
-            transformed_phone = transform_func(telecom.get("value", ""))
+            countries = country_extractor(patient)
+            transformed_phone = transform_func(telecom.get("value", ""), countries)
             phone_was_altered = phone_was_altered or (
                 transformed_phone != telecom.get("value", "")
             )
