@@ -180,4 +180,4 @@ if __name__ == "__main__":
     df = parquet_table.to_pandas()
     print(df.head())
     print(df.info())
-    breakpoint()
+    
