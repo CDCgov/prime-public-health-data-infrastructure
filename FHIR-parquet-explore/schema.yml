@@ -1,0 +1,16 @@
+---
+Patient:
+  - patient_id
+  - first_name
+  - last_name
+  - dob
+  - gender
+  #- race
+  #- ethnicity
+  - phone_number
+  - street
+  - city
+  - state
+  - country
+  #- latitude
+  #- longitude

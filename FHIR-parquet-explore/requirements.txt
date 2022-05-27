@@ -1,0 +1,4 @@
+azure-identity
+pyyaml
+pyarrow
+pandas
