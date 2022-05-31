@@ -1,16 +1,21 @@
 ---
-Patient:
-  - patient_id
-  - first_name
-  - last_name
-  - dob
-  - gender
-  #- race
-  #- ethnicity
-  - phone_number
-  - street
-  - city
-  - state
-  - country
-  #- latitude
-  #- longitude
+schema:
+  Patient:
+    Identifier:
+      fhir_path: /resources/resource/entry/Patient/identifier
+      include_nulls: false
+      include_unknowns: false
+      selection_criteria: first
+      new_name: identifier
+    First Name:
+      fhir_path: /resources/resource/entry/Patient/name/given/first
+      include_nulls: false
+      include_unknowns: false
+      selection_criteria: first
+      new_name: first_name
+    Last Name:
+      fhir_path: /resources/resource/entry/Patient/name/family
+      include_nulls: false
+      include_unknowns: false
+      selection_criteria: first
+      new_name: last_name
