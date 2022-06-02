@@ -43,13 +43,13 @@ def run_pipeline(
     import upload to the FHIR server with the finalized bundle. If the
     incoming message cannot be converted, it is stored to the configured
     invalid blob container and no further processing is done.
-    :param str message: The raw HL7 message to attempt conversion on
-    :param dict message_mappings: Dictionary having the appropriate
-    template mapping for the type of HL7 file being processed
-    :param str fhir_url: The url of the FHIR server to interact with
-    :param str access_token: The token that allows us to authenticate
-    with blob storage and the FHIR server
-    :return: None
+
+    :param message: The raw HL7 message to attempt conversion on
+    :param message_mappings: Dictionary having the appropriate
+        template mapping for the type of HL7 file being processed
+    :param fhir_url: The url of the FHIR server to interact with
+    :param access_token: The token that allows us to authenticate
+        with blob storage and the FHIR server
     """
     # Load various environment variables and the geocoding client
     salt = get_required_config("HASH_SALT")
@@ -142,9 +142,9 @@ def main(blob: func.InputStream) -> None:
     It is responsible for splitting an incoming batch file (or individual message)
     into a list of individual messages.  Each individual message is passed to the
     processing pipeline.
-    :param func.InputStream blob: The blob that's about to go on
-    the journey of a lifetime
-    :return: None
+
+    :param blob: The blob that's about to go on
+        the journey of a lifetime
     """
     # Set up logging, retrieve configuration variables
     logging.debug("Entering intake pipeline ")

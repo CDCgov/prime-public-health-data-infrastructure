@@ -11,12 +11,13 @@ def clean_message(message: str) -> str:
     fields that are known to contain data in problematic formats. This
     function helps to-be-converted messages conform to Azure's expectations.
     Cleaning operations include:
-      * Convert segment terminators from \n to \r
-      * Normalize datetime fields
-      * Convert segment terminators back from \r to \n
-    :param str message: The raw HL7 message to sanitize
+
+    * Convert segment terminators from ``\\n`` to ``\\r``
+    * Normalize datetime fields
+    * Convert segment terminators back from ``\\r`` to ``\\n``
+
+    :param message: The raw HL7 message to sanitize
     :return: The parsed, normalized message with delimiters removed
-    :rtype: str
     """
     parsed_message = ""
     try:
@@ -84,15 +85,15 @@ def normalize_hl7_datetime_segment(
     """
     Utility function used to apply datetime normalization
     to multiple fields in a segment.
-    :param list message: The HL7 message, represented as a list
+
+    :param message: The HL7 message, represented as a list
       of indexable component strings (which is how the HL7 library
       processes and returns messages)
-    :param str segment_id: The HL7-specified segment (ex. PID) to
+    :param segment_id: The HL7-specified segment (ex. PID) to
       normalize the fields of
-    :param list field_list: The list of fields contained in the
+    :param field_list: The list of fields contained in the
       indexed message component, which are themselves indices to
       data strings
-    :return: None
     """
     try:
         for segment in message.segments(segment_id):
@@ -110,16 +111,16 @@ def normalize_hl7_datetime(hl7_datetime: str) -> str:
     <integer 8+ digits>[.<integer 1+ digits>][+/-<integer 4+ digits>]
 
     Each group of integers is truncated to conform to the HL7 specification:
-      - first integer group: max 14 digits
-      - following decimal point: max 4 digits
-      - following +/- (timezone): 4 digits
+    - first integer group: max 14 digits
+    - following decimal point: max 4 digits
+    - following +/- (timezone): 4 digits
 
     This normalization facilitates downstream processing using, e.g.
     Azure, which has particular requirements for dates.
-    :param str hl7_datetime: The raw datetime string to clean
+
+    :param hl7_datetime: The raw datetime string to clean
     :return: The cleaned datetime string appropriately segmented and
       truncated
-    :rtype: str
     """
     hl7_datetime_match = re.match(r"(\d{8}\d*)(\.\d+)?([+-]\d+)?", hl7_datetime)
 
@@ -146,10 +147,10 @@ def clean_batch(batch: str, delimiter: str = "\n") -> str:
     Clean a batch file by replacing Windows (CR-LF) newlines with the specified
     newline delimiter (LF by default). Also, strip vertical tab and file
     separator characters which can appear in input batch file data.
-    :param str batch: The batch file data to clean
-    :param str delimiter: The newline character to standardize
+
+    :param batch: The batch file data to clean
+    :param delimiter: The newline character to standardize
     :return: The batch data with newlines correctly substituted
-    :rtype: str
     """
     cleaned_batch = re.sub("[\r\n]+", delimiter, batch)
 
@@ -169,11 +170,11 @@ def convert_batch_messages_to_list(content: str, delimiter: str = "\n") -> List[
     parts of the message. This function is based on the following header/tail
     segments:
 
-      - FHS is a "File Header Segment", which is used to head a file
+    * FHS is a "File Header Segment", which is used to head a file
         (group of batches)
-      - FTS is a "File Trailer Segment", which defines the end of a file
-      - BHS is "Batch Header Segment", which defines the start of a batch
-      - BTS is "Batch Trailer Segment", which defines the end of a batch
+    * FTS is a "File Trailer Segment", which defines the end of a file
+    * BHS is "Batch Header Segment", which defines the start of a batch
+    * BTS is "Batch Trailer Segment", which defines the end of a batch
 
     The structure of an HL7 Batch looks like this:
     [FHS] (file header segment) { [BHS] (batch header segment)
@@ -189,10 +190,8 @@ def convert_batch_messages_to_list(content: str, delimiter: str = "\n") -> List[
     We ignore lines that start with these since we don't want to include
     them in a message.
 
-    :param str content: the batch content to turn into a list
-    :param str delimiter: the character delimiting messages in the batch
-    :return: list of message strings
-    :rtype: List[str]
+    :param content: the batch content to turn into a list
+    :param delimiter: the character delimiting messages in the batch
     """
 
     cleaned_batch = clean_batch(content)
@@ -232,11 +231,11 @@ def get_file_type_mappings(blob_name: str) -> Dict[str, str]:
     a given message file based on the data stream the file comes from.
     E.g., ECR data will require a different conversion standard than
     VXU data (different root segments/templates, etc.).
-    :param str blob_name: The name of the blob to determine conversion
-    mappings for
+
+    :param blob_name: The name of the blob to determine conversion
+        mappings for
     :return: Mappings of key conversion variable to their appropriate
-    values for this data type
-    :rtype: Dict[str, str]
+        values for this data type
     """
 
     # Determine if the blob can be processed with our heuristics
@@ -293,22 +292,21 @@ def convert_message_to_fhir(
     returned. HL7v2 messages are cleaned (minor corrections made) via the
     clean_message function prior to conversion.
 
-    :param str message: The raw message that needs to be converted to FHIR.
-    Must be HL7v2 or HL7 v3
-    :param str input_data_type: The data type of the message. Must be one
-    of Hl7v2 or Ccda
-    :param str root_template: The core template that should be used when
-    attempting to convert the message to FHIR. More data can be found here:
-    https://docs.microsoft.com/en-us/azure/healthcare-apis/azure-api-for-fhir/convert-data
-    :param str template_collection: Further specification of which template
-    to use. More information can be found here:
-    https://docs.microsoft.com/en-us/azure/healthcare-apis/azure-api-for-fhir/convert-data
-    :param str access_token: A Bearer token used to authenticate with the
-    FHIR server
-    :param str fhir_url: A URL that points to the location of the FHIR
-    server
+    :param message: The raw message that needs to be converted to FHIR.
+        Must be HL7v2 or HL7 v3
+    :param input_data_type: The data type of the message. Must be one
+        of Hl7v2 or Ccda
+    :param root_template: The core template that should be used when
+        attempting to convert the message to FHIR. More data can be found here:
+        https://docs.microsoft.com/en-us/azure/healthcare-apis/azure-api-for-fhir/convert-data
+    :param template_collection: Further specification of which template
+        to use. More information can be found here:
+        https://docs.microsoft.com/en-us/azure/healthcare-apis/azure-api-for-fhir/convert-data
+    :param access_token: A Bearer token used to authenticate with the
+        FHIR server
+    :param fhir_url: A URL that points to the location of the FHIR
+        server
     :return: The converted message expressed in FHIR as a json dictionary
-    :rtype: Dict
     """
     if input_data_type == "Hl7v2":
         message = clean_message(message)

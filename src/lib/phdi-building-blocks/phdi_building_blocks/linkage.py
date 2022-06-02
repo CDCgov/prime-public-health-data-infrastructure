@@ -8,20 +8,20 @@ def add_linking_identifier_to_patients_in_bundle(
 ) -> dict:
     """
     Given a FHIR resource bundle:
-      - identify all patient resource(s) in the bundle
-      - extract standardized name, DOB, and address information for each
-      - compute a unique hash string based on these fields
-      - add the hash string to the list of identifiers held in that
-        patient resource
-    :param dict bundle: The FHIR bundle for whose patients to add a
-    linking identifier
-    :param str salt_str: The suffix string added to prevent being
-    able to reverse the hash into PII
-    :param bool overwrite: Whether to write the new standardizations
-    directly into the given bundle, changing the original data (True
-    is yes)
+
+    * identify all patient resource(s) in the bundle
+    * extract standardized name, DOB, and address information for each
+    * compute a unique hash string based on these fields
+    * add the hash string to the list of identifiers held in that patient resource
+
+    :param bundle: The FHIR bundle for whose patients to add a
+        linking identifier
+    :param salt_str: The suffix string added to prevent being
+        able to reverse the hash into PII
+    :param overwrite: Whether to write the new standardizations
+        directly into the given bundle, changing the original data (True
+        is yes)
     :return: The bundle of data with patients having unique identifiers
-    :rtype: dict
     """
     # Copy the data if we don't want to overwrite the original
     if not overwrite:
@@ -69,14 +69,14 @@ def get_field_with_use(patient: dict, field: str, use: str, default_field: int) 
     name for a patient that has an "official" use capacity. If no
     instance of a field with the requested use case can be found, instead
     return a specified default field.
-    :param dict patient: Patient from a FHIR bundle
-    :param str field: The field to extract
-    :param str use: The use the field must have to qualify
-    :param int default_field: The index of the field type to treat as
-    the default return type if no field with the requested use case is
-    found
+
+    :param patient: Patient from a FHIR bundle
+    :param field: The field to extract
+    :param use: The use the field must have to qualify
+    :param default_field: The index of the field type to treat as
+        the default return type if no field with the requested use case is
+        found
     :return: The requested use-case-type field
-    :rtype: str
     """
     return next(
         (item for item in patient[field] if item.get("use") == use),
@@ -89,12 +89,12 @@ def generate_hash_str(linking_identifier: str, salt_str: str) -> str:
     Given a string made of concatenated patient information, generate
     a hash for this string to serve as a "unique" identifier for the
     patient.
-    :param str linking_identifier: The concatenation of a patient's name,
-    address, and date of birth, delimited by dashes
-    :param str salt_str: The salt to concatenate onto the end to prevent
-    being able to reverse-engineer PII
+
+    :param linking_identifier: The concatenation of a patient's name,
+        address, and date of birth, delimited by dashes
+    :param salt_str: The salt to concatenate onto the end to prevent
+        being able to reverse-engineer PII
     :return: The unique patient hash
-    :rtype: str
     """
     hash_obj = hashlib.sha256()
     to_encode = (linking_identifier + salt_str).encode("utf-8")

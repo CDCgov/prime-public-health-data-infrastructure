@@ -12,7 +12,8 @@ class AzureFhirserverCredentialManager:
     def __init__(self, fhir_url: str):
         """
         Constructor to create a credential manager.
-        :param str fhir_url: The url of the FHIR server to-access
+
+        :param fhir_url: The url of the FHIR server to-access
         """
         self.access_token = None
         self.fhir_url = fhir_url
@@ -21,7 +22,6 @@ class AzureFhirserverCredentialManager:
         """
         Getter to retrieve the FHIR URL.
         :return: The FHIR url
-        :rtype: str
         """
         return self.fhir_url
 
@@ -31,10 +31,9 @@ class AzureFhirserverCredentialManager:
         If the token is already set for this object and is not about to expire
         (within token_reuse_tolerance parameter), then return the existing token.
         Otherwise, request a new one.
-        :param float token_reuse_tolerance: Number of seconds before expiration; it
+
+        :param token_reuse_tolerance: Number of seconds before expiration; it
         is okay to reuse the currently assigned token
-        :return: The AccessToken the manager is currently using
-        :rtype: AccessToken
         """
         if not self._need_new_token(token_reuse_tolerance):
             return self.access_token
@@ -49,7 +48,6 @@ class AzureFhirserverCredentialManager:
         """
         Get default Azure Credentials from login context and related
         Azure configuration.
-        :return: A set of default Azure credentials
         """
         return DefaultAzureCredential()
 
@@ -57,9 +55,9 @@ class AzureFhirserverCredentialManager:
         """
         Determine whether the token already stored for this object can be reused,
         or if it needs to be re-requested.
-        :param float token_reuse_tolerance: Number of seconds before expiration
+
+        :param token_reuse_tolerance: Number of seconds before expiration
         :return: Whether we need a new token (True means we do)
-        :rtype: bool
         """
         try:
             current_time_utc = datetime.now(timezone.utc).timestamp()

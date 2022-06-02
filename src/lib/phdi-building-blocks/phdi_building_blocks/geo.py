@@ -18,11 +18,11 @@ def get_geocoder_result(
     and use our wrapper class to return a succinctly encapsulated result. If
     a valid result is found, it will be returned. Otherwise, the function
     returns None.
-    :param us_street.Client client: the SmartyStreets API Client suitable
-    for use with street addresses in the US
-    :param str address: The address to perform a geocoding lookup for
+
+    :param client: the SmartyStreets API Client suitable
+        for use with street addresses in the US
+    :param address: The address to perform a geocoding lookup for
     :return: The geocoded result wrapped in our result class, or None
-    :rtype: GeocodeResult, or None
     """
 
     # Make the API call
@@ -54,10 +54,10 @@ def get_geocoder_result(
 def get_smartystreets_client(auth_id: str, auth_token: str) -> us_street.Client:
     """
     Build a smartystreets api client from an auth id and token.
-    :param str auth_id: Authentication ID to build the client with
-    :param str auth_token: The token that allows us to access the client
+
+    :param auth_id: Authentication ID to build the client with
+    :param auth_token: The token that allows us to access the client
     :return: Built smartystreets API client
-    :rtype: us_street.Client
     """
 
     creds = StaticCredentials(auth_id, auth_token)
@@ -79,16 +79,16 @@ def geocode_patients_in_bundle(
     across all patient resources in the bundle. The function makes a deep copy
     of the data before operating so that the source data is unchanged and the
     new standardized bundle may be passed by value to other building blocks.
+
     :param dict bundle: A FHIR resource bundle
     :param us_street.Client client: The smartystreets API client to geocode
-    with
-    :param bool add_address_metrics: Whether to add tracking information into
-    the patient resource denoting whether one or more addresses were
-    standardized
-    :param bool overwrite: Whether to write the new standardizations directly
-    into the given bundle, changing the original data (True is yes)
+        with
+    :param add_address_metrics: Whether to add tracking information into
+        the patient resource denoting whether one or more addresses were
+        standardized
+    :param overwrite: Whether to write the new standardizations directly
+        into the given bundle, changing the original data (True is yes)
     :return: The standardized bundle of data
-    :rtype: dict
     """
     # Copy the data if we don't want to alter the original
     if not overwrite:
@@ -109,12 +109,12 @@ def geocode_single_address(
     resource. Here, the address is expressed in dictionary form, as it comes
     straight out of a FHIR bundle. This function also determines whether the
     geocoded standardized address is different from the raw address.
-    :param us_street.Client client: The API client to geocode with
-    :param dict address: A patient's address in FHIR / JSON
+
+    :param client: The API client to geocode with
+    :param address: A patient's address in FHIR / JSON
     :return: Tuple containing the standardized geocoding result as well as
-    whether the information in the result is different than the information
-    held in the raw address
-    :rtype: Tuple[GeocodeResult, bool]
+        whether the information in the result is different than the information
+        held in the raw address
     """
 
     raw_one_line = get_one_line_address(address)
@@ -139,11 +139,11 @@ def standardize_addresses_for_patient(
     a single patient in a FHIR resource bundle. This function also determines
     whether any of that patient's addresses were improved through geocoding and
     tracks this in an extension on the patient profile.
-    :param dict patient: A Patient resource FHIR profile
-    :param us_street.Client client: The API client to geocode with
-    :param bool add_metrics_extension: Whether to add tracking metrics into the
-    patient resource denoting that one or more addresses was standardized.
-    :return: None
+
+    :param patient: A Patient resource FHIR profile
+    :param client: The API client to geocode with
+    :param add_metrics_extension: Whether to add tracking metrics into the
+        patient resource denoting that one or more addresses was standardized.
     """
 
     # We can track whether geocoding improved addresses by taking the logical

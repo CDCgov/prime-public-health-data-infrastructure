@@ -9,13 +9,15 @@ def non_numeric_caps_standardization(raw_name: str) -> str:
     """
     Perform standardization on a provided name string. Name
     standardization performs:
-    - removal of all numeric characters
-    - trimming of extra whitespace
-    - converting all characters to uppercase
+
+    * removal of all numeric characters
+    * trimming of extra whitespace
+    * converting all characters to uppercase
+
     For example, standardize_name(" JohN Doe ") is 'JOHN DOE'.
-    :param str raw: The raw string to standardize
+
+    :param raw: The raw string to standardize
     :return: The standardized name string
-    :rtype: str
     """
     raw_name = [x for x in raw_name if not x.isnumeric()]
     raw_name = "".join(raw_name)
@@ -38,15 +40,15 @@ def standardize_patient_names_in_bundle(
     Also, augment the patient resources with metrics information about
     whether standardization improved the quality of any names, if
     desired.
-    :param dict bundle: The FHIR bundle to standardize patients in
-    :param str standardization_mode: The type of standardization to perform.
-    Options include: "non_numeric_caps"
-    :param bool add_name_metrics: Whether to store tracking data about
-    if any names were changed in the patient resources
-    :param bool overwrite: Whether to overwrite the original data with
-    the transformed values. Default is yes.
+
+    :param bundle: The FHIR bundle to standardize patients in
+    :param standardization_mode: The type of standardization to perform.
+        Options include: "non_numeric_caps"
+    :param add_name_metrics: Whether to store tracking data about
+        if any names were changed in the patient resources
+    :param overwrite: Whether to overwrite the original data with
+        the transformed values. Default is yes.
     :return: The bundle with all patients having transformed names
-    :rtype: dict
     """
     # Copy the data if we don't want to overwrite the origina
     if not overwrite:
@@ -74,13 +76,13 @@ def standardize_names_for_patient(
     Receives a particular standardization function from the calling method
     standardize_patient_names_in_bundle. Default behavior is to use the simple
     non-numeric, space-trimming, full capitalization standardization.
-    :param dict patient: The Patient resource to standardize all names for
-    :param Callable transform_func: The particular standardization function
-    to invoke for these transforms
-    :param bool add_metrics_extensions: Whether to store values in the patient
-    extension array for if our standardization functions transformed the names
-    to different values than their raw strings
-    :return: None
+
+    :param patient: The Patient resource to standardize all names for
+    :param transform_func: The particular standardization function
+        to invoke for these transforms
+    :param add_metrics_extensions: Whether to store values in the patient
+        extension array for if our standardization functions transformed the names
+        to different values than their raw strings
     """
 
     # Can track name changes with logical ORs each time a name is updated
@@ -121,12 +123,12 @@ def add_name_change_metrics_values(
     changed through the use of our standardization function directly
     to the patient resource as an extension. We define a pseudo-FHIR standard
     URL for this purpose.
-    :param dict patient: The Patient to add data for
-    :param bool given_name_was_changed: Did the transforms standardize
-    the given name string to something different than the raw form
-    :param bool family_name_was_Changed: Did the transforms standardize
-    the family name string to something different than the raw form
-    :return: None
+
+    :param patient: The Patient to add data for
+    :param given_name_was_changed: Did the transforms standardize
+        the given name string to something different than the raw form
+    :param family_name_was_Changed: Did the transforms standardize
+        the family name string to something different than the raw form
     """
     # Add in the tracking array for extra properties, if not there
     if "extension" not in patient:
@@ -152,12 +154,12 @@ def country_extractor(
     """
     Given a patient, build a list containing all of the counries found in the
     patient's addresses in a standard form sepcified by code_type.
-    :param dict patient: A patient from a FHIR resource
-    :param str code_type: A string equal to 'alpha_2', 'alpha_3', or 'numeric' to
-    specify which type of standard country identifier to generate
-    :return countries: A list containing country codes as specified by code_type
-    for each country found in resource
-    :rtype: List
+
+    :param patient: A patient from a FHIR resource
+    :param code_type: A string equal to 'alpha_2', 'alpha_3', or 'numeric' to
+        specify which type of standard country identifier to generate
+    :return: A list containing country codes as specified by code_type
+        for each country found in resource.
     """
     countries = []
     for address in patient.get("address"):
@@ -183,12 +185,12 @@ def phone_country_standardization(raw: str, countries: List = [None, "US"]) -> s
     or a list of countries has not been provided we make a final attempt to parse the
     number assuming it is American.
 
-    :param str raw: Raw phone number to be standardized.
-    :param list countries: A list containing 2 letter ISO country codes for each country
-    extracted from resource of the phone number to be standardized that might indicate
-    it the phone numbers country of origin.
-    :return str standardized: The standardized phone number in E.164 format when the raw
-    phone number was succesfully parsed and an emptry string otherwise.
+    :param raw: Raw phone number to be standardized.
+    :param countries: A list containing 2 letter ISO country codes for each country
+        extracted from resource of the phone number to be standardized that might indicate
+        it the phone numbers country of origin.
+    :return: The standardized phone number in E.164 format when the raw
+        phone number was succesfully parsed and an emptry string otherwise.
     """
 
     if countries != [None, "US"]:
@@ -216,11 +218,11 @@ def standardize_country(
     """
     Given a country return it in a standard form as specified by code_type.
 
-    :param str raw: Country to be standardized.
-    :param str code_type: A string equal to 'alpha_2', 'alpha_3', or 'numeric' to
-    specify which type of standard country identifier to generate.
-    :return str standard: Country in standardized form, or None if unable to
-    standardize.
+    :param raw: Country to be standardized.
+    :param code_type: A string equal to 'alpha_2', 'alpha_3', or 'numeric' to
+        specify which type of standard country identifier to generate.
+    :return: Country in standardized form, or None if unable to
+        standardize.
     """
     standard = None
     raw = raw.strip().upper()
@@ -253,9 +255,9 @@ def phone_truncation_standardization(raw_phone: str, *args) -> str:
     standardize_phone("(555) 555-1212") would return '5555551212'. If
     the provided phone number is less than ten digits, then the
     function simply returns None, as this is not a valid phone number.
-    :param str raw_phone: The phone number to standardize
+
+    :param raw_phone: The phone number to standardize
     :return: The truncated phone number
-    :rtype: str
     """
     raw_phone = [x for x in raw_phone if x.isnumeric()]
     raw_phone = "".join(raw_phone)
@@ -278,15 +280,15 @@ def standardize_all_phones_in_bundle(
     bundle. The default mode of standardization is "truncation". Also,
     optionally store tracking data around whether any phone numbers
     were transformed in an extension array directly on the patient.
-    :param dict bundle: The FHIR bundle to standardize patients in
-    :param str standardization_mode: The type of standardization to
-    perform. Valid options include: "truncation"
-    :param bool add_phone_metrics: Whether to store tracking metrics
-    for changed phone numbers. Default is yes.
-    :param bool overwrite: Whether to overwrite the original data
-    with the transformed values. Default is yes.
+
+    :param bundle: The FHIR bundle to standardize patients in
+    :param standardization_mode: The type of standardization to
+        perform. Valid options include: "truncation"
+    :param add_phone_metrics: Whether to store tracking metrics
+        for changed phone numbers. Default is yes.
+    :param overwrite: Whether to overwrite the original data
+        with the transformed values. Default is yes.
     :return: The bundle with all phone numbers transformed
-    :rtype: dict
     """
     if not overwrite:
         bundle = copy.deepcopy(bundle)
@@ -315,14 +317,14 @@ def standardize_phone_numbers_for_patient(
     resource using the caller-supplied transformation function. Also,
     optionally add extensions for metrics tracking around whether any
     phone numbers were different after standardization.
-    :param dict patient: The patient to standardize all numbers for
-    :param Callable transform_func: The specific standardization
-    function to invoke on the numbers. Default behavior is truncation
-    standardization.
-    :param bool add_metrics_extensions: Whether to add tracking data in
-    our pseud-FHIR-standard extensions around if any numbers were changed.
-    Default behavior is yes, do this.
-    :return: None
+
+    :param patient: The patient to standardize all numbers for
+    :param transform_func: The specific standardization
+        function to invoke on the numbers. Default behavior is truncation
+        standardization.
+    :param add_metrics_extensions: Whether to add tracking data in
+        our pseud-FHIR-standard extensions around if any numbers were changed.
+        Default behavior is yes, do this.
     """
     # We can determine if phones were altered by using logical ORs
     phone_was_altered = False

@@ -1,4 +1,4 @@
-# PHDI Transforms Library
+# PHDI Building Blocks Library
 
 ## Development
 
@@ -12,4 +12,4 @@ To run the tests (and black, and flake8), this would be `poetry run make test`.
 ### Building the docs
 
 We're using [Sphinx](https://www.sphinx-doc.org) to write up external docs, but there's a Make target
-to help out. Running `make docs` should build a single html file in `docs/_build/singlehtml/index.html`.
+to help out. Running `poetry run make docs` should build a single html file in `docs/_build/singlehtml/index.html`.

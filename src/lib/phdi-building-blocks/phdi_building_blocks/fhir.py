@@ -17,10 +17,10 @@ def generate_filename(blob_name: str, message_index: int) -> str:
     """
     Strip the file type suffix from the blob name, and instead
     append the message index.
-    :param str blob_name: The name of the blob to modify
-    :param int message_index: The index of this message in the batch
+
+    :param blob_name: The name of the blob to modify
+    :param message_index: The index of this message in the batch
     :return: The derived filename
-    :rtype: str
     """
     filename = blob_name.split("/")[-1]
     root_name, _ = filename.rsplit(".", 1)
@@ -31,9 +31,8 @@ def get_fhirserver_cred_manager(fhir_url: str) -> AzureFhirserverCredentialManag
     """
     Get an instance of the Azure FHIR Server credential manager configured
     for a given FHIR server url.
-    :param str fhir_url: The url of the FHIR server to access
-    :return: The credentials manager
-    :rtype: AzureFhirserverCredentialManager
+
+    :param fhir_url: The url of the FHIR server to access
     """
     return AzureFhirserverCredentialManager(fhir_url)
 
@@ -45,9 +44,9 @@ def upload_bundle_to_fhir_server(
     Import a FHIR resource to the FHIR server.
     The submissions may be Bundles or individual FHIR resources.
 
-    :param dict bundle: FHIR bundle (type "batch") to post
-    :param str access_token: FHIR Server access token
-    :param str fhir_url: The url of the FHIR server to upload to
+    :param bundle: FHIR bundle (type "batch") to post
+    :param access_token: FHIR Server access token
+    :param fhir_url: The url of the FHIR server to upload to
     """
 
     # Configure the settings of the 'requests' session we'll make
@@ -92,23 +91,23 @@ def export_from_fhir_server(
     If the export operation is in progress at the end of poll_timeout,
     use the default polling behavior to do the last function check
     before shutting down the request.
-    :param str access_token: Access token string used to connect to FHIR server
-    :param str fhir_url: FHIR Server base URL
-    :param str export_scope: Either `Patient` or `Group/[id]` as specified in the FHIR
-    spec
-    (https://hl7.org/fhir/uv/bulkdata/export/index.html#bulk-data-kick-off-request)
-    :param str since: A FHIR instant (https://build.fhir.org/datatypes.html#instant)
-    instructing the export to include only resources created or modified after the
-    specified instant.
-    :param str resource_type: A comma-delimited list of resource types to include.
-    :param str container: The name of the container used to store exported files.
-    :param float poll_step: the number of seconds to wait between poll requests, waiting
-    for export files to be generated.
-    :param float poll_timeout: the maximum number of seconds to wait for export files to
-    be generated.
+
+    :param access_token: Access token string used to connect to FHIR server
+    :param fhir_url: FHIR Server base URL
+    :param export_scope: Either `Patient` or `Group/[id]` as specified in the FHIR
+        spec
+        (https://hl7.org/fhir/uv/bulkdata/export/index.html#bulk-data-kick-off-request)
+    :param since: A FHIR instant (https://build.fhir.org/datatypes.html#instant)
+        instructing the export to include only resources created or modified after the
+        specified instant.
+    :param resource_type: A comma-delimited list of resource types to include.
+    :param container: The name of the container used to store exported files.
+    :param poll_step: the number of seconds to wait between poll requests, waiting
+        for export files to be generated.
+    :param poll_timeout: the maximum number of seconds to wait for export files to
+        be generated.
     :return: The response from the FHIR export, containing the records that were
-    processed
-    :rtype: Dict
+        processed
     """
 
     # Combine template variables into export endpoint
@@ -166,16 +165,16 @@ def _compose_export_url(
     """
     Generate a query string for the export request.  Details in the FHIR spec:
     https://hl7.org/fhir/uv/bulkdata/export/index.html#query-parameters
-    :param str fhir_url: The url of the FHIR server to export from
-    :param str export_scope: The data we want back (e.g. Patients)
-    :param str since: We'll get all FHIR resources that have been updated
+
+    :param fhir_url: The url of the FHIR server to export from
+    :param export_scope: The data we want back (e.g. Patients)
+    :param since: We'll get all FHIR resources that have been updated
     since this given timestamp
-    :param str resource_type: Comma-delimited list of resource types we want
+    :param resource_type: Comma-delimited list of resource types we want
     back
-    :param str container: The container where we want to store the uploaded
+    :param container: The container where we want to store the uploaded
     files
     :return: The url built with our desired export endpoitn criteria
-    :rtype: str
     """
     export_url = fhir_url
     if export_scope == "Patient" or export_scope.startswith("Group/"):
@@ -212,13 +211,13 @@ def __export_from_fhir_server_poll_call(
     continues. If the response is 200, then the export files are ready, and we
     return the HTTP response. Any other status either indicates an error or
     unexpected condition. In this case raise an error.
-    :param str poll_url: The endpoint the FHIR server gave us to query for if
+
+    :param poll_url: The endpoint the FHIR server gave us to query for if
     our files are ready
-    :param str access_token: The access token we use to authenticate with the
+    :param access_token: The access token we use to authenticate with the
     FHIR server
     :return: None if the files didn't get processed in time, OR a response with
     the relevant status codes and exported records if the files did get processed
-    :rtype: Either None, or a Response from Requests
     """
     logging.debug(f"Polling endpoint {poll_url}")
     response = requests.get(
@@ -244,17 +243,17 @@ def export_from_fhir_server_poll(
     """
     The main polling function that determines export file avialability after
     an export run has been initiated.
-    :param str poll_url: URL to poll for export information
-    :param str access_token: Bearer token used for authentication
-    :param float poll_step: the number of seconds to wait between poll requests, waiting
-    for export files to be generated. defaults to 30
-    :param float poll_timeout: the maximum number of seconds to wait for export files to
-    be generated. defaults to 300
+
+    :param poll_url: URL to poll for export information
+    :param access_token: Bearer token used for authentication
+    :param poll_step: the number of seconds to wait between poll requests, waiting
+        for export files to be generated. defaults to 30
+    :param poll_timeout: the maximum number of seconds to wait for export files to
+        be generated. defaults to 300
     :raises polling.TimeoutException: If the FHIR server continually returns a 202
-    status indicating in progress until the timeout is reached.
+        status indicating in progress until the timeout is reached.
     :raises requests.HTTPError: If an unexpected status code is returned.
     :return: The export response obtained from the FHIR server (200 status code)
-    :rtype: requests.Response
     """
     response = polling.poll(
         target=__export_from_fhir_server_poll_call,
@@ -284,10 +283,10 @@ def download_from_export_response(
     Loops through the "output" array and yields the resource_type (e.g. Patient)
     along with TextIO wrapping ndjson content.
 
-    :param dict export_response: JSON-type dictionary holding the response from
-    the export URL the FHIR server set up.
+    :param export_response: JSON-type dictionary holding the response from
+        the export URL the FHIR server set up.
     :yield: tuple containing resource type (e.g. Patient) AND the TextIO of the
-    downloaded ndjson content for that resource type
+        downloaded ndjson content for that resource type
     """
     # TODO: Handle error array that could be contained in the response content.
 
@@ -301,10 +300,9 @@ def _download_export_blob(blob_url: str, encoding: str = "utf-8") -> TextIO:
     """
     Download an export file blob.
 
-    :param str blob_url: Blob URL location to download from Azure Blob storage
-    :param str encoding: encoding to apply to the ndjson content, defaults to "utf-8"
+    :param blob_url: Blob URL location to download from Azure Blob storage
+    :param encoding: encoding to apply to the ndjson content, defaults to "utf-8"
     :return: Downloaded content wrapped in TextIO
-    :rtype: TextIO
     """
     bytes_buffer = io.BytesIO()
     cred = DefaultAzureCredential()

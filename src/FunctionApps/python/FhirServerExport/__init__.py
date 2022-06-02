@@ -12,9 +12,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     Main function that activates the FHIR export function app utility.
     An HTTP request is used to kick off the procedure. For more information,
     see the README file accompanying the FhirServerExport function app.
-    :param func.HttpRequest req: The request initiating a FHIR export.
+
+    :param req: The request initiating a FHIR export.
     :return: The response from the FHIR server
-    :rtype: func.HttpResponse
     """
 
     # Load configurations and environment variables
