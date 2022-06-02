@@ -25,7 +25,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     if container == "<none>":
         container = ""
 
-    cred_manager = fhir.AzureFhirserverCredentialManager(fhir_url=fhir_url)
+    cred_manager = fhir.AzureFhirServerCredentialManager(fhir_url=fhir_url)
     access_token = cred_manager.get_access_token()
 
     # Properly configured, kickoff the export procedure

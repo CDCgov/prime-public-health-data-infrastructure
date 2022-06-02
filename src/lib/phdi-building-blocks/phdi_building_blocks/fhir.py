@@ -10,7 +10,7 @@ from urllib3 import Retry
 
 from azure.identity import DefaultAzureCredential
 from azure.storage.blob import download_blob_from_url
-from phdi_building_blocks.classes.creds_manager import AzureFhirserverCredentialManager
+from phdi_building_blocks.classes.creds_manager import AzureFhirServerCredentialManager
 
 
 def generate_filename(blob_name: str, message_index: int) -> str:
@@ -27,14 +27,14 @@ def generate_filename(blob_name: str, message_index: int) -> str:
     return f"{root_name}-{message_index}"
 
 
-def get_fhirserver_cred_manager(fhir_url: str) -> AzureFhirserverCredentialManager:
+def get_fhirserver_cred_manager(fhir_url: str) -> AzureFhirServerCredentialManager:
     """
     Get an instance of the Azure FHIR Server credential manager configured
     for a given FHIR server url.
 
     :param fhir_url: The url of the FHIR server to access
     """
-    return AzureFhirserverCredentialManager(fhir_url)
+    return AzureFhirServerCredentialManager(fhir_url)
 
 
 def upload_bundle_to_fhir_server(

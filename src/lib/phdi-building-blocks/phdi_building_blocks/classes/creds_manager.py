@@ -4,7 +4,7 @@ from azure.core.credentials import AccessToken
 from azure.identity import DefaultAzureCredential
 
 
-class AzureFhirserverCredentialManager:
+class AzureFhirServerCredentialManager:
     """
     A class that manages handling Azure credentials for access to the FHIR server.
     """
