@@ -1,6 +1,12 @@
 ---
-schema:
+my_table:
   Patient:
+    Patient ID:
+      fhir_path: /resources/resource/entry/Patient/id
+      include_nulls: false
+      include_unknowns: false
+      selection_criteria: first
+      new_name: patient_id
     Identifier:
       fhir_path: /resources/resource/entry/Patient/identifier
       include_nulls: false
@@ -19,3 +25,28 @@ schema:
       include_unknowns: false
       selection_criteria: first
       new_name: last_name
+    Phone Number:
+      fhir_path: /resources/resource/entry/Patient/telecom/value|system:phone
+      include_nulls: false
+      include_unknowns: false
+      selection_criteria: first
+      new_name: phone_number
+  Observation:
+      Observation ID:
+        fhir_path: /resources/resource/entry/Observation/id
+        include_nulls: false
+        include_unknowns: false
+        selection_criteria: first
+        new_name: observation_id
+      Subject:
+        fhir_path: /resources/resource/entry/Observation/subject/reference
+        include_nulls: false
+        include_unknowns: false
+        selection_criteria: first
+        new_name: patient_id
+      Effective DateTime:
+        fhir_path: /resources/resource/entry/Observation/effectiveDateTime
+        include_nulls: false
+        include_unknowns: false
+        selection_criteria: first
+        new_name: effective_datetime
