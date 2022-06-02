@@ -51,7 +51,6 @@ def run_pipeline(
     :param access_token: The token that allows us to authenticate
         with blob storage and the FHIR server
     """
-    # Load various environment variables and the geocoding client
     salt = get_required_config("HASH_SALT")
     geocoder = get_smartystreets_client(
         get_required_config("SMARTYSTREETS_AUTH_ID"),

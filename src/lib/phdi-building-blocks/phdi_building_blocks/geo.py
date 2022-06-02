@@ -25,7 +25,6 @@ def get_geocoder_result(
     :return: The geocoded result wrapped in our result class, or None
     """
 
-    # Make the API call
     lookup = Lookup(street=address)
     client.send_lookup(lookup)
 

@@ -42,16 +42,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         )
         logging.debug(f"Export response received: {json.dumps(export_response)}")
 
-    # The error occured at the FHIR server's HTTP level, so report
-    # the status code
     except requests.HTTPError as exception:
         logging.exception(
             f"Error occurred while making reqeust to {exception.request.url}, "
             + f"status code: {exception.response.status_code}"
         )
 
-    # The error is some other more general type that happened
-    # during export
     except Exception as exception:
         # Log and re-raise so it bubbles up as an execution failure
         logging.exception("Error occurred while performing export operation.")
