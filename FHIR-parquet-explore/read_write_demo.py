@@ -1,5 +1,5 @@
 from azure.identity import DefaultAzureCredential
-from pathlib import Path
+import pathlib
 import requests
 import yaml
 from typing import Literal, List
@@ -10,6 +10,7 @@ import logging
 import numpy as np
 import random
 from phdi_building_blocks.fhir import AzureFhirserverCredentialManager
+import os
 
 
 def load_schema(path: str) -> dict:
@@ -27,7 +28,9 @@ def load_schema(path: str) -> dict:
 
 
 def query_fhir_server(
-    base_url: str, credential_manager: AzureFhirserverCredentialManager, query: str = ""
+    credential_manager: AzureFhirserverCredentialManager,
+    query: str = "",
+    specific_url: str = "",
 ) -> requests.models.Response:
     """
     Given the url for a FHIR server, a query to execute via the server's API, and an
@@ -35,13 +38,18 @@ def query_fhir_server(
     specified type and return the response.
 
     :param str base_url: Url of the FHIR server to be queried.
+    :param AzureFhirserverCredentialManager credential_manager: A credential manager for
+    a FHIR server.
     :param str query: The query for the FHIR server to execute.
-    :param str auth_method: A string specifying the authentication method to be used
-    with the FHIR server.
     :return requests.models.Response response: The response from the FHIR server.
     """
+    # When no specific url is provided use the base url for the FHIR server from the
+    # credential manager and add the query. Otherwise use the specific url by itself.
+    if specific_url == "":
+        full_url = credential_manager.fhir_url + query
+    else:
+        full_url = specific_url + query
 
-    full_url = base_url + query
     access_token = credential_manager.get_access_token().token
     header = {"Authorization": f"Bearer {access_token}"}
     response = requests.get(url=full_url, headers=header)
@@ -184,70 +192,145 @@ def log_fhir_server_error(status_code: int):
         additional_page = False
 
 
-if __name__ == "__main__":
+def make_resource_type_table(
+    resource_type: str,
+    schema: dict,
+    output_path: pathlib.PosixPath,
+    output_format: Literal["parquet"],
+    credential_manager: AzureFhirserverCredentialManager,
+):
+    """
+    Given a FHIR resource type, schema, and FHIR server credential manager create a
+    table containing the field from resource type specified in the the schema.
 
-    schema = load_schema("schema.yml")
-    table_name = list(schema.keys())[0]
-    schema = schema[table_name]
+    :param str resource_type: A FHIR resource type.
+    :param dict schema: A schema specifying the desired values by FHIR resource type.
+    :param AzureFhirserverCredentialManager credential_manager: A credential manager for
+    a FHIR server.
+    """
 
-    base_url = "https://phdi-pilot.azurehealthcareapis.com"
+    output_path.mkdir(parents=True, exist_ok=True)
+    output_file_name = output_path / f"{resource_type}.{output_format}"
 
-    credential_manager = AzureFhirserverCredentialManager(base_url)
+    query = f"/{resource_type}"
+    response = query_fhir_server(credential_manager, query)
+
+    additional_page = True
+    writer = None
+    while additional_page:
+        if response.status_code != 200:
+            log_fhir_server_error(response.status_code)
+            break
+
+        # Load queried data.
+        query_result = json.loads(response.content)
+        raw_schema_data = []
+
+        # Extract values specified by schema from each resource.
+        for resource in query_result["entry"]:
+            values_from_resource = apply_schema_to_resource(
+                resource["resource"], schema
+            )
+            if values_from_resource != {}:
+                raw_schema_data.append(values_from_resource)
+
+        # Write data to parquet
+        writer = write_schema_table(
+            raw_schema_data, output_file_name, output_format, writer
+        )
+
+        # Check for an additional page of query results.
+        for link in query_result.get("link"):
+            if link.get("relation") == "next":
+                next_page_url = link.get("url")
+                response = query_fhir_server(
+                    credential_manager, specific_url=next_page_url
+                )
+                break
+            else:
+                response = None
+
+        if response is None:
+            additional_page = False
+    writer.close()
+
+
+def generate_schema(
+    fhir_url: str,
+    schema_path: pathlib.PosixPath,
+    output_path: pathlib.PosixPath,
+    output_format: Literal["parquet"],
+):
+    """
+    Given the url for a FHIR server, the location of a schema file, and and output
+    directory generate the specified schema and store the tables in the desired
+    location.
+    """
+    schema = load_schema(schema_path)
+    schema_name = list(schema.keys())[0]
+    schema = schema[schema_name]
+    output_path = pathlib.Path(schema_name)
+
+    credential_manager = AzureFhirserverCredentialManager(fhir_url)
 
     for resource_type in schema.keys():
-        query = f"/{resource_type}"
-        output_file_name = Path(f"{table_name}/{resource_type}.parquet")
-        output_file_name.parent.mkdir(parents=True, exist_ok=True)
+        make_resource_type_table(
+            resource_type, schema, output_path, output_format, credential_manager
+        )
 
-        response = query_fhir_server(base_url, credential_manager, query)
 
-        additional_page = True
-        writer = None
+def write_schema_table(
+    data: List[dict],
+    output_file_name: pathlib.PosixPath,
+    file_format: Literal["parquet"],
+    writer: pq.ParquetWriter = None,
+):
+    """
+    Write schema data to a file given the data, a path to the file including the file
+    name, and the file format.
+    """
 
-        while additional_page:
-            if response.status_code != 200:
-                log_fhir_server_error(response.status_code)
-                break
+    if file_format == "parquet":
+        table = pa.Table.from_pylist(data)
+        if writer is None:
+            writer = pq.ParquetWriter(output_file_name, table.schema)
+        writer.write_table(table=table)
+        return writer
 
-            # Load queried data.
-            query_result = json.loads(response.content)
-            raw_schema_data = []
 
-            # Extract values specified by schema from each resource.
-            for resource in query_result["entry"]:
-                values_from_resource = apply_schema_to_resource(
-                    resource["resource"], schema
-                )
-                if values_from_resource != {}:
-                    raw_schema_data.append(values_from_resource)
+def get_schema_summary(schema_directory: pathlib.PosixPath, file_extension: str):
+    """
+    Given a directory containing the tables comprising a schema and the appropriate file
+    extension print a summary of each table.
+    """
+    all_file_names = next(os.walk(schema_directory))[2]
+    parquet_file_names = [
+        file_name for file_name in all_file_names if file_name.endswith(file_extension)
+    ]
 
-            # Write data to parquet
-            table = pa.Table.from_pylist(raw_schema_data)
-            if writer is None:
-                writer = pq.ParquetWriter(output_file_name, table.schema)
-            writer.write_table(table=table)
+    for file_name in parquet_file_names:
+        if file_extension.endswith("parquet"):
+            # Read metadata from parquet file without loading the actual data.
+            parquet_file = pq.ParquetFile(schema_directory / file_name)
+            print(parquet_file.metadata)
 
-            # Check for an additional page of query results.
-            for link in query_result.get("link"):
-                if link.get("relation") == "next":
-                    next_page_url = link.get("url")
-                    response = query_fhir_server(next_page_url, credential_manager)
-                    break
-                else:
-                    response = None
+            # Read data from parquet and convert to pandas data frame.
+            parquet_table = pq.read_table(schema_directory / file_name)
+            df = parquet_table.to_pandas()
+            print(df.head())
+            print(df.info())
 
-            if response is None:
-                additional_page = False
 
-        if writer is not None:
-            writer.close()
+if __name__ == "__main__":
 
-        # Read metadata from parquet file without loading the actual data.
-        parquet_file = pq.ParquetFile(output_file_name)
-        print(parquet_file.metadata)
+    # Make Schema
+    fhir_url = "https://phdi-pilot.azurehealthcareapis.com"
+    schema_path = pathlib.Path("schema.yml")
+    output_path = pathlib.Path("")
+    output_format = "parquet"
+    generate_schema(fhir_url, schema_path, output_path, output_format)
 
-        # Read data from parquet and convert to pandas data frame.
-        parquet_table = pq.read_table(output_file_name)
-        df = parquet_table.to_pandas()
-        print(df.head())
-        print(df.info())
+    # Display Schema Summary
+    schema = load_schema(schema_path)
+    schema_directory = output_path / list(schema.keys())[0]
+    get_schema_summary(schema_directory, ".parquet")
