@@ -49,31 +49,6 @@ def query_fhir_server(
     return response
 
 
-def get_next_page(
-    base_url: str, next_page: str, auth_method: Literal["azure"] = "azure"
-) -> requests.models.Response:
-    """
-    Given the url for a FHIR server, the url for the next page of results in query, and
-    an authentication method execute a query of the server for all resources of the
-    specified type and return the response.
-
-    :param str base_url: The url of the FHIR server to be queried.
-    :param str next_page: The url for the next page of results in query.
-    :param str auth_method: A string specifying the authentication method to be used
-    with the FHIR server.
-    :return requests.models.Response response: The response from the FHIR server.
-    """
-
-    if auth_method == "azure":
-        cred = DefaultAzureCredential()
-        access_token = cred.get_token(f"{base_url}/.default").token
-        header = {"Authorization": f"Bearer {access_token}"}
-
-    response = requests.get(url=next_page, headers=header)
-
-    return response
-
-
 def parse_value(
     value: list,
     path: List[str],
