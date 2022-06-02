@@ -7,7 +7,10 @@ from azure.storage.blob import ContainerClient
 def get_blob_client(container_url: str) -> ContainerClient:
     """
     Obtains a client connected to an Azure storage container by
-    using whatever credentials can be found to authenticate.
+    utilizing the first valid credentials Azure can find. For
+    more information on the order in which the credentials are
+    checked, see the Azure documentation:
+    https://docs.microsoft.com/en-us/azure/developer/python/sdk/authentication-overview#sequence-of-authentication-methods-when-using-defaultazurecredential
 
     :param container_url: The url at which to access the container
     :return: An Azure container client for the given container

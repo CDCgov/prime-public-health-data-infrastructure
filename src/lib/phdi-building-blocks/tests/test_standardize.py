@@ -5,9 +5,9 @@ import copy
 
 from phdi_building_blocks.standardize import (
     non_numeric_caps_standardization,
-    standardize_patient_names_in_bundle,
+    standardize_patient_names,
     phone_truncation_standardization,
-    standardize_all_phones_in_bundle,
+    standardize_all_phones,
     phone_country_standardization,
     country_extractor,
     standardize_country,
@@ -40,7 +40,7 @@ def test_standardize_patient_name():
             "valueBoolean": True,
         }
     )
-    assert standardize_patient_names_in_bundle(raw_bundle) == standardized_bundle
+    assert standardize_patient_names(raw_bundle) == standardized_bundle
 
 
 def test_standardize_phone():
@@ -97,6 +97,6 @@ def test_standardize_patient_phone():
         }
     )
     assert (
-        standardize_all_phones_in_bundle(raw_bundle, standardization_mode="country")
+        standardize_all_phones(raw_bundle, standardization_mode="country")
         == standardized_bundle
     )

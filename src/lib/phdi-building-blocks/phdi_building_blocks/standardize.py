@@ -26,7 +26,7 @@ def non_numeric_caps_standardization(raw_name: str) -> str:
     return raw_name
 
 
-def standardize_patient_names_in_bundle(
+def standardize_patient_names(
     bundle: dict,
     standardization_mode: str = "non_numeric_caps",
     add_name_metrics: bool = True,
@@ -74,7 +74,7 @@ def standardize_names_for_patient(
     """
     Helper method to standardize all names associated with a single patient.
     Receives a particular standardization function from the calling method
-    standardize_patient_names_in_bundle. Default behavior is to use the simple
+    standardize_patient_names. Default behavior is to use the simple
     non-numeric, space-trimming, full capitalization standardization.
 
     :param patient: The Patient resource to standardize all names for
@@ -268,7 +268,7 @@ def phone_truncation_standardization(raw_phone: str, *args) -> str:
     return raw_phone
 
 
-def standardize_all_phones_in_bundle(
+def standardize_all_phones(
     bundle: dict,
     standardization_mode: str = "truncation",
     add_phone_metrics: bool = True,

@@ -21,13 +21,13 @@ from phdi_building_blocks.conversion import (
 
 from phdi_building_blocks.geo import (
     get_smartystreets_client,
-    geocode_patients_in_bundle,
+    geocode_patients,
 )
 from phdi_building_blocks.standardize import (
-    standardize_patient_names_in_bundle,
-    standardize_all_phones_in_bundle,
+    standardize_patient_names,
+    standardize_all_phones,
 )
-from phdi_building_blocks.linkage import add_linking_identifier_to_patients_in_bundle
+from phdi_building_blocks.linkage import add_linking_identifier_to_patients
 
 
 def run_pipeline(
@@ -75,10 +75,10 @@ def run_pipeline(
     # sequentially and then add the linking identifier
     if response and response.get("resourceType") == "Bundle":
         bundle = response
-        standardized_bundle = standardize_patient_names_in_bundle(bundle)
-        standardized_bundle = standardize_all_phones_in_bundle(standardized_bundle)
-        standardized_bundle = geocode_patients_in_bundle(standardized_bundle, geocoder)
-        standardized_bundle = add_linking_identifier_to_patients_in_bundle(
+        standardized_bundle = standardize_patient_names(bundle)
+        standardized_bundle = standardize_all_phones(standardized_bundle)
+        standardized_bundle = geocode_patients(standardized_bundle, geocoder)
+        standardized_bundle = add_linking_identifier_to_patients(
             standardized_bundle, salt
         )
 
@@ -100,7 +100,7 @@ def run_pipeline(
         # Don't forget to import the bundle to the FHIR server as well
         upload_bundle_to_fhir_server(standardized_bundle, access_token, fhir_url)
 
-    # For some reason, the HL7 message failed to convert
+    # For some reason, the HL7/CCDA message failed to convert
     else:
         try:
             # First attempt is storing the message directly in the
@@ -159,7 +159,7 @@ def main(blob: func.InputStream) -> None:
         )
 
         # Once we have the file type mappings, run through all
-        # the blobs and send them down the pipeline
+        # messages in the blob and send them down the pipeline
         message_mappings = get_file_type_mappings(blob.name)
         for i, message in enumerate(messages):
             message_mappings["filename"] = generate_filename(blob.name, i)

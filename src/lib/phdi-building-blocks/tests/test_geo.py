@@ -9,7 +9,7 @@ from smartystreets_python_sdk.us_street.components import Components
 
 from phdi_building_blocks.geo import (
     get_geocoder_result,
-    geocode_patients_in_bundle,
+    geocode_patients,
 )
 from phdi_building_blocks.classes.geocode_result import GeocodeResult
 
@@ -108,4 +108,4 @@ def test_geocode_patient_address(patched_geocoder):
     )
     patched_geocoder.return_value = geocoded_response
 
-    assert geocode_patients_in_bundle(raw_bundle, mock.Mock()) == standardized_bundle
+    assert geocode_patients(raw_bundle, mock.Mock()) == standardized_bundle

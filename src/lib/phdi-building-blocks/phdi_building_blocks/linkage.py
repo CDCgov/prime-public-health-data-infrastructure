@@ -3,7 +3,7 @@ import copy
 from phdi_building_blocks.utils import find_patient_resources, get_one_line_address
 
 
-def add_linking_identifier_to_patients_in_bundle(
+def add_linking_identifier_to_patients(
     bundle: dict, salt_str: str, overwrite: bool = True
 ) -> dict:
     """

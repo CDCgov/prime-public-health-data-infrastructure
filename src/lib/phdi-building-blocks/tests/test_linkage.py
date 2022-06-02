@@ -1,6 +1,6 @@
 from phdi_building_blocks.linkage import (
     generate_hash_str,
-    add_linking_identifier_to_patients_in_bundle,
+    add_linking_identifier_to_patients,
 )
 
 
@@ -30,7 +30,7 @@ def test_missing_address():
         ]
     }
 
-    add_linking_identifier_to_patients_in_bundle(bundle, "some-salt")
+    add_linking_identifier_to_patients(bundle, "some-salt")
     expected = generate_hash_str("doe-19900101-", "some-salt")
     actual = bundle["entry"][0]["resource"]["identifier"][0]["value"]
     assert actual == expected
@@ -112,7 +112,7 @@ def test_add_patient_identifier():
         "use": "temp",
     }
 
-    add_linking_identifier_to_patients_in_bundle(incoming_bundle, salt_str)
+    add_linking_identifier_to_patients(incoming_bundle, salt_str)
     assert len(incoming_bundle["entry"]) == 3
     for resource in incoming_bundle["entry"]:
         if resource["resource"]["resourceType"] == "Patient":

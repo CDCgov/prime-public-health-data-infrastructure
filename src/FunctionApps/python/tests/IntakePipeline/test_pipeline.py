@@ -35,10 +35,10 @@ MESSAGE_MAPPINGS = {
 }
 
 
-@mock.patch("IntakePipeline.standardize_patient_names_in_bundle")
-@mock.patch("IntakePipeline.standardize_all_phones_in_bundle")
-@mock.patch("IntakePipeline.geocode_patients_in_bundle")
-@mock.patch("IntakePipeline.add_linking_identifier_to_patients_in_bundle")
+@mock.patch("IntakePipeline.standardize_patient_names")
+@mock.patch("IntakePipeline.standardize_all_phones")
+@mock.patch("IntakePipeline.geocode_patients")
+@mock.patch("IntakePipeline.add_linking_identifier_to_patients")
 @mock.patch("IntakePipeline.upload_bundle_to_fhir_server")
 @mock.patch("IntakePipeline.store_data")
 @mock.patch("IntakePipeline.get_smartystreets_client")
@@ -109,10 +109,10 @@ def test_pipeline_valid_message(
     )
 
 
-@mock.patch("IntakePipeline.standardize_patient_names_in_bundle")
-@mock.patch("IntakePipeline.standardize_all_phones_in_bundle")
-@mock.patch("IntakePipeline.geocode_patients_in_bundle")
-@mock.patch("IntakePipeline.add_linking_identifier_to_patients_in_bundle")
+@mock.patch("IntakePipeline.standardize_patient_names")
+@mock.patch("IntakePipeline.standardize_all_phones")
+@mock.patch("IntakePipeline.geocode_patients")
+@mock.patch("IntakePipeline.add_linking_identifier_to_patients")
 @mock.patch("IntakePipeline.upload_bundle_to_fhir_server")
 @mock.patch("IntakePipeline.store_data")
 @mock.patch("IntakePipeline.get_smartystreets_client")
@@ -176,10 +176,10 @@ def test_pipeline_invalid_message(
     )
 
 
-@mock.patch("IntakePipeline.standardize_patient_names_in_bundle")
-@mock.patch("IntakePipeline.standardize_all_phones_in_bundle")
-@mock.patch("IntakePipeline.geocode_patients_in_bundle")
-@mock.patch("IntakePipeline.add_linking_identifier_to_patients_in_bundle")
+@mock.patch("IntakePipeline.standardize_patient_names")
+@mock.patch("IntakePipeline.standardize_all_phones")
+@mock.patch("IntakePipeline.geocode_patients")
+@mock.patch("IntakePipeline.add_linking_identifier_to_patients")
 @mock.patch("IntakePipeline.upload_bundle_to_fhir_server")
 @mock.patch("IntakePipeline.store_data")
 @mock.patch("IntakePipeline.get_smartystreets_client")

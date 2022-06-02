@@ -67,7 +67,7 @@ def get_smartystreets_client(auth_id: str, auth_token: str) -> us_street.Client:
     )
 
 
-def geocode_patients_in_bundle(
+def geocode_patients(
     bundle: dict,
     client: us_street.Client,
     add_address_metrics: bool = True,

@@ -39,17 +39,10 @@ class AzureFhirServerCredentialManager:
             return self.access_token
 
         # Obtain a new token if ours is going to expire soon
-        creds = self._get_azure_credentials()
+        creds = DefaultAzureCredential()
         scope = f"{self.fhir_url}/.default"
         self.access_token = creds.get_token(scope)
         return self.access_token
-
-    def _get_azure_credentials(self):
-        """
-        Get default Azure Credentials from login context and related
-        Azure configuration.
-        """
-        return DefaultAzureCredential()
 
     def _need_new_token(self, token_reuse_tolerance: float = 10.0) -> bool:
         """
