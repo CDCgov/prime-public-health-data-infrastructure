@@ -252,7 +252,8 @@ def make_resource_type_table(
 
         if response is None:
             additional_page = False
-    writer.close()
+    if writer is not None:
+        writer.close()
 
 
 def generate_schema(
