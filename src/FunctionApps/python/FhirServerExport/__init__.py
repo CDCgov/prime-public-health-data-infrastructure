@@ -4,7 +4,10 @@ import json
 import logging
 import requests
 
-from phdi_building_blocks.fhir import AzureFhirServerCredentialManager, export_from_fhir_server
+from phdi_building_blocks.fhir import (
+    AzureFhirServerCredentialManager,
+    export_from_fhir_server,
+)
 
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
