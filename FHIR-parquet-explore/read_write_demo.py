@@ -181,13 +181,13 @@ def log_fhir_server_error(status_code: int):
 
     :param int status_code: Status code returned by a FHIR server
     """
-    if response.status_code == 401:
+    if status_code == 401:
         logging.error(
             "FHIR SERVER ERROR - Status Code 401: Failed to authenticate with the FHIR server."
         )
         additional_page = False
 
-    elif response.status_code == 404:
+    elif status_code == 404:
         logging.error("FHIR SERVER ERROR - Status Code 404: FHIR server not found.")
         additional_page = False
 
