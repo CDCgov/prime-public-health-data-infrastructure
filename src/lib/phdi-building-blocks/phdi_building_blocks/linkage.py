@@ -1,6 +1,10 @@
 import hashlib
 import copy
-from phdi_building_blocks.utils import find_patient_resources, get_one_line_address, get_field_with_use
+from phdi_building_blocks.utils import (
+    find_patient_resources,
+    get_one_line_address,
+    get_field_with_use,
+)
 
 
 def add_linking_identifier_to_patients(

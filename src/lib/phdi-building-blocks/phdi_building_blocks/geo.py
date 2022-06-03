@@ -92,7 +92,7 @@ def geocode_patients(
 ) -> dict:
     """
     Given a FHIR bundle and a SmartyStreets client, geocode all patient addresses
-    across all patient resources in the bundle. If the overwrite parameter is 
+    across all patient resources in the bundle. If the overwrite parameter is
     false, the function makes a deep copy of the data before operating so that
     the source data is unchanged and the new standardized bundle may be passed
     by value to other building blocks.
