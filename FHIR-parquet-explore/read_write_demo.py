@@ -1,11 +1,16 @@
-from phdi_building_blocks.schemas import generate_schema, load_schema
+from pathlib import Path
+from phdi_building_blocks.schemas import (
+    generate_schema,
+    load_schema,
+    get_schema_summary,
+)
 
 if __name__ == "__main__":
 
     # Make Schema
     fhir_url = "https://phdi-pilot.azurehealthcareapis.com"
-    schema_path = pathlib.Path("schema.yml")
-    output_path = pathlib.Path("")
+    schema_path = Path("schema.yml")
+    output_path = Path("")
     output_format = "parquet"
     generate_schema(fhir_url, schema_path, output_path, output_format)
 
