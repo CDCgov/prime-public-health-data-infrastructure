@@ -295,3 +295,47 @@ def _download_export_blob(blob_url: str, encoding: str = "utf-8") -> TextIO:
     text_buffer = io.TextIOWrapper(buffer=bytes_buffer, encoding=encoding, newline="\n")
     text_buffer.seek(0)
     return text_buffer
+
+
+def query_fhir_server(
+    credential_manager: AzureFhirserverCredentialManager,
+    query: str = "",
+    specific_url: str = "",
+) -> requests.models.Response:
+    """
+    Given the url for a FHIR server, a query to execute via the server's API, and an
+    authentication method execute a query of the server for all resources of the
+    specified type and return the response.
+
+    :param str base_url: Url of the FHIR server to be queried.
+    :param AzureFhirserverCredentialManager credential_manager: A credential manager for
+    a FHIR server.
+    :param str query: The query for the FHIR server to execute.
+    :return requests.models.Response response: The response from the FHIR server.
+    """
+    # When no specific url is provided use the base url for the FHIR server from the
+    # credential manager and add the query. Otherwise use the specific url by itself.
+    if specific_url == "":
+        full_url = credential_manager.fhir_url + query
+    else:
+        full_url = specific_url + query
+
+    access_token = credential_manager.get_access_token().token
+    header = {"Authorization": f"Bearer {access_token}"}
+    response = requests.get(url=full_url, headers=header)
+
+    return response
+
+
+def log_fhir_server_error(status_code: int):
+    """Given a status code from a FHIR server's response log the specified error.
+
+    :param int status_code: Status code returned by a FHIR server
+    """
+    if status_code == 401:
+        logging.error(
+            "FHIR SERVER ERROR - Status Code 401: Failed to authenticate with the FHIR server."
+        )
+
+    elif status_code == 404:
+        logging.error("FHIR SERVER ERROR - Status Code 404: FHIR server not found.")
