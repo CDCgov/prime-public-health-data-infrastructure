@@ -4,10 +4,7 @@ import json
 import logging
 import requests
 
-from phdi_building_blocks.fhir import (
-    AzureFhirServerCredentialManager,
-    export_from_fhir_server,
-)
+from phdi_building_blocks.fhir import fhir
 
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
@@ -28,12 +25,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     if container == "<none>":
         container = ""
 
-    cred_manager = AzureFhirServerCredentialManager(fhir_url=fhir_url)
+    cred_manager = fhir.AzureFhirServerCredentialManager(fhir_url=fhir_url)
     access_token = cred_manager.get_access_token()
 
     # Properly configured, kickoff the export procedure
     try:
-        export_response = export_from_fhir_server(
+        export_response = fhir.export_from_fhir_server(
             access_token=access_token.token,
             fhir_url=fhir_url,
             export_scope=req.params.get("export_scope", ""),
