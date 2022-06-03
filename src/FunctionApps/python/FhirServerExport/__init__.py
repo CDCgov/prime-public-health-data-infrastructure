@@ -4,7 +4,7 @@ import json
 import logging
 import requests
 
-from phdi_building_blocks.fhir import fhir
+from phdi_building_blocks import fhir
 
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
