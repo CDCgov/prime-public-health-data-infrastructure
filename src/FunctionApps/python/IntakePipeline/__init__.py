@@ -11,7 +11,7 @@ from phdi_building_blocks.azure_blob import store_data
 from phdi_building_blocks.fhir import (
     upload_bundle_to_fhir_server,
     generate_filename,
-    get_fhirserver_cred_manager,
+    AzureFhirServerCredentialManager,
 )
 from phdi_building_blocks.conversion import (
     convert_batch_messages_to_list,
@@ -148,7 +148,7 @@ def main(blob: func.InputStream) -> None:
     # Set up logging, retrieve configuration variables
     logging.debug("Entering intake pipeline ")
     fhir_url = get_required_config("FHIR_URL")
-    cred_manager = get_fhirserver_cred_manager(fhir_url)
+    cred_manager = AzureFhirServerCredentialManager(fhir_url)
 
     try:
         access_token = cred_manager.get_access_token()
