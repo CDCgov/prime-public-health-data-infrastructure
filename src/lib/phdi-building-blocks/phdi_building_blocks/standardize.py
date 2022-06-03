@@ -187,8 +187,8 @@ def phone_country_standardization(raw: str, countries: List = [None, "US"]) -> s
 
     :param raw: Raw phone number to be standardized.
     :param countries: A list containing 2 letter ISO country codes for each country
-        extracted from resource of the phone number to be standardized that might indicate
-        it the phone numbers country of origin.
+        extracted from resource of the phone number to be standardized that might
+        indicate it the phone numbers country of origin.
     :return: The standardized phone number in E.164 format when the raw
         phone number was succesfully parsed and an emptry string otherwise.
     """
