@@ -4,10 +4,27 @@ from smartystreets_python_sdk import StaticCredentials, ClientBuilder
 from smartystreets_python_sdk import us_street
 from smartystreets_python_sdk.us_street.lookup import Lookup
 
-from typing import Tuple, Union
+from typing import List, Tuple, Union
+from pydantic import BaseModel
 import copy
 
-from phdi_building_blocks.classes.geocode_result import GeocodeResult
+
+class GeocodeResult(BaseModel):
+    """
+    A basic abstract class representing a successful geocoding response.
+    SmartyStreets asks us to implement a custom result to wrap their
+    base model in for ease of working with.
+    """
+
+    address: List[str]
+    city: str
+    state: str
+    zipcode: str
+    county_fips: str
+    county_name: str
+    lat: float
+    lng: float
+    precision: str
 
 
 def get_geocoder_result(

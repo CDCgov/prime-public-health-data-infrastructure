@@ -11,7 +11,7 @@ from phdi_building_blocks.geo import (
     get_geocoder_result,
     geocode_patients,
 )
-from phdi_building_blocks.classes.geocode_result import GeocodeResult
+from phdi_building_blocks.geo import GeocodeResult
 
 
 def test_get_geocoder_result():
