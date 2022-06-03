@@ -115,8 +115,8 @@ def normalize_hl7_datetime(hl7_datetime: str) -> str:
     - following decimal point: max 4 digits
     - following +/- (timezone): 4 digits
 
-    This normalization facilitates downstream processing using, e.g.
-    Azure, which has particular requirements for dates.
+    This normalization facilitates downstream processing using cloud
+    providers that have particular requirements for dates.
 
     :param hl7_datetime: The raw datetime string to clean
     :return: The cleaned datetime string appropriately segmented and
@@ -200,21 +200,22 @@ def convert_batch_messages_to_list(content: str, delimiter: str = "\n") -> List[
     output = []
 
     for line in message_lines:
-        if not line.startswith(("FHS", "BHS", "BTS", "FTS")):
+        if line.startswith(("FHS", "BHS", "BTS", "FTS")):
+            continue
 
-            # If we reach a line that starts with MSH and we have
-            # content in nextMessage, then by definition we have
-            # a full message in next_message and need to append it
-            # to output. This will not trigger the first time we
-            # see a line with MSH since next_message will be empty
-            # at that time.
-            if next_message != "" and line.startswith("MSH"):
-                output.append(next_message)
-                next_message = ""
+        # If we reach a line that starts with MSH and we have
+        # content in nextMessage, then by definition we have
+        # a full message in next_message and need to append it
+        # to output. This will not trigger the first time we
+        # see a line with MSH since next_message will be empty
+        # at that time.
+        if next_message != "" and line.startswith("MSH"):
+            output.append(next_message)
+            next_message = ""
 
-            # Otherwise, continue to add the line of text to next_message
-            if line != "":
-                next_message += f"{line}\r"
+        # Otherwise, continue to add the line of text to next_message
+        if line != "":
+            next_message += f"{line}\r"
 
     # Since our loop only adds messages to output when it finds
     # a line that starts with MSH, the last message would never

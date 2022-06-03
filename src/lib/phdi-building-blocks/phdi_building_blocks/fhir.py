@@ -20,19 +20,10 @@ class AzureFhirServerCredentialManager:
     """
 
     def __init__(self, fhir_url: str):
-        """
-        Constructor to create a credential manager.
-
-        :param fhir_url: The url of the FHIR server to-access
-        """
         self.access_token = None
         self.fhir_url = fhir_url
 
     def get_fhir_url(self) -> str:
-        """
-        Getter to retrieve the FHIR URL.
-        :return: The FHIR url
-        """
         return self.fhir_url
 
     def get_access_token(self, token_reuse_tolerance: float = 10.0) -> AccessToken:

@@ -92,9 +92,10 @@ def geocode_patients(
 ) -> dict:
     """
     Given a FHIR bundle and a SmartyStreets client, geocode all patient addresses
-    across all patient resources in the bundle. The function makes a deep copy
-    of the data before operating so that the source data is unchanged and the
-    new standardized bundle may be passed by value to other building blocks.
+    across all patient resources in the bundle. If the overwrite parameter is 
+    false, the function makes a deep copy of the data before operating so that
+    the source data is unchanged and the new standardized bundle may be passed
+    by value to other building blocks.
 
     :param dict bundle: A FHIR resource bundle
     :param us_street.Client client: The smartystreets API client to geocode
@@ -121,7 +122,7 @@ def geocode_single_address(
     client: us_street.Client, address: dict
 ) -> Tuple[GeocodeResult, bool]:
     """
-    Helper method to perform geocoding on a single address from a patient
+    Helper function to perform geocoding on a single address from a patient
     resource. Here, the address is expressed in dictionary form, as it comes
     straight out of a FHIR bundle. This function also determines whether the
     geocoded standardized address is different from the raw address.
@@ -140,7 +141,7 @@ def geocode_single_address(
     # Default assumption is addresses are same, in case there's no
     # valid geocoder result
     address_is_different = False
-    if geocoded_result:
+    if geocoded_result is not None:
         std_one_line = f"{geocoded_result.address} {geocoded_result.city}, {geocoded_result.state} {geocoded_result.zipcode}"  # noqa
         address_is_different = raw_one_line != std_one_line
 
