@@ -185,11 +185,9 @@ def log_fhir_server_error(status_code: int):
         logging.error(
             "FHIR SERVER ERROR - Status Code 401: Failed to authenticate with the FHIR server."
         )
-        additional_page = False
 
     elif status_code == 404:
         logging.error("FHIR SERVER ERROR - Status Code 404: FHIR server not found.")
-        additional_page = False
 
 
 def make_resource_type_table(
