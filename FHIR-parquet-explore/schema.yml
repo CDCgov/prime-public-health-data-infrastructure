@@ -2,50 +2,50 @@
 my_table:
   Patient:
     Patient ID:
-      fhir_path: /resources/resource/entry/Patient/id
+      fhir_path: Patient.id
       include_nulls: false
       include_unknowns: false
       selection_criteria: first
       new_name: patient_id
     Identifier:
-      fhir_path: /resources/resource/entry/Patient/identifier
+      fhir_path: Patient.identifier
       include_nulls: false
       include_unknowns: false
       selection_criteria: first
       new_name: identifier
     First Name:
-      fhir_path: /resources/resource/entry/Patient/name/given/first
+      fhir_path: Patient.name.given
       include_nulls: false
       include_unknowns: false
       selection_criteria: first
       new_name: first_name
     Last Name:
-      fhir_path: /resources/resource/entry/Patient/name/family
+      fhir_path: Patient.name.family
       include_nulls: false
       include_unknowns: false
       selection_criteria: first
       new_name: last_name
     Phone Number:
-      fhir_path: /resources/resource/entry/Patient/telecom/value|system:phone
+      fhir_path: Patient.telecom.value.where(system=phone)
       include_nulls: false
       include_unknowns: false
       selection_criteria: first
       new_name: phone_number
   Observation:
       Observation ID:
-        fhir_path: /resources/resource/entry/Observation/id
+        fhir_path: Observation.id
         include_nulls: false
         include_unknowns: false
         selection_criteria: first
         new_name: observation_id
       Subject:
-        fhir_path: /resources/resource/entry/Observation/subject/reference
+        fhir_path: Observation.subject.reference
         include_nulls: false
         include_unknowns: false
         selection_criteria: first
         new_name: patient_id
       Effective DateTime:
-        fhir_path: /resources/resource/entry/Observation/effectiveDateTime
+        fhir_path: Observation.effectiveDateTime
         include_nulls: false
         include_unknowns: false
         selection_criteria: first
