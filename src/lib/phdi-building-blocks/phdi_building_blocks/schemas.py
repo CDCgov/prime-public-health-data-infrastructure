@@ -4,8 +4,6 @@ import yaml
 import json
 import random
 from typing import Literal, List
-import logging
-import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
 from fhirpathpy import evaluate
