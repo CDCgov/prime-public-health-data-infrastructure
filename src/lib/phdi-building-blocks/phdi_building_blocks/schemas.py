@@ -8,6 +8,7 @@ import logging
 import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
+from fhirpathpy import evaluate
 
 from phdi_building_blocks.fhir import (
     AzureFhirserverCredentialManager,
@@ -30,76 +31,28 @@ def load_schema(path: str) -> dict:
     return schema
 
 
-def parse_value(
+def apply_selection_criteria(
     value: list,
-    path: List[str],
     selection_criteria: Literal["first", "last", "random", "all"],
 ) -> str:
     """
-    Given a list containing all the values stored in a top level key in a FHIR resource,
-    follow the provided path and apply the selection criteria to extract the desired
-    value.
+    Given a list of value parsed from a FHIR resource and selection criteria return a
+    single value.
 
-    :param list value: A list containing the values stored in a top level key in a FHIR
+    :param value: A list containing the values stored in a top level key in a FHIR
     resource.
-    :param str path: A list were each element represents one parsing step.
-    :param str selection_criteria: A string indicating which element of list to select
+    :param selection_criteria: A string indicating which element of list to select
     when one is encountered during parsing.
     """
-    num_steps = len(path)
-    for index, step in enumerate(path):
 
-        if type(value) == list:
-
-            # When a list of dictionaries is encountered select the relevant subset
-            # ensuring that at a minimum the next step in the path is a key in the
-            # dictionary, and when specified the dictionary contains a desired key:value
-            # pair.
-
-            all_dicts = all(isinstance(element, dict) for element in value)
-            if num_steps == 1:
-                last_step = True
-            else:
-                last_step = index < num_steps - 2
-
-            if all_dicts and not last_step:
-                next_step = path[index + 1]
-                parts = next_step.split("|")
-                if len(parts) == 2:
-                    required_pair = parts[1].split(":")
-                    if len(required_pair) == 2:
-                        required_key = required_pair[0]
-                        required_value = required_pair[1]
-                        value = [
-                            x for x in value if x.get(required_key) == required_value
-                        ]
-                        next_key = parts[0]
-                        path[index + 1] = next_key
-                    else:
-                        logging.error(
-                            "Encountered improperly formatted fhir_path in schema."
-                        )
-                        return ""
-                elif len(parts) >= 3:
-                    logging.error(
-                        "Encountered improperly formatted fhir_path in schema."
-                    )
-                    return ""
-
-            # Apply selection criteria
-            if selection_criteria == "first":
-                value = value[0]
-            elif selection_criteria == "last":
-                value = value[-1]
-            elif selection_criteria == "random":
-                value = random.choice(value)
-            elif selection_criteria == "all":
-                break
-        elif type(value) == dict:
-            value = value.get(step, "")
-
-        if np.isscalar(value):
-            break
+    if selection_criteria == "first":
+        value = value[0]
+    elif selection_criteria == "last":
+        value = value[-1]
+    elif selection_criteria == "random":
+        value = random.choice(value)
+    elif selection_criteria == "all":
+        value = value
 
     # Temporary hack to ensure no structured data is written using pyarrow.
     # Currently Pyarrow does no support mixing non structure and structured data.
@@ -132,18 +85,13 @@ def apply_schema_to_resource(resource: dict, schema: dict) -> dict:
     for field in resource_schema.keys():
 
         path = resource_schema[field]["fhir_path"]
-        path = path.split("/")
-        path = path[path.index(resource.get("resourceType")) + 1 :]
-        value = resource.get(path[0], "")
+        value = evaluate(resource, path)
 
-        if np.isscalar(value):
-            data[resource_schema[field]["new_name"]] = value
+        if len(value) == 0:
+            data[resource_schema[field]["new_name"]] = ""
         else:
             selection_criteria = resource_schema[field]["selection_criteria"]
-            if type(value) == list:
-                value = parse_value(value, path, selection_criteria)
-            elif type(value) == dict:
-                value = parse_value(value, path[1:], selection_criteria)
+            value = apply_selection_criteria(value, selection_criteria)
             data[resource_schema[field]["new_name"]] = value
 
     return data
