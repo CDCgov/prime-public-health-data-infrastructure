@@ -26,7 +26,7 @@ my_table:
       selection_criteria: first
       new_name: last_name
     Phone Number:
-      fhir_path: Patient.telecom.value.where(system=phone)
+      fhir_path: Patient.telecom.where(system = 'phone').value
       include_nulls: false
       include_unknowns: false
       selection_criteria: first
