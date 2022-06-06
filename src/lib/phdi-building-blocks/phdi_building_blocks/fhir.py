@@ -54,8 +54,8 @@ class AzureFhirserverCredentialManager:
         return DefaultAzureCredential()
 
     def _need_new_token(self, token_reuse_tolerance: float = 10.0) -> bool:
-        """Determine whether the token already stored for this object can be reused, or if it
-        needs to be re-requested.
+        """Determine whether the token already stored for this object can be reused, or
+        if it needs to be re-requested.
         :param str token_reuse_tolerance: Number of seconds before expiration
         it is OK to reuse the currently assigned token"""
         try:
@@ -307,10 +307,9 @@ def query_fhir_server(
     authentication method execute a query of the server for all resources of the
     specified type and return the response.
 
-    :param str base_url: Url of the FHIR server to be queried.
-    :param AzureFhirserverCredentialManager credential_manager: A credential manager for
-    a FHIR server.
-    :param str query: The query for the FHIR server to execute.
+    :param base_url: Url of the FHIR server to be queried.
+    :param credential_manager: A credential manager for a FHIR server.
+    :param query: The query for the FHIR server to execute.
     :return requests.models.Response response: The response from the FHIR server.
     """
     # When no specific url is provided use the base url for the FHIR server from the
@@ -330,11 +329,11 @@ def query_fhir_server(
 def log_fhir_server_error(status_code: int):
     """Given a status code from a FHIR server's response log the specified error.
 
-    :param int status_code: Status code returned by a FHIR server
+    :param status_code: Status code returned by a FHIR server
     """
     if status_code == 401:
         logging.error(
-            "FHIR SERVER ERROR - Status Code 401: Failed to authenticate with the FHIR server."
+            "FHIR SERVER ERROR - Status Code 401: Failed to authenticate with the FHIR server."  # noqa
         )
 
     elif status_code == 404:
