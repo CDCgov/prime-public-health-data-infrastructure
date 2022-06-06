@@ -17,6 +17,7 @@ pycountry = "^22.3.5"
 PyYAML = "^6.0"
 pyarrow = "^8.0.0"
 pandas = "^1.4.2"
+fhirpathpy = {git = "https://github.com/beda-software/fhirpath-py.git"}
 
 [tool.poetry.dev-dependencies]
 Sphinx = "^4.4.0"
