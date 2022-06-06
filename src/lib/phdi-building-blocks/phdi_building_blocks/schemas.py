@@ -20,8 +20,8 @@ def load_schema(path: str) -> dict:
     Given the path to local YAML files containing a user-defined schema read the file
     and return the schema as a dictionary.
 
-    :param str path: Path specifying the location of a YAML file containing a schema.
-    :return dict schema: A user-defined schema
+    :param path: Path specifying the location of a YAML file containing a schema.
+    :return schema: A user-defined schema
     """
 
     with open(path, "r") as file:
@@ -70,9 +70,9 @@ def apply_schema_to_resource(resource: dict, schema: dict) -> dict:
     specified by the schema and associated keys defined by the variable name provided
     by the schema.
 
-    :param dict resource: A FHIR resource on which to apply a schema.
-    :param dict schema: A schema specifying the desired values by FHIR resource type.
-    :return dict data: A dictionary containing the data extracted from the patient along
+    :param resource: A FHIR resource on which to apply a schema.
+    :param schema: A schema specifying the desired values by FHIR resource type.
+    :return data: A dictionary containing the data extracted from the patient a long
     with specified variable names.
     """
 
@@ -106,9 +106,9 @@ def make_resource_type_table(
     Given a FHIR resource type, schema, and FHIR server credential manager create a
     table containing the field from resource type specified in the the schema.
 
-    :param str resource_type: A FHIR resource type.
-    :param dict schema: A schema specifying the desired values by FHIR resource type.
-    :param AzureFhirserverCredentialManager credential_manager: A credential manager for
+    :param resource_type: A FHIR resource type.
+    :param schema: A schema specifying the desired values by FHIR resource type.
+    :param credential_manager: A credential manager for
     a FHIR server.
     """
 
@@ -169,7 +169,13 @@ def generate_schema(
     Given the url for a FHIR server, the location of a schema file, and and output
     directory generate the specified schema and store the tables in the desired
     location.
+
+    :param fhir_url: URL to a FHIR server.
+    :schema_path: A path to the location of a YAML schema config file.
+    :output_path: A path to the directory where tables of the schema should be written.
+    :output_format: Specifies the file format of the tables to be generated.
     """
+
     schema = load_schema(schema_path)
     schema_name = list(schema.keys())[0]
     schema = schema[schema_name]
@@ -192,6 +198,15 @@ def write_schema_table(
     """
     Write schema data to a file given the data, a path to the file including the file
     name, and the file format.
+
+    :param data: A list of dictionaries specifying the data for each row of a table
+    where the keys of each dict correspond the columns and the values contain the data
+    for each entry in a row.
+    :param output_file_name: Full name for the file where the table is to be written.
+    :output_format: Specifies the file format of the table to be written.
+    :param writer: A writer object that can be kept open between calls of this function
+    to support file formats that cannot be appended to after being written
+    (e.g. parquet).
     """
 
     if file_format == "parquet":
@@ -202,24 +217,35 @@ def write_schema_table(
         return writer
 
 
-def get_schema_summary(schema_directory: pathlib.PosixPath, file_extension: str):
+def get_schema_summary(
+    schema_directory: pathlib.PosixPath,
+    file_format: Literal["parquet"],
+    display_head: bool = False,
+):
     """
     Given a directory containing the tables comprising a schema and the appropriate file
     extension print a summary of each table.
+
+    :param schema_directory: Path specifying location of schema tables.
+    :param file_format: Format of files in schema.
+    :param display_head: Print the head of each table when true. Note depending on the
+    file format this may require reading large amounts of data into memory.
     """
+
     all_file_names = next(os.walk(schema_directory))[2]
     parquet_file_names = [
-        file_name for file_name in all_file_names if file_name.endswith(file_extension)
+        file_name for file_name in all_file_names if file_name.endswith(file_format)
     ]
 
     for file_name in parquet_file_names:
-        if file_extension.endswith("parquet"):
+        if file_format.endswith("parquet"):
             # Read metadata from parquet file without loading the actual data.
             parquet_file = pq.ParquetFile(schema_directory / file_name)
             print(parquet_file.metadata)
 
             # Read data from parquet and convert to pandas data frame.
-            parquet_table = pq.read_table(schema_directory / file_name)
-            df = parquet_table.to_pandas()
-            print(df.head())
-            print(df.info())
+            if display_head is True:
+                parquet_table = pq.read_table(schema_directory / file_name)
+                df = parquet_table.to_pandas()
+                print(df.head())
+                print(df.info())

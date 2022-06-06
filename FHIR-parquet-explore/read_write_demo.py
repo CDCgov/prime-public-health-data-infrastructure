@@ -17,4 +17,4 @@ if __name__ == "__main__":
     # Display Schema Summary
     schema = load_schema(schema_path)
     schema_directory = output_path / list(schema.keys())[0]
-    get_schema_summary(schema_directory, ".parquet")
+    get_schema_summary(schema_directory, ".parquet", display_head=True)
