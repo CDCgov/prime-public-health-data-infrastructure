@@ -147,14 +147,6 @@ def test_make_resource_type_table_fail(patch_query, patch_logger):
 
     credential_manager = mock.Mock()
 
-    fhir_server_responses = json.load(
-        open(
-            pathlib.Path(__file__).parent
-            / "assets"
-            / "FHIR_server_query_response_200_example.json"
-        )
-    )
-
     response = mock.Mock()
     response.status_code = 400
     patch_query.return_value = response
