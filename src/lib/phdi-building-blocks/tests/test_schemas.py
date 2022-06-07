@@ -49,7 +49,7 @@ def test_apply_schema_to_resource():
 
 @mock.patch("phdi_building_blocks.schemas.write_schema_table")
 @mock.patch("phdi_building_blocks.schemas.query_fhir_server")
-def test_make_resource_type_table(patch_query, patch_write):
+def test_make_resource_type_table_success(patch_query, patch_write):
 
     resource_type = "some_resource_type"
 
@@ -129,3 +129,43 @@ def test_make_resource_type_table(patch_query, patch_write):
             )
         ),
     )
+
+
+@mock.patch("phdi_building_blocks.schemas.log_fhir_server_error")
+@mock.patch("phdi_building_blocks.schemas.query_fhir_server")
+def test_make_resource_type_table_fail(patch_query, patch_logger):
+
+    resource_type = "some_resource_type"
+
+    schema = {}
+
+    output_path = mock.Mock()
+    output_path.__truediv__ = (  # Redefine division operator to prevent failure.
+        lambda x, y: x
+    )
+
+    output_format = "parquet"
+
+    credential_manager = mock.Mock()
+
+    fhir_server_responses = json.load(
+        open(
+            pathlib.Path(__file__).parent
+            / "assets"
+            / "FHIR_server_query_response_200_example.json"
+        )
+    )
+
+    response = mock.Mock()
+    response.status_code = 400
+    patch_query.return_value = response
+
+    make_resource_type_table(
+        resource_type,
+        schema,
+        output_path,
+        output_format,
+        credential_manager,
+    )
+
+    patch_logger.assert_called_once_with(response.status_code)
