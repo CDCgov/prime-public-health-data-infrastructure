@@ -14,6 +14,7 @@ from phdi_building_blocks.fhir import (
     export_from_fhir_server,
     _compose_export_url,
     download_from_export_response,
+    log_fhir_server_error,
 )
 
 
@@ -328,4 +329,21 @@ def test_download_from_export_response(mock_download_export_blob):
             mock.call(blob_url="https://export-download-url/_Patient"),
             mock.call(blob_url="https://export-download-url/_Observation"),
         ]
+    )
+
+
+@mock.patch("phdi_building_blocks.fhir.logging")
+def test_log_fhir_server_error(patched_logger):
+
+    log_fhir_server_error(200)
+    assert ~patched_logger.error.called
+
+    log_fhir_server_error(401)
+    patched_logger.error.assert_called_with(
+        "FHIR SERVER ERROR - Status Code 401: Failed to authenticate with the FHIR server."
+    )
+
+    log_fhir_server_error(404)
+    patched_logger.error.assert_called_with(
+        "FHIR SERVER ERROR - Status Code 404: FHIR server not found."
     )
