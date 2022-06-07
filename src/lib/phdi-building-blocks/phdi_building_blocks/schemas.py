@@ -98,7 +98,7 @@ def apply_schema_to_resource(resource: dict, schema: dict) -> dict:
 def make_resource_type_table(
     resource_type: str,
     schema: dict,
-    output_path: pathlib.PosixPath,
+    output_path: pathlib.Path,
     output_format: Literal["parquet"],
     credential_manager: AzureFhirserverCredentialManager,
 ):
@@ -161,8 +161,8 @@ def make_resource_type_table(
 
 def generate_schema(
     fhir_url: str,
-    schema_path: pathlib.PosixPath,
-    output_path: pathlib.PosixPath,
+    schema_path: pathlib.Path,
+    output_path: pathlib.Path,
     output_format: Literal["parquet"],
 ):
     """
@@ -191,7 +191,7 @@ def generate_schema(
 
 def write_schema_table(
     data: List[dict],
-    output_file_name: pathlib.PosixPath,
+    output_file_name: pathlib.Path,
     file_format: Literal["parquet"],
     writer: pq.ParquetWriter = None,
 ):
@@ -218,7 +218,7 @@ def write_schema_table(
 
 
 def get_schema_summary(
-    schema_directory: pathlib.PosixPath,
+    schema_directory: pathlib.Path,
     file_format: Literal["parquet"],
     display_head: bool = False,
 ):
