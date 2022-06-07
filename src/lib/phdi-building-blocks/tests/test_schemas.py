@@ -9,6 +9,7 @@ from phdi_building_blocks.schemas import (
     apply_schema_to_resource,
     make_resource_type_table,
     generate_schema,
+    write_schema_table,
 )
 
 
@@ -193,3 +194,36 @@ def test_generate_schema(
         output_format,
         patched_cred_manager(fhir_url),
     )
+
+
+@mock.patch("phdi_building_blocks.schemas.pq.ParquetWriter")
+@mock.patch("phdi_building_blocks.schemas.pa.Table")
+def test_write_schema_table_no_writer(patched_pa_table, patched_writer):
+
+    data = [{"some_column": "some value", "some_other_column": "some other value"}]
+    output_file_name = mock.Mock()
+    file_format = "parquet"
+
+    write_schema_table(data, output_file_name, file_format)
+    patched_pa_table.from_pylist.assert_called_with(data)
+    table = patched_pa_table.from_pylist(data)
+    patched_writer.assert_called_with(output_file_name, table.schema)
+    patched_writer(output_file_name, table.schema).write_table.assert_called_with(
+        table=table
+    )
+
+
+@mock.patch("phdi_building_blocks.schemas.pq.ParquetWriter")
+@mock.patch("phdi_building_blocks.schemas.pa.Table")
+def test_write_schema_table_with_writer(patched_pa_table, patched_writer):
+
+    data = [{"some_column": "some value", "some_other_column": "some other value"}]
+    output_file_name = mock.Mock()
+    file_format = "parquet"
+    writer = mock.Mock()
+
+    write_schema_table(data, output_file_name, file_format, writer)
+    patched_pa_table.from_pylist.assert_called_with(data)
+    table = patched_pa_table.from_pylist(data)
+    writer.write_table.assert_called_with(table=table)
+    assert len(patched_writer.call_args_list) == 0
