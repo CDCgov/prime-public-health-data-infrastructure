@@ -91,7 +91,6 @@ def test_make_resource_type_table_success(patch_query, patch_write):
         output_format,
         credential_manager,
     )
-    writer = mock.Mock()
 
     assert len(patch_write.call_args_list[0]) == 2
 
