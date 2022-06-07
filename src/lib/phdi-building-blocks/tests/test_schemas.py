@@ -8,6 +8,7 @@ from phdi_building_blocks.schemas import (
     apply_selection_criteria,
     apply_schema_to_resource,
     make_resource_type_table,
+    generate_schema,
 )
 
 
@@ -160,3 +161,35 @@ def test_make_resource_type_table_fail(patch_query, patch_logger):
     )
 
     patch_logger.assert_called_once_with(response.status_code)
+
+
+@mock.patch("phdi_building_blocks.schemas.make_resource_type_table")
+@mock.patch("phdi_building_blocks.schemas.AzureFhirserverCredentialManager")
+@mock.patch("phdi_building_blocks.schemas.load_schema")
+def test_generate_schema(
+    patched_load_schema, patched_cred_manager, patched_make_resource_type_table
+):
+
+    fhir_url = "some_fhir_url"
+    schema_path = mock.Mock()
+    output_path = mock.Mock()
+    output_path.__truediv__ = (  # Redefine division operator to prevent failure.
+        lambda x, y: x
+    )
+    output_format = "parquet"
+
+    schema = yaml.safe_load(
+        open(pathlib.Path(__file__).parent / "assets" / "test_schema.yaml")
+    )
+
+    patched_load_schema.return_value = schema
+
+    generate_schema(fhir_url, schema_path, output_path, output_format)
+
+    patched_make_resource_type_table.assert_called_with(
+        "Patient",
+        schema["my_table"],
+        output_path,
+        output_format,
+        patched_cred_manager(fhir_url),
+    )

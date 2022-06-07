@@ -179,7 +179,7 @@ def generate_schema(
     schema = load_schema(schema_path)
     schema_name = list(schema.keys())[0]
     schema = schema[schema_name]
-    output_path = pathlib.Path(schema_name)
+    output_path = output_path / schema_name
 
     credential_manager = AzureFhirserverCredentialManager(fhir_url)
 
