@@ -15,6 +15,7 @@ from phdi_building_blocks.fhir import (
     _compose_export_url,
     download_from_export_response,
     log_fhir_server_error,
+    query_fhir_server,
 )
 
 
@@ -347,3 +348,24 @@ def test_log_fhir_server_error(patched_logger):
     patched_logger.error.assert_called_with(
         "FHIR SERVER ERROR - Status Code 404: FHIR server not found."
     )
+
+
+@mock.patch("phdi_building_blocks.fhir.requests")
+def test_query_fhir_server(patched_requests):
+
+    credential_manager = mock.Mock()
+    credential_manager.fhir_url = "some_fhir_server_url"
+    credential_manager.get_access_token().token = "access_token"
+
+    query = "/some_query"
+    specific_url = "special_url"
+
+    query_fhir_server(credential_manager, query)
+
+    full_query = credential_manager.fhir_url + query
+    header = {"Authorization": f"Bearer {credential_manager.get_access_token().token}"}
+    patched_requests.get.assert_called_with(url=full_query, headers=header)
+
+    query = ""
+    query_fhir_server(credential_manager, query, specific_url)
+    patched_requests.get.assert_called_with(url=specific_url, headers=header)
