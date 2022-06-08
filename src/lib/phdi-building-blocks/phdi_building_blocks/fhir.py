@@ -299,9 +299,8 @@ def _download_export_blob(blob_url: str, encoding: str = "utf-8") -> TextIO:
 
 def fhir_server_get(url: str, access_token: str) -> requests.models.Response:
     """
-    Given the url for a FHIR server, a query to execute via the server's API, and an
-    authentication method execute a query of the server for all resources of the
-    specified type and return the response.
+    Submit a get request to a FHIR server given a url and access token for
+    authentication.
 
     :param url: Url specifying a get request on a FHIR server.
     :param access_token: A bearer token to authenticate with the FHIR server.
@@ -314,15 +313,20 @@ def fhir_server_get(url: str, access_token: str) -> requests.models.Response:
     return response
 
 
-def log_fhir_server_error(status_code: int):
-    """Given a status code from a FHIR server's response log the specified error.
+def log_fhir_server_error(status_code: int) -> None:
+    """Given an HTTP status code from a FHIR server's response, log the specified error.
 
     :param status_code: Status code returned by a FHIR server
     """
     if status_code == 401:
-        logging.error(
-            "FHIR SERVER ERROR - Status Code 401: Failed to authenticate with the FHIR server."  # noqa
-        )
+        logging.error("FHIR SERVER ERROR - Status Code 401: Failed to authenticate.")
 
     elif status_code == 404:
-        logging.error("FHIR SERVER ERROR - Status Code 404: FHIR server not found.")
+        logging.error(
+            "FHIR SERVER ERROR - Status Code 404: Server or requested data not found."
+        )
+
+    elif status_code == 410:
+        logging.error(
+            "FHIR SERVER ERROR - Status Code 410: Server has deleted this data."
+        )
