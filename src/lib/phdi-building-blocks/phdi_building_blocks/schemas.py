@@ -3,7 +3,7 @@ import os
 import yaml
 import json
 import random
-from typing import Literal, List
+from typing import Literal, List, Union
 import pyarrow as pa
 import pyarrow.parquet as pq
 from fhirpathpy import evaluate
@@ -33,15 +33,15 @@ def load_schema(path: str) -> dict:
 def apply_selection_criteria(
     value: list,
     selection_criteria: Literal["first", "last", "random", "all"],
-) -> str:
+) -> Union[str, List[str]]:
     """
-    Given a list of value parsed from a FHIR resource and selection criteria return a
-    single value.
+    Given a list of values parsed from a FHIR resource, return value(s) according to the
+    selection criteria. In general a single value is returned, but when
+    selection_criteria is set to "all" a list containing all of the parsed values is
+    returned.
 
-    :param value: A list containing the values stored in a top level key in a FHIR
-    resource.
-    :param selection_criteria: A string indicating which element of list to select
-    when one is encountered during parsing.
+    :param value: A list containing the values parsed from a FHIR resource.
+    :param selection_criteria: A string indicating which element(s) of a list to select.
     """
 
     if selection_criteria == "first":
@@ -54,7 +54,7 @@ def apply_selection_criteria(
         value = value
 
     # Temporary hack to ensure no structured data is written using pyarrow.
-    # Currently Pyarrow does no support mixing non structure and structured data.
+    # Currently Pyarrow does no support mixing non structured and structured data.
     # https://github.com/awslabs/aws-data-wrangler/issues/463
     # Will need to consider other methods of writing to parquet if this is and essential
     # feature.
