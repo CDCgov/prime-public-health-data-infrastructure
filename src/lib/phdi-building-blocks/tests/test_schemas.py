@@ -133,9 +133,8 @@ def test_make_resource_type_table_success(patch_query, patch_write):
     )
 
 
-@mock.patch("phdi_building_blocks.schemas.log_fhir_server_error")
 @mock.patch("phdi_building_blocks.schemas.fhir_server_get")
-def test_make_resource_type_table_fail(patch_query, patch_logger):
+def test_make_resource_type_table_fail(patch_query):
 
     resource_type = "some_resource_type"
 
@@ -162,8 +161,6 @@ def test_make_resource_type_table_fail(patch_query, patch_logger):
         output_format,
         credential_manager,
     )
-
-    patch_logger.assert_called_once_with(response.status_code)
 
 
 @mock.patch("phdi_building_blocks.schemas.make_resource_type_table")

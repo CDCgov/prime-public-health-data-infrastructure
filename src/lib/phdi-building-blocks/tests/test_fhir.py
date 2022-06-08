@@ -350,8 +350,9 @@ def test_log_fhir_server_error(patched_logger):
     )
 
 
+@mock.patch("phdi_building_blocks.fhir.log_fhir_server_error")
 @mock.patch("phdi_building_blocks.fhir.requests")
-def test_fhir_server_get(patched_requests):
+def test_fhir_server_get(patched_requests, patched_logger):
 
     url = "url_for_FHIR_server_get_request"
     access_token = "some_access_token_for_authentication"
@@ -360,3 +361,6 @@ def test_fhir_server_get(patched_requests):
 
     header = {"Authorization": f"Bearer {access_token}"}
     patched_requests.get.assert_called_with(url=url, headers=header)
+
+    response = patched_requests.get(url=url, headers=header)
+    patched_logger.assert_called_with(response.status_code)

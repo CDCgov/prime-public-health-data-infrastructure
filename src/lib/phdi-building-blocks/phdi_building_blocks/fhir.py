@@ -309,6 +309,7 @@ def fhir_server_get(url: str, access_token: str) -> requests.models.Response:
 
     header = {"Authorization": f"Bearer {access_token}"}
     response = requests.get(url=url, headers=header)
+    log_fhir_server_error(response.status_code)
 
     return response
 

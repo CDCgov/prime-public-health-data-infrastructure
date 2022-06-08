@@ -11,7 +11,6 @@ from fhirpathpy import evaluate
 from phdi_building_blocks.fhir import (
     AzureFhirserverCredentialManager,
     fhir_server_get,
-    log_fhir_server_error,
 )
 
 
@@ -124,7 +123,6 @@ def make_resource_type_table(
     writer = None
     while additional_page:
         if response.status_code != 200:
-            log_fhir_server_error(response.status_code)
             break
 
         # Load queried data.
