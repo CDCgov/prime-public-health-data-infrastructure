@@ -157,7 +157,7 @@ def make_resource_type_table(
         writer.close()
 
 
-def generate_schema(
+def make_tables_from_schema(
     fhir_url: str,
     schema_path: pathlib.Path,
     output_path: pathlib.Path,
@@ -169,9 +169,9 @@ def generate_schema(
     location.
 
     :param fhir_url: URL to a FHIR server.
-    :schema_path: A path to the location of a YAML schema config file.
-    :output_path: A path to the directory where tables of the schema should be written.
-    :output_format: Specifies the file format of the tables to be generated.
+    :param schema_path: A path to the location of a YAML schema config file.
+    :param output_path: A path to the directory where tables of the schema should be written.
+    :param output_format: Specifies the file format of the tables to be generated.
     """
 
     schema = load_schema(schema_path)
@@ -194,14 +194,13 @@ def write_schema_table(
     writer: pq.ParquetWriter = None,
 ):
     """
-    Write schema data to a file given the data, a path to the file including the file
-    name, and the file format.
+    Write data extracted from the FHIR Server to a file.
 
     :param data: A list of dictionaries specifying the data for each row of a table
-    where the keys of each dict correspond the columns and the values contain the data
-    for each entry in a row.
+    where the keys of each dict correspond to the columns, and the values contain the
+    data for each entry in a row.
     :param output_file_name: Full name for the file where the table is to be written.
-    :output_format: Specifies the file format of the table to be written.
+    :param output_format: Specifies the file format of the table to be written.
     :param writer: A writer object that can be kept open between calls of this function
     to support file formats that cannot be appended to after being written
     (e.g. parquet).
@@ -215,14 +214,14 @@ def write_schema_table(
         return writer
 
 
-def get_schema_summary(
+def print_schema_summary(
     schema_directory: pathlib.Path,
     file_format: Literal["parquet"],
     display_head: bool = False,
 ):
     """
-    Given a directory containing the tables comprising a schema and the appropriate file
-    extension print a summary of each table.
+    Given a directory containing tables of the specified file format, print a summary of
+    each table.
 
     :param schema_directory: Path specifying location of schema tables.
     :param file_format: Format of files in schema.
