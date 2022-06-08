@@ -117,9 +117,8 @@ def make_resource_type_table(
     access_token = credential_manager.get_access_token().token
     response = fhir_server_get(url, access_token)
 
-    additional_page = True
     writer = None
-    while additional_page:
+    while response is not None:
         if response.status_code != 200:
             break
 
@@ -151,8 +150,6 @@ def make_resource_type_table(
             else:
                 response = None
 
-        if response is None:
-            additional_page = False
     if writer is not None:
         writer.close()
 
