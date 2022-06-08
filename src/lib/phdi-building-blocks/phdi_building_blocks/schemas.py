@@ -22,10 +22,12 @@ def load_schema(path: str) -> dict:
     :param path: Path specifying the location of a YAML file containing a schema.
     :return schema: A user-defined schema
     """
-
-    with open(path, "r") as file:
-        schema = yaml.safe_load(file)
-    return schema
+    try:
+        with open(path, "r") as file:
+            schema = yaml.safe_load(file)
+        return schema
+    except FileNotFoundError:
+        return {}
 
 
 def apply_selection_criteria(
