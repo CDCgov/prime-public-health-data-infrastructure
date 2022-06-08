@@ -10,7 +10,7 @@ from fhirpathpy import evaluate
 
 from phdi_building_blocks.fhir import (
     AzureFhirserverCredentialManager,
-    query_fhir_server,
+    fhir_server_get,
     log_fhir_server_error,
 )
 
@@ -116,7 +116,9 @@ def make_resource_type_table(
     output_file_name = output_path / f"{resource_type}.{output_format}"
 
     query = f"/{resource_type}"
-    response = query_fhir_server(credential_manager, query)
+    url = credential_manager.fhir_url + query
+    access_token = credential_manager.get_access_token().token
+    response = fhir_server_get(url, access_token)
 
     additional_page = True
     writer = None
@@ -146,9 +148,8 @@ def make_resource_type_table(
         for link in query_result.get("link"):
             if link.get("relation") == "next":
                 next_page_url = link.get("url")
-                response = query_fhir_server(
-                    credential_manager, specific_url=next_page_url
-                )
+                access_token = credential_manager.get_access_token().token
+                response = fhir_server_get(next_page_url, access_token)
                 break
             else:
                 response = None

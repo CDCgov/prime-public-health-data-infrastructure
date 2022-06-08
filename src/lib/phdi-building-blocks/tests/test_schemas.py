@@ -50,7 +50,7 @@ def test_apply_schema_to_resource():
 
 
 @mock.patch("phdi_building_blocks.schemas.write_schema_table")
-@mock.patch("phdi_building_blocks.schemas.query_fhir_server")
+@mock.patch("phdi_building_blocks.schemas.fhir_server_get")
 def test_make_resource_type_table_success(patch_query, patch_write):
 
     resource_type = "some_resource_type"
@@ -67,6 +67,7 @@ def test_make_resource_type_table_success(patch_query, patch_write):
     output_format = "parquet"
 
     credential_manager = mock.Mock()
+    credential_manager.fhir_url = "some_fhir_server_url"
 
     fhir_server_responses = json.load(
         open(
@@ -133,7 +134,7 @@ def test_make_resource_type_table_success(patch_query, patch_write):
 
 
 @mock.patch("phdi_building_blocks.schemas.log_fhir_server_error")
-@mock.patch("phdi_building_blocks.schemas.query_fhir_server")
+@mock.patch("phdi_building_blocks.schemas.fhir_server_get")
 def test_make_resource_type_table_fail(patch_query, patch_logger):
 
     resource_type = "some_resource_type"
@@ -148,6 +149,7 @@ def test_make_resource_type_table_fail(patch_query, patch_logger):
     output_format = "parquet"
 
     credential_manager = mock.Mock()
+    credential_manager.fhir_url = "some_fhir_server_url"
 
     response = mock.Mock()
     response.status_code = 400

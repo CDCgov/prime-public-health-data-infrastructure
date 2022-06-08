@@ -15,7 +15,7 @@ from phdi_building_blocks.fhir import (
     _compose_export_url,
     download_from_export_response,
     log_fhir_server_error,
-    query_fhir_server,
+    fhir_server_get,
 )
 
 
@@ -351,21 +351,12 @@ def test_log_fhir_server_error(patched_logger):
 
 
 @mock.patch("phdi_building_blocks.fhir.requests")
-def test_query_fhir_server(patched_requests):
+def test_fhir_server_get(patched_requests):
 
-    credential_manager = mock.Mock()
-    credential_manager.fhir_url = "some_fhir_server_url"
-    credential_manager.get_access_token().token = "access_token"
+    url = "url_for_FHIR_server_get_request"
+    access_token = "some_access_token_for_authentication"
 
-    query = "/some_query"
-    specific_url = "special_url"
+    fhir_server_get(url, access_token)
 
-    query_fhir_server(credential_manager, query)
-
-    full_query = credential_manager.fhir_url + query
-    header = {"Authorization": f"Bearer {credential_manager.get_access_token().token}"}
-    patched_requests.get.assert_called_with(url=full_query, headers=header)
-
-    query = ""
-    query_fhir_server(credential_manager, query, specific_url)
-    patched_requests.get.assert_called_with(url=specific_url, headers=header)
+    header = {"Authorization": f"Bearer {access_token}"}
+    patched_requests.get.assert_called_with(url=url, headers=header)
