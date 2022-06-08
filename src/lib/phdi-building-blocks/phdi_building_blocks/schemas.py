@@ -6,7 +6,7 @@ import random
 from typing import Literal, List, Union
 import pyarrow as pa
 import pyarrow.parquet as pq
-from fhirpathpy import evaluate
+import fhirpathpy
 
 from phdi_building_blocks.fhir import (
     AzureFhirserverCredentialManager,
@@ -46,17 +46,15 @@ def apply_selection_criteria(
 
     if selection_criteria == "first":
         value = value[0]
-    elif selection_criteria == "last":
+    if selection_criteria == "last":
         value = value[-1]
-    elif selection_criteria == "random":
+    if selection_criteria == "random":
         value = random.choice(value)
-    elif selection_criteria == "all":
-        value = value
 
     # Temporary hack to ensure no structured data is written using pyarrow.
-    # Currently Pyarrow does no support mixing non structured and structured data.
+    # Currently Pyarrow does not support mixing non-structured and structured data.
     # https://github.com/awslabs/aws-data-wrangler/issues/463
-    # Will need to consider other methods of writing to parquet if this is and essential
+    # Will need to consider other methods of writing to parquet if this is an essential
     # feature.
     if type(value) == dict:
         value = json.dumps(value)
@@ -84,7 +82,7 @@ def apply_schema_to_resource(resource: dict, schema: dict) -> dict:
     for field in resource_schema.keys():
 
         path = resource_schema[field]["fhir_path"]
-        value = evaluate(resource, path)
+        value = fhirpathpy.evaluate(resource, path)
 
         if len(value) == 0:
             data[resource_schema[field]["new_name"]] = ""
