@@ -65,14 +65,12 @@ def apply_selection_criteria(
 
 def apply_schema_to_resource(resource: dict, schema: dict) -> dict:
     """
-    Given a resource and a schema return a dictionary with values of the data
+    Given a resource and a schema, return a dictionary with values of the data
     specified by the schema and associated keys defined by the variable name provided
     by the schema.
 
     :param resource: A FHIR resource on which to apply a schema.
     :param schema: A schema specifying the desired values by FHIR resource type.
-    :return data: A dictionary containing the data extracted from the patient a long
-    with specified variable names.
     """
 
     data = {}
@@ -80,12 +78,11 @@ def apply_schema_to_resource(resource: dict, schema: dict) -> dict:
     if resource_schema is None:
         return data
     for field in resource_schema.keys():
-
         path = resource_schema[field]["fhir_path"]
         value = fhirpathpy.evaluate(resource, path)
 
         if len(value) == 0:
-            data[resource_schema[field]["new_name"]] = ""
+            data[resource_schema[field]["new_name"]] = None
         else:
             selection_criteria = resource_schema[field]["selection_criteria"]
             value = apply_selection_criteria(value, selection_criteria)
@@ -103,12 +100,13 @@ def make_resource_type_table(
 ):
     """
     Given a FHIR resource type, schema, and FHIR server credential manager create a
-    table containing the field from resource type specified in the the schema.
+    table containing the fields from the resource type specified in the schema.
 
     :param resource_type: A FHIR resource type.
     :param schema: A schema specifying the desired values by FHIR resource type.
-    :param credential_manager: A credential manager for
-    a FHIR server.
+    :param output_path: A path specifying where the table should be written.
+    :param output_format: A string indicating the file format to be used.
+    :param credential_manager: A credential manager for a FHIR server.
     """
 
     output_path.mkdir(parents=True, exist_ok=True)
@@ -127,27 +125,28 @@ def make_resource_type_table(
 
         # Load queried data.
         query_result = json.loads(response.content)
-        raw_schema_data = []
+        data = []
 
         # Extract values specified by schema from each resource.
+        # values_from_resource is a dictionary of the form:
+        # {field1:value1, field2:value2, ...}.
+
         for resource in query_result["entry"]:
             values_from_resource = apply_schema_to_resource(
                 resource["resource"], schema
             )
             if values_from_resource != {}:
-                raw_schema_data.append(values_from_resource)
+                data.append(values_from_resource)
 
-        # Write data to parquet
-        writer = write_schema_table(
-            raw_schema_data, output_file_name, output_format, writer
-        )
+        # Write data to file.
+        writer = write_schema_table(data, output_file_name, output_format, writer)
 
         # Check for an additional page of query results.
         for link in query_result.get("link"):
             if link.get("relation") == "next":
-                next_page_url = link.get("url")
+                url = link.get("url")
                 access_token = credential_manager.get_access_token().token
-                response = fhir_server_get(next_page_url, access_token)
+                response = fhir_server_get(url, access_token)
                 break
             else:
                 response = None
