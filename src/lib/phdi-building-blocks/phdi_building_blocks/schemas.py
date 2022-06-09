@@ -44,9 +44,9 @@ def apply_selection_criteria(
 
     if selection_criteria == "first":
         value = value[0]
-    if selection_criteria == "last":
+    elif selection_criteria == "last":
         value = value[-1]
-    if selection_criteria == "random":
+    elif selection_criteria == "random":
         value = random.choice(value)
 
     # Temporary hack to ensure no structured data is written using pyarrow.
