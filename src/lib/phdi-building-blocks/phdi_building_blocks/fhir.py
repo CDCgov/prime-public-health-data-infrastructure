@@ -24,6 +24,7 @@ def generate_filename(blob_name: str, message_index: int) -> str:
 class AzureFhirserverCredentialManager:
     """Manager for handling Azure credentials for access to the FHIR server"""
 
+    # TODO: Generalize this class to decouple from Azure
     def __init__(self, fhir_url):
         """Credential manager constructor"""
         self.access_token = None
