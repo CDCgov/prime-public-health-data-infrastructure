@@ -4,10 +4,9 @@ from phdi_building_blocks.schemas import (
     load_schema,
     print_schema_summary,
 )
-from phdi_building_blocks.fhir import AzureFhirserverCredentialManager
 
 # Set required parameters
-schema_path = "example_schema.yaml"  # Path to a schema config file. Included example used by default.
+schema_path = "example_schema.yaml"  # Path to a schema config file.
 output_path = "example_schema"  # Path to directory where files will be written
 output_format = "parquet"  # File format of tables
 fhir_url = "your_fhir_url"  # The URL for a FHIR server

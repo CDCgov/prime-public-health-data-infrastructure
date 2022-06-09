@@ -163,7 +163,8 @@ def make_schema_tables(
     location.
 
     :param schema_path: A path to the location of a YAML schema config file.
-    :param base_output_path: A path to the directory where tables of the schema should be written.
+    :param base_output_path: A path to the directory where tables of the schema should
+    be written.
     :param output_format: Specifies the file format of the tables to be generated.
     :param fhir_url: URL to a FHIR server.
     :param access_token: Bear token to authenticate with the FHIR server.

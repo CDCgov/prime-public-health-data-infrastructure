@@ -1,5 +1,4 @@
 import json
-from os import access
 import yaml
 import pathlib
 from unittest import mock
@@ -53,8 +52,6 @@ def test_apply_schema_to_resource():
 @mock.patch("phdi_building_blocks.schemas.write_schema_table")
 @mock.patch("phdi_building_blocks.schemas.fhir_server_get")
 def test_make_table_success(patch_query, patch_write):
-
-    resource_type = "some_resource_type"
 
     schema = yaml.safe_load(
         open(pathlib.Path(__file__).parent / "assets" / "test_schema.yaml")
@@ -135,8 +132,6 @@ def test_make_table_success(patch_query, patch_write):
 @mock.patch("phdi_building_blocks.schemas.write_schema_table")
 @mock.patch("phdi_building_blocks.schemas.fhir_server_get")
 def test_make_table_fail(patch_query, patch_write):
-
-    resource_type = "some_resource_type"
 
     schema = {}
 
