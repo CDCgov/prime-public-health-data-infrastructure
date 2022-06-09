@@ -331,3 +331,6 @@ def log_fhir_server_error(status_code: int) -> None:
         logging.error(
             "FHIR SERVER ERROR - Status Code 410: Server has deleted this data."
         )
+
+    elif str(status_code).startswith(("4", "5")):
+        logging.error(f"FHIR SERVER ERROR - Status code {status_code}")

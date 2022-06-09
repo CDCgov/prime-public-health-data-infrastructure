@@ -354,6 +354,18 @@ def test_log_fhir_server_error(patched_logger):
         "FHIR SERVER ERROR - Status Code 410: Server has deleted this data."
     )
 
+    status_code = 499
+    log_fhir_server_error(status_code)
+    patched_logger.error.assert_called_with(
+        f"FHIR SERVER ERROR - Status code {status_code}"
+    )
+
+    status_code = 599
+    log_fhir_server_error(status_code)
+    patched_logger.error.assert_called_with(
+        f"FHIR SERVER ERROR - Status code {status_code}"
+    )
+
 
 @mock.patch("phdi_building_blocks.fhir.log_fhir_server_error")
 @mock.patch("phdi_building_blocks.fhir.requests")
