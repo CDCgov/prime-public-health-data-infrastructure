@@ -96,7 +96,8 @@ def make_resource_type_table(
     schema: dict,
     output_path: pathlib.Path,
     output_format: Literal["parquet"],
-    credential_manager: AzureFhirserverCredentialManager,
+    fhir_url: str,
+    access_token: str,
 ):
     """
     Given a FHIR resource type, schema, and FHIR server credential manager create a
@@ -106,15 +107,15 @@ def make_resource_type_table(
     :param schema: A schema specifying the desired values by FHIR resource type.
     :param output_path: A path specifying where the table should be written.
     :param output_format: A string indicating the file format to be used.
-    :param credential_manager: A credential manager for a FHIR server.
+    :param fhir_url: URL to a FHIR server.
+    :param access_token: Bear token to authenticate with the FHIR server.
     """
 
     output_path.mkdir(parents=True, exist_ok=True)
     output_file_name = output_path / f"{resource_type}.{output_format}"
 
     query = f"/{resource_type}"
-    url = credential_manager.fhir_url + query
-    access_token = credential_manager.get_access_token().token
+    url = fhir_url + query
     response = fhir_server_get(url, access_token)
 
     writer = None
@@ -144,7 +145,6 @@ def make_resource_type_table(
         for link in query_result.get("link"):
             if link.get("relation") == "next":
                 url = link.get("url")
-                access_token = credential_manager.get_access_token().token
                 response = fhir_server_get(url, access_token)
                 break
             else:
@@ -155,10 +155,11 @@ def make_resource_type_table(
 
 
 def make_tables_from_schema(
-    fhir_url: str,
     schema_path: pathlib.Path,
     output_path: pathlib.Path,
     output_format: Literal["parquet"],
+    fhir_url: str,
+    access_token: str,
 ):
     """
     Given the url for a FHIR server, the location of a schema file, and and output
@@ -166,6 +167,7 @@ def make_tables_from_schema(
     location.
 
     :param fhir_url: URL to a FHIR server.
+    :param access_token: Bear token to authenticate with the FHIR server.
     :param schema_path: A path to the location of a YAML schema config file.
     :param output_path: A path to the directory where tables of the schema should be written.
     :param output_format: Specifies the file format of the tables to be generated.
@@ -176,11 +178,9 @@ def make_tables_from_schema(
     schema = schema[schema_name]
     output_path = output_path / schema_name
 
-    credential_manager = AzureFhirserverCredentialManager(fhir_url)
-
     for resource_type in schema.keys():
         make_resource_type_table(
-            resource_type, schema, output_path, output_format, credential_manager
+            resource_type, schema, output_path, output_format, fhir_url, access_token
         )
 
 

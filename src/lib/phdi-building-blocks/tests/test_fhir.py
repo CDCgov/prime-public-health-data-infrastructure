@@ -341,12 +341,17 @@ def test_log_fhir_server_error(patched_logger):
 
     log_fhir_server_error(401)
     patched_logger.error.assert_called_with(
-        "FHIR SERVER ERROR - Status Code 401: Failed to authenticate with the FHIR server."
+        "FHIR SERVER ERROR - Status Code 401: Failed to authenticate."
     )
 
     log_fhir_server_error(404)
     patched_logger.error.assert_called_with(
-        "FHIR SERVER ERROR - Status Code 404: FHIR server not found."
+        "FHIR SERVER ERROR - Status Code 404: Server or requested data not found."
+    )
+
+    log_fhir_server_error(410)
+    patched_logger.error.assert_called_with(
+        "FHIR SERVER ERROR - Status Code 410: Server has deleted this data."
     )
 
 

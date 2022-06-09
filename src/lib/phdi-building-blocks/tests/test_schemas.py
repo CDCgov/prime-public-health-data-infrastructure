@@ -1,4 +1,5 @@
 import json
+from os import access
 import yaml
 import pathlib
 from unittest import mock
@@ -8,7 +9,7 @@ from phdi_building_blocks.schemas import (
     apply_selection_criteria,
     apply_schema_to_resource,
     make_resource_type_table,
-    generate_schema,
+    make_tables_from_schema,
     write_schema_table,
 )
 
@@ -63,11 +64,9 @@ def test_make_resource_type_table_success(patch_query, patch_write):
     output_path.__truediv__ = (  # Redefine division operator to prevent failure.
         lambda x, y: x
     )
-
     output_format = "parquet"
-
-    credential_manager = mock.Mock()
-    credential_manager.fhir_url = "some_fhir_server_url"
+    fhir_url = "some_fhir_server_url"
+    access_token = "some_access_token"
 
     fhir_server_responses = json.load(
         open(
@@ -92,7 +91,8 @@ def test_make_resource_type_table_success(patch_query, patch_write):
         schema["my_table"],
         output_path,
         output_format,
-        credential_manager,
+        fhir_url,
+        access_token,
     )
 
     assert len(patch_write.call_args_list[0]) == 2
@@ -133,8 +133,9 @@ def test_make_resource_type_table_success(patch_query, patch_write):
     )
 
 
+@mock.patch("phdi_building_blocks.schemas.write_schema_table")
 @mock.patch("phdi_building_blocks.schemas.fhir_server_get")
-def test_make_resource_type_table_fail(patch_query):
+def test_make_resource_type_table_fail(patch_query, patch_write):
 
     resource_type = "some_resource_type"
 
@@ -147,8 +148,8 @@ def test_make_resource_type_table_fail(patch_query):
 
     output_format = "parquet"
 
-    credential_manager = mock.Mock()
-    credential_manager.fhir_url = "some_fhir_server_url"
+    fhir_url = "some_fhir_server_url"
+    access_token = "some_access_token"
 
     response = mock.Mock()
     response.status_code = 400
@@ -159,24 +160,25 @@ def test_make_resource_type_table_fail(patch_query):
         schema,
         output_path,
         output_format,
-        credential_manager,
+        fhir_url,
+        access_token,
     )
+
+    assert len(patch_write.call_args_list) == 0
 
 
 @mock.patch("phdi_building_blocks.schemas.make_resource_type_table")
-@mock.patch("phdi_building_blocks.schemas.AzureFhirserverCredentialManager")
 @mock.patch("phdi_building_blocks.schemas.load_schema")
-def test_generate_schema(
-    patched_load_schema, patched_cred_manager, patched_make_resource_type_table
-):
+def test_make_tables_from_schema(patched_load_schema, patched_make_resource_type_table):
 
-    fhir_url = "some_fhir_url"
     schema_path = mock.Mock()
     output_path = mock.Mock()
     output_path.__truediv__ = (  # Redefine division operator to prevent failure.
         lambda x, y: x
     )
     output_format = "parquet"
+    fhir_url = "some_fhir_url"
+    access_token = "some_access_token"
 
     schema = yaml.safe_load(
         open(pathlib.Path(__file__).parent / "assets" / "test_schema.yaml")
@@ -184,14 +186,17 @@ def test_generate_schema(
 
     patched_load_schema.return_value = schema
 
-    generate_schema(fhir_url, schema_path, output_path, output_format)
+    make_tables_from_schema(
+        schema_path, output_path, output_format, fhir_url, access_token
+    )
 
     patched_make_resource_type_table.assert_called_with(
         "Patient",
         schema["my_table"],
         output_path,
         output_format,
-        patched_cred_manager(fhir_url),
+        fhir_url,
+        access_token,
     )
 
 
