@@ -303,7 +303,7 @@ def fhir_server_get(url: str, access_token: str) -> requests.models.Response:
     Submit a GET request to a FHIR server given a url and access token for
     authentication.
 
-    :param url: URL specifying a get request on a FHIR server.
+    :param url: URL specifying a GET request on a FHIR server.
     :param access_token: A bearer token to authenticate with the FHIR server.
     """
 
