@@ -10,6 +10,7 @@ from phdi_building_blocks.schemas import (
     make_table,
     make_schema_tables,
     write_schema_table,
+    print_schema_summary,
 )
 
 
@@ -221,3 +222,26 @@ def test_write_schema_table_with_writer(patched_pa_table, patched_writer):
     table = patched_pa_table.from_pylist(data)
     writer.write_table.assert_called_with(table=table)
     assert len(patched_writer.call_args_list) == 0
+
+
+@mock.patch("phdi_building_blocks.schemas.pq.read_table")
+@mock.patch("phdi_building_blocks.schemas.pq.ParquetFile")
+@mock.patch("phdi_building_blocks.schemas.os.walk")
+def test_print_schema_summary(patched_os_walk, patched_ParquetFile, patched_reader):
+
+    patched_os_walk.return_value = [("some_path", None, ["filename.parquet"])]
+
+    schema_directory = mock.Mock()
+    display_head = False
+    print_schema_summary(schema_directory, display_head)
+    patched_ParquetFile.assert_called_with(
+        pathlib.Path("some_path") / "filename.parquet"
+    )
+    assert len(patched_reader.call_args_list) == 0
+
+    display_head = True
+    print_schema_summary(schema_directory, display_head)
+    patched_ParquetFile.assert_called_with(
+        pathlib.Path("some_path") / "filename.parquet"
+    )
+    patched_reader.assert_called_with(pathlib.Path("some_path") / "filename.parquet")
