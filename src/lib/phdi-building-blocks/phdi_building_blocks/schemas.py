@@ -9,10 +9,7 @@ import pyarrow.parquet as pq
 import fhirpathpy
 from pathlib import Path
 
-from phdi_building_blocks.fhir import (
-    AzureFhirserverCredentialManager,
-    fhir_server_get,
-)
+from phdi_building_blocks.fhir import fhir_server_get
 
 
 def load_schema(path: str) -> dict:
@@ -115,10 +112,11 @@ def make_table(
 
         query = f"/{resource_type}"
         url = fhir_url + query
-        response = fhir_server_get(url, access_token)
 
         writer = None
-        while response is not None:
+        next_page = True
+        while next_page:
+            response = fhir_server_get(url, access_token)
             if response.status_code != 200:
                 break
 
@@ -144,10 +142,9 @@ def make_table(
             for link in query_result.get("link"):
                 if link.get("relation") == "next":
                     url = link.get("url")
-                    response = fhir_server_get(url, access_token)
                     break
                 else:
-                    response = None
+                    next_page = False
 
         if writer is not None:
             writer.close()

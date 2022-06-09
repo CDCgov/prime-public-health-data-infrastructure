@@ -87,7 +87,6 @@ def test_make_table_success(patch_query, patch_write):
     patch_query.side_effect = [query_response_1, query_response_2]
 
     make_table(
-        resource_type,
         schema["my_table"],
         output_path,
         output_format,
@@ -156,7 +155,6 @@ def test_make_table_fail(patch_query, patch_write):
     patch_query.return_value = response
 
     make_table(
-        resource_type,
         schema,
         output_path,
         output_format,
@@ -167,9 +165,9 @@ def test_make_table_fail(patch_query, patch_write):
     assert len(patch_write.call_args_list) == 0
 
 
-@mock.patch("phdi_building_blocks.schemas.make_resource_type_table")
+@mock.patch("phdi_building_blocks.schemas.make_table")
 @mock.patch("phdi_building_blocks.schemas.load_schema")
-def test_make_tables_from_schema(patched_load_schema, patched_make_resource_type_table):
+def test_make_tables_from_schema(patched_load_schema, patched_make_table):
 
     schema_path = mock.Mock()
     output_path = mock.Mock()
@@ -186,12 +184,9 @@ def test_make_tables_from_schema(patched_load_schema, patched_make_resource_type
 
     patched_load_schema.return_value = schema
 
-    make_tables_from_schema(
-        schema_path, output_path, output_format, fhir_url, access_token
-    )
+    make_schema_tables(schema_path, output_path, output_format, fhir_url, access_token)
 
-    patched_make_resource_type_table.assert_called_with(
-        "Patient",
+    patched_make_table.assert_called_with(
         schema["my_table"],
         output_path,
         output_format,
