@@ -8,8 +8,8 @@ from phdi_building_blocks.schemas import (
     load_schema,
     apply_selection_criteria,
     apply_schema_to_resource,
-    make_resource_type_table,
-    make_tables_from_schema,
+    make_table,
+    make_schema_tables,
     write_schema_table,
 )
 
@@ -52,7 +52,7 @@ def test_apply_schema_to_resource():
 
 @mock.patch("phdi_building_blocks.schemas.write_schema_table")
 @mock.patch("phdi_building_blocks.schemas.fhir_server_get")
-def test_make_resource_type_table_success(patch_query, patch_write):
+def test_make_table_success(patch_query, patch_write):
 
     resource_type = "some_resource_type"
 
@@ -86,7 +86,7 @@ def test_make_resource_type_table_success(patch_query, patch_write):
 
     patch_query.side_effect = [query_response_1, query_response_2]
 
-    make_resource_type_table(
+    make_table(
         resource_type,
         schema["my_table"],
         output_path,
@@ -135,7 +135,7 @@ def test_make_resource_type_table_success(patch_query, patch_write):
 
 @mock.patch("phdi_building_blocks.schemas.write_schema_table")
 @mock.patch("phdi_building_blocks.schemas.fhir_server_get")
-def test_make_resource_type_table_fail(patch_query, patch_write):
+def test_make_table_fail(patch_query, patch_write):
 
     resource_type = "some_resource_type"
 
@@ -155,7 +155,7 @@ def test_make_resource_type_table_fail(patch_query, patch_write):
     response.status_code = 400
     patch_query.return_value = response
 
-    make_resource_type_table(
+    make_table(
         resource_type,
         schema,
         output_path,
