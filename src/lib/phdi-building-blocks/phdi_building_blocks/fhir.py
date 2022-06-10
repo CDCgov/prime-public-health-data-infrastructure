@@ -322,6 +322,11 @@ def log_fhir_server_error(status_code: int) -> None:
     if status_code == 401:
         logging.error("FHIR SERVER ERROR - Status Code 401: Failed to authenticate.")
 
+    elif status_code == 403:
+        logging.error(
+            "FHIR SERVER ERROR - Status Code 403: User does not have permission to make that request."  # noqa
+        )
+
     elif status_code == 404:
         logging.error(
             "FHIR SERVER ERROR - Status Code 404: Server or requested data not found."
@@ -329,8 +334,9 @@ def log_fhir_server_error(status_code: int) -> None:
 
     elif status_code == 410:
         logging.error(
-            "FHIR SERVER ERROR - Status Code 410: Server has deleted this data."
+            "FHIR SERVER ERROR - Status Code 410: Server has deleted this cached data."
         )
 
     elif str(status_code).startswith(("4", "5")):
-        logging.error(f"FHIR SERVER ERROR - Status code {status_code}")
+        error_message = f"FHIR SERVER ERROR - Status code {status_code}"
+        logging.error(error_message)

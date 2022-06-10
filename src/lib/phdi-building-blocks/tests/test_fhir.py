@@ -339,32 +339,18 @@ def test_log_fhir_server_error(patched_logger):
     log_fhir_server_error(200)
     assert ~patched_logger.error.called
 
-    log_fhir_server_error(401)
-    patched_logger.error.assert_called_with(
-        "FHIR SERVER ERROR - Status Code 401: Failed to authenticate."
-    )
+    error_status_codes = {
+        401: "FHIR SERVER ERROR - Status Code 401: Failed to authenticate.",
+        403: "FHIR SERVER ERROR - Status Code 403: User does not have permission to make that request.",  # noqa
+        404: "FHIR SERVER ERROR - Status Code 404: Server or requested data not found.",
+        410: "FHIR SERVER ERROR - Status Code 410: Server has deleted this cached data.",  # noqa
+        499: "FHIR SERVER ERROR - Status code 499",
+        599: "FHIR SERVER ERROR - Status code 599",
+    }
 
-    log_fhir_server_error(404)
-    patched_logger.error.assert_called_with(
-        "FHIR SERVER ERROR - Status Code 404: Server or requested data not found."
-    )
-
-    log_fhir_server_error(410)
-    patched_logger.error.assert_called_with(
-        "FHIR SERVER ERROR - Status Code 410: Server has deleted this data."
-    )
-
-    status_code = 499
-    log_fhir_server_error(status_code)
-    patched_logger.error.assert_called_with(
-        f"FHIR SERVER ERROR - Status code {status_code}"
-    )
-
-    status_code = 599
-    log_fhir_server_error(status_code)
-    patched_logger.error.assert_called_with(
-        f"FHIR SERVER ERROR - Status code {status_code}"
-    )
+    for status_code, error_message in error_status_codes.items():
+        log_fhir_server_error(status_code)
+        patched_logger.error.assert_called_with(error_message)
 
 
 @mock.patch("phdi_building_blocks.fhir.log_fhir_server_error")
