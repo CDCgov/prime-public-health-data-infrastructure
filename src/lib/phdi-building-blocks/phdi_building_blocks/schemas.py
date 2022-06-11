@@ -1,15 +1,18 @@
-import pathlib
-import os
-import yaml
+import fhirpathpy
 import json
-import random
-from typing import Literal, List, Union
+import logging
+import os
+import pathlib
 import pyarrow as pa
 import pyarrow.parquet as pq
-import fhirpathpy
-from pathlib import Path
+import random
+import urllib
+import yaml
 
-from phdi_building_blocks.fhir import fhir_server_get
+from pathlib import Path
+from typing import Literal, List, Union
+
+from phdi_building_blocks.fhir import AzureFhirserverCredentialManager, fhir_server_get
 
 
 def load_schema(path: str) -> dict:
@@ -77,7 +80,12 @@ def apply_schema_to_resource(resource: dict, schema: dict) -> dict:
         return data
     for field in resource_schema.keys():
         path = resource_schema[field]["fhir_path"]
-        value = fhirpathpy.evaluate(resource, path)
+
+        try:
+            value = fhirpathpy.evaluate(resource, path)
+        except Exception:
+            logging.exception(f"Error evalutating {field} path {path}")
+            return {}
 
         if len(value) == 0:
             data[resource_schema[field]["new_name"]] = ""
@@ -92,9 +100,10 @@ def apply_schema_to_resource(resource: dict, schema: dict) -> dict:
 def make_table(
     schema: dict,
     output_path: pathlib.Path,
+    search_parameters: dict,
     output_format: Literal["parquet"],
     fhir_url: str,
-    access_token: str,
+    cred_manager: str,
 ):
     """
     Given the schema for a single table, make the table.
@@ -103,7 +112,8 @@ def make_table(
     :param output_path: A path specifying where the table should be written.
     :param output_format: A string indicating the file format to be used.
     :param fhir_url: URL to a FHIR server.
-    :param access_token: Bear token to authenticate with the FHIR server.
+    :param cred_manager: Service used to get an access token used to make a
+    request.
     """
     output_path.mkdir(parents=True, exist_ok=True)
     for resource_type in schema:
@@ -111,12 +121,13 @@ def make_table(
         output_file_name = output_path / f"{resource_type}.{output_format}"
 
         query = f"/{resource_type}"
+        if search_parameters:
+            query += f"?{urllib.parse.urlencode(search_parameters)}"
         url = fhir_url + query
+        response = fhir_server_get(url, cred_manager)
 
         writer = None
-        next_page = True
-        while next_page:
-            response = fhir_server_get(url, access_token)
+        while response is not None:
             if response.status_code != 200:
                 break
 
@@ -128,9 +139,9 @@ def make_table(
             # values_from_resource is a dictionary of the form:
             # {field1:value1, field2:value2, ...}.
 
-            for resource in query_result["entry"]:
+            for entry in query_result["entry"]:
                 values_from_resource = apply_schema_to_resource(
-                    resource["resource"], schema
+                    entry["resource"], schema
                 )
                 if values_from_resource != {}:
                     data.append(values_from_resource)
@@ -142,9 +153,10 @@ def make_table(
             for link in query_result.get("link"):
                 if link.get("relation") == "next":
                     url = link.get("url")
+                    response = fhir_server_get(url, cred_manager)
                     break
                 else:
-                    next_page = False
+                    response = None
 
         if writer is not None:
             writer.close()
@@ -155,7 +167,7 @@ def make_schema_tables(
     base_output_path: pathlib.Path,
     output_format: Literal["parquet"],
     fhir_url: str,
-    access_token: str,
+    cred_manager: AzureFhirserverCredentialManager,
 ):
     """
     Given the url for a FHIR server, the location of a schema file, and and output
@@ -167,14 +179,22 @@ def make_schema_tables(
     be written.
     :param output_format: Specifies the file format of the tables to be generated.
     :param fhir_url: URL to a FHIR server.
-    :param access_token: Bear token to authenticate with the FHIR server.
+    :param cred_manager: Service used to get an access token used to make a
+    request.
     """
 
     schema = load_schema(schema_path)
 
     for table in schema.keys():
         output_path = base_output_path / table
-        make_table(schema[table], output_path, output_format, fhir_url, access_token)
+        make_table(
+            schema[table].get("Fields", {}),
+            schema[table].get("Search Parameters", {}),
+            output_path,
+            output_format,
+            fhir_url,
+            cred_manager,
+        )
 
 
 def write_schema_table(

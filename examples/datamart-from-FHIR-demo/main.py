@@ -1,3 +1,4 @@
+from phdi_building_blocks.fhir import AzureFhirserverCredentialManager
 from pathlib import Path
 from phdi_building_blocks.schemas import (
     make_schema_tables,
@@ -5,17 +6,26 @@ from phdi_building_blocks.schemas import (
     print_schema_summary,
 )
 
+
 # Set required parameters
-schema_path = "example_schema.yaml"  # Path to a schema config file.
-output_path = "example_schema"  # Path to directory where files will be written
-output_format = "parquet"  # File format of tables
-fhir_url = "your_fhir_url"  # The URL for a FHIR server
-access_token = "your_access_token"  # Access token for authentication with FHIR server.
+
+# Path to a schema config file. Included example used by default.
+schema_path = "demo_schema.yaml"
+
+# Path to directory where files will be written
+output_path = "demo_schema"
+
+# File format of tables
+output_format = "parquet"
+
+# The URL for a FHIR server
+fhir_url = "https://pitest-fhir.azurehealthcareapis.com"
+cred_manager = AzureFhirserverCredentialManager(fhir_url=fhir_url)
 
 # Make Schema
 schema_path = Path(schema_path)
 output_path = Path(output_path)
-make_schema_tables(schema_path, output_path, output_format, fhir_url, access_token)
+make_schema_tables(schema_path, output_path, output_format, fhir_url, cred_manager)
 
 # Display Schema Summary
 schema = load_schema(schema_path)

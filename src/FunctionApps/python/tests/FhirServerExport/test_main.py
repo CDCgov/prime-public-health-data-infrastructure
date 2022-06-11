@@ -15,9 +15,9 @@ ENVIRONMENT = {
 
 @mock.patch("FhirServerExport.fhir.download_from_export_response")
 @mock.patch("FhirServerExport.fhir.export_from_fhir_server")
-@mock.patch.object(AzureFhirserverCredentialManager, "get_access_token")
+@mock.patch.object(AzureFhirserverCredentialManager)
 @mock.patch.dict("os.environ", ENVIRONMENT)
-def test_main(mock_get_access_token, mock_export, mock_download):
+def test_main(mock_cred_manager, mock_export, mock_download):
     logging.basicConfig(level=logging.DEBUG)
     req = mock.Mock()
     req.params = {
@@ -28,7 +28,7 @@ def test_main(mock_get_access_token, mock_export, mock_download):
 
     mock_access_token = mock.Mock()
     mock_access_token.token = "some-token"
-    mock_get_access_token.return_value = mock_access_token
+    mock_cred_manager.get_access_token.return_value = mock_access_token
 
     export_return_value = {
         "output": [
@@ -62,7 +62,7 @@ def test_main(mock_get_access_token, mock_export, mock_download):
     main(req)
 
     mock_export.assert_called_with(
-        access_token="some-token",
+        cred_manager=mock_cred_manager,
         fhir_url="https://some-fhir-url",
         export_scope="",
         since="",

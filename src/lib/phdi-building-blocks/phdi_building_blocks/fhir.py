@@ -74,24 +74,29 @@ def get_fhirserver_cred_manager(fhir_url: str):
     return AzureFhirserverCredentialManager(fhir_url)
 
 
-def upload_bundle_to_fhir_server(bundle: dict, access_token: str, fhir_url: str):
+def upload_bundle_to_fhir_server(
+    bundle: dict, cred_manager: AzureFhirserverCredentialManager, fhir_url: str
+):
     """Import a FHIR resource to the FHIR server.
     The submissions may be Bundles or individual FHIR resources.
 
     :param dict bundle: FHIR bundle (type "batch") to post
-    :param str access_token: FHIR Server access token.
+    :param cred_manager: Service used to get an access token used to make a
+    request.
     :param str method: HTTP method to use (currently PUT or POST supported)
     """
-    retry_strategy = Retry(
+    access_token = cred_manager.get_access_token().token
+    retry_strategy = RetryWithAuthRefresh(
         total=3,
         status_forcelist=[429, 500, 502, 503, 504],
-        allowed_methods=["HEAD", "PUT", "POST", "OPTIONS"],
+        allowed_methods=["HEAD", "POST", "OPTIONS"],
+        cred_manager=cred_manager,
     )
     adapter = HTTPAdapter(max_retries=retry_strategy)
-    http = requests.Session()
-    http.mount("https://", adapter)
+    http_session = requests.Session()
+    http_session.mount("https://", adapter)
     try:
-        requests.post(
+        http_session.post(
             fhir_url,
             headers={
                 "Authorization": f"Bearer {access_token}",
@@ -106,7 +111,7 @@ def upload_bundle_to_fhir_server(bundle: dict, access_token: str, fhir_url: str)
 
 
 def export_from_fhir_server(
-    access_token: str,
+    cred_manager: AzureFhirserverCredentialManager,
     fhir_url: str,
     export_scope: str = "",
     since: str = "",
@@ -117,7 +122,8 @@ def export_from_fhir_server(
 ) -> dict:
     """Initiate a FHIR $export operation, and poll until it completes.
     If the export operation is in progress at the end of poll_timeout,
-    :param access_token: Access token string used to connect to FHIR server
+    :param cred_manager: Service used to get an access token used to make a
+    request.
     :param fhir_url: FHIR Server base URL
     :param export_scope: Either `Patient` or `Group/[id]` as specified in the FHIR spec
     (https://hl7.org/fhir/uv/bulkdata/export/index.html#bulk-data-kick-off-request)
@@ -132,6 +138,7 @@ def export_from_fhir_server(
     be generated.
     """
     logging.debug("Initiating export from FHIR server.")
+    access_token = cred_manager.get_access_token().token
     export_url = _compose_export_url(
         fhir_url=fhir_url,
         export_scope=export_scope,
@@ -140,7 +147,16 @@ def export_from_fhir_server(
         container=container,
     )
     logging.debug(f"Composed export URL: {export_url}")
-    response = requests.get(
+    retry_strategy = RetryWithAuthRefresh(
+        total=3,
+        status_forcelist=[429, 500, 502, 503, 504],
+        allowed_methods=["HEAD", "GET", "OPTIONS"],
+        cred_manager=cred_manager,
+    )
+    adapter = HTTPAdapter(max_retries=retry_strategy)
+    http_session = requests.Session()
+    http_session.mount("https://", adapter)
+    response = http_session.get(
         export_url,
         headers={
             "Authorization": f"Bearer {access_token}",
@@ -203,7 +219,7 @@ def _compose_export_url(
 
 
 def __export_from_fhir_server_poll_call(
-    poll_url: str, access_token: str
+    poll_url: str, cred_manager: AzureFhirserverCredentialManager
 ) -> Union[requests.Response, None]:
     """Poll to see if the export files are ready.  If export is still in progress,
     and we should return null so polling continues.  If the response is 200, then
@@ -211,7 +227,17 @@ def __export_from_fhir_server_poll_call(
     either indicates an error or unexpected condition.  In this case raise an error.
     """
     logging.debug(f"Polling endpoint {poll_url}")
-    response = requests.get(
+    access_token = cred_manager.get_access_token().token
+    retry_strategy = RetryWithAuthRefresh(
+        total=3,
+        status_forcelist=[429, 500, 502, 503, 504],
+        allowed_methods=["HEAD", "GET", "OPTIONS"],
+        cred_manager=cred_manager,
+    )
+    adapter = HTTPAdapter(max_retries=retry_strategy)
+    http_session = requests.Session()
+    http_session.mount("https://", adapter)
+    response = http_session.get(
         poll_url,
         headers={
             "Authorization": f"Bearer {access_token}",
@@ -229,12 +255,16 @@ def __export_from_fhir_server_poll_call(
 
 
 def export_from_fhir_server_poll(
-    poll_url: str, access_token: str, poll_step: float = 30, poll_timeout: float = 300
+    poll_url: str,
+    cred_manager: AzureFhirserverCredentialManager,
+    poll_step: float = 30,
+    poll_timeout: float = 300,
 ) -> requests.Response:
     """Poll for export file avialability after an export has been initiated.
 
     :param poll_url: URL to poll for export information
-    :param access_token: Bearer token used for authentication
+    :param cred_manager: Service used to get an access token used to make a
+    request.
     :param poll_step: the number of seconds to wait between poll requests, waiting
     for export files to be generated. defaults to 30
     :param poll_timeout: the maximum number of seconds to wait for export files to
@@ -246,7 +276,7 @@ def export_from_fhir_server_poll(
     """
     response = polling.poll(
         target=__export_from_fhir_server_poll_call,
-        args=[poll_url, access_token],
+        args=[poll_url, cred_manager],
         step=poll_step,
         timeout=poll_timeout,
     )
@@ -298,17 +328,29 @@ def _download_export_blob(blob_url: str, encoding: str = "utf-8") -> TextIO:
     return text_buffer
 
 
-def fhir_server_get(url: str, access_token: str) -> requests.models.Response:
+def fhir_server_get(
+    url: str, cred_manager: AzureFhirserverCredentialManager
+) -> requests.models.Response:
     """
     Submit a GET request to a FHIR server given a url and access token for
     authentication.
 
     :param url: URL specifying a GET request on a FHIR server.
-    :param access_token: A bearer token to authenticate with the FHIR server.
+    :param cred_manager: Service used to get an access token used to make a
+    request.
     """
-
+    access_token = cred_manager.get_access_token().token
     header = {"Authorization": f"Bearer {access_token}"}
-    response = requests.get(url=url, headers=header)
+    retry_strategy = RetryWithAuthRefresh(
+        total=3,
+        status_forcelist=[429, 500, 502, 503, 504],
+        allowed_methods=["HEAD", "GET", "OPTIONS"],
+        cred_manager=cred_manager,
+    )
+    adapter = HTTPAdapter(max_retries=retry_strategy)
+    http_session = requests.Session()
+    http_session.mount("https://", adapter)
+    response = http_session.get(url=url, headers=header)
     log_fhir_server_error(response.status_code)
 
     return response
@@ -340,3 +382,19 @@ def log_fhir_server_error(status_code: int) -> None:
     elif str(status_code).startswith(("4", "5")):
         error_message = f"FHIR SERVER ERROR - Status code {status_code}"
         logging.error(error_message)
+
+
+class RetryWithAuthRefresh(Retry):
+    def __init__(self, *args, **kwargs):
+        self._cred_manager = kwargs.pop("cred_manager", None)
+        super(RetryWithAuthRefresh, self).__init__(*args, **kwargs)
+
+    def new(self, **kw):
+        kw["cred_manager"] = self._cred_manager
+        return super(RetryWithAuthRefresh, self).new(**kw)
+
+    def increment(self, method, url, *args, **kwargs):
+        if self._cred_manager and self.response.status_code == 401:
+            access_token = self._cred_manager.get_access_token().token
+            self.response.request.headers["Authorization"] = f"Bearer {access_token}"
+        return super(RetryWithAuthRefresh, self).increment(method, url, *args, **kwargs)

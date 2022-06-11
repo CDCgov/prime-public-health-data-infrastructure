@@ -2,6 +2,12 @@ import logging
 import re
 import requests
 import hl7
+
+from phdi_building_blocks.fhir import (
+    AzureFhirserverCredentialManager,
+    RetryWithAuthRefresh,
+)
+from requests.adapters import HTTPAdapter
 from typing import List, Dict
 
 
@@ -235,7 +241,7 @@ def convert_message_to_fhir(
     input_data_type: str,
     root_template: str,
     template_collection: str,
-    access_token: str,
+    cred_manager: AzureFhirserverCredentialManager,
     fhir_url: str,
 ) -> dict:
     """
@@ -259,7 +265,8 @@ def convert_message_to_fhir(
     :param template_collection Further specification of which template to use. More
     information can be found here:
     https://docs.microsoft.com/en-us/azure/healthcare-apis/azure-api-for-fhir/convert-data
-    :param access_token A Bearer token used to authenticate with the FHIR server
+    :param cred_manager: Service used to get an access token used to make a
+    request.
     :param fhir_url A URL that points to the location of the FHIR server
     """
     if input_data_type == "Hl7v2":
@@ -275,7 +282,17 @@ def convert_message_to_fhir(
             {"name": "rootTemplate", "valueString": root_template},
         ],
     }
-    response = requests.post(
+    access_token = cred_manager.get_access_token().token
+    retry_strategy = RetryWithAuthRefresh(
+        total=3,
+        status_forcelist=[429, 500, 502, 503, 504],
+        allowed_methods=["HEAD", "POST", "OPTIONS"],
+        cred_manager=cred_manager,
+    )
+    adapter = HTTPAdapter(max_retries=retry_strategy)
+    http_session = requests.Session()
+    http_session.mount("https://", adapter)
+    response = http_session.post(
         url=url, json=data, headers={"Authorization": f"Bearer {access_token}"}
     )
 
