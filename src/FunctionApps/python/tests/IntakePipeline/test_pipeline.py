@@ -62,7 +62,14 @@ def test_pipeline_valid_message(
     patched_geocoder = mock.Mock()
     patched_get_geocoder.return_value = patched_geocoder
 
-    run_pipeline("MSH|Hello World", MESSAGE_MAPPINGS, "some-fhir-url", "some-token")
+    patched_access_token = mock.Mock()
+    patched_access_token.token = "some-token"
+    patched_cred_manager = mock.Mock()
+    patched_cred_manager.get_access_token.return_value = patched_access_token
+
+    run_pipeline(
+        "MSH|Hello World", MESSAGE_MAPPINGS, "some-fhir-url", patched_cred_manager
+    )
 
     patched_get_geocoder.assert_called_with("smarty-auth-id", "smarty-auth-token")
     patched_converter.assert_called_with(
@@ -71,7 +78,7 @@ def test_pipeline_valid_message(
         input_data_type=MESSAGE_MAPPINGS["input_data_type"],
         root_template=MESSAGE_MAPPINGS["root_template"],
         template_collection=MESSAGE_MAPPINGS["template_collection"],
-        access_token="some-token",
+        cred_manager=patched_cred_manager,
         fhir_url="some-fhir-url",
     )
 

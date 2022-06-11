@@ -1,2 +1,2 @@
-*.parquet
+**/*.parquet
 venv/

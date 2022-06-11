@@ -19,11 +19,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     cred_manager = fhir.AzureFhirserverCredentialManager(fhir_url=fhir_url)
 
-    access_token = cred_manager.get_access_token()
-
     try:
         export_response = fhir.export_from_fhir_server(
-            access_token=access_token.token,
+            cred_manager=cred_manager,
             fhir_url=fhir_url,
             export_scope=req.params.get("export_scope", ""),
             since=req.params.get("since", ""),

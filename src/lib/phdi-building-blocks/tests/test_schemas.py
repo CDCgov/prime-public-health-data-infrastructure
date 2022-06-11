@@ -64,7 +64,11 @@ def test_make_table_success(patch_query, patch_write):
     )
     output_format = "parquet"
     fhir_url = "some_fhir_server_url"
-    access_token = "some_access_token"
+    mock_access_token_value = "some-token"
+    mock_access_token = mock.Mock()
+    mock_access_token.token = mock_access_token_value
+    mock_cred_manager = mock.Mock()
+    mock_cred_manager.get_access_token.return_value = mock_access_token
 
     fhir_server_responses = json.load(
         open(
@@ -89,7 +93,7 @@ def test_make_table_success(patch_query, patch_write):
         output_path,
         output_format,
         fhir_url,
-        access_token,
+        mock_cred_manager,
     )
 
     assert len(patch_write.call_args_list[0]) == 2
@@ -144,7 +148,11 @@ def test_make_table_fail(patch_query, patch_write):
     output_format = "parquet"
 
     fhir_url = "some_fhir_server_url"
-    access_token = "some_access_token"
+    mock_access_token_value = "some-token"
+    mock_access_token = mock.Mock()
+    mock_access_token.token = mock_access_token_value
+    mock_cred_manager = mock.Mock()
+    mock_cred_manager.get_access_token.return_value = mock_access_token
 
     response = mock.Mock()
     response.status_code = 400
@@ -155,7 +163,7 @@ def test_make_table_fail(patch_query, patch_write):
         output_path,
         output_format,
         fhir_url,
-        access_token,
+        mock_cred_manager,
     )
     patch_write.assert_not_called()
 
@@ -171,7 +179,11 @@ def test_make_tables_from_schema(patched_load_schema, patched_make_table):
     )
     output_format = "parquet"
     fhir_url = "some_fhir_url"
-    access_token = "some_access_token"
+    mock_access_token_value = "some-token"
+    mock_access_token = mock.Mock()
+    mock_access_token.token = mock_access_token_value
+    mock_cred_manager = mock.Mock()
+    mock_cred_manager.get_access_token.return_value = mock_access_token
 
     schema = yaml.safe_load(
         open(pathlib.Path(__file__).parent / "assets" / "test_schema.yaml")
@@ -179,14 +191,16 @@ def test_make_tables_from_schema(patched_load_schema, patched_make_table):
 
     patched_load_schema.return_value = schema
 
-    make_schema_tables(schema_path, output_path, output_format, fhir_url, access_token)
+    make_schema_tables(
+        schema_path, output_path, output_format, fhir_url, mock_cred_manager
+    )
 
     patched_make_table.assert_called_with(
         schema["my_table"],
         output_path,
         output_format,
         fhir_url,
-        access_token,
+        mock_cred_manager,
     )
 
 
