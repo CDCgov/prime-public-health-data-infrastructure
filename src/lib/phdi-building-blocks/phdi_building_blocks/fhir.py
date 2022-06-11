@@ -395,8 +395,10 @@ class RetryWithAuthRefresh(Retry):
         kw["cred_manager"] = self._cred_manager
         return super(RetryWithAuthRefresh, self).new(**kw)
 
-    def increment(self, method, url, *args, **kwargs):
-        if self._cred_manager and self.response.status_code == 401:
+    def increment(self, method, url, response=None, *args, **kwargs):
+        if response and response.status_code == 401 and self._cred_manager:
             access_token = self._cred_manager.get_access_token().token
-            self.response.request.headers["Authorization"] = f"Bearer {access_token}"
-        return super(RetryWithAuthRefresh, self).increment(method, url, *args, **kwargs)
+            response.request.headers["Authorization"] = f"Bearer {access_token}"
+        return super(RetryWithAuthRefresh, self).increment(
+            method, url, response, *args, **kwargs
+        )
