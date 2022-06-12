@@ -88,7 +88,7 @@ def upload_bundle_to_fhir_server(
     access_token = cred_manager.get_access_token().token
     retry_strategy = RetryWithAuthRefresh(
         total=3,
-        status_forcelist=[429, 500, 502, 503, 504],
+        status_forcelist=[401, 429, 500, 502, 503, 504],
         allowed_methods=["HEAD", "POST", "OPTIONS"],
         cred_manager=cred_manager,
     )
@@ -149,7 +149,7 @@ def export_from_fhir_server(
     logging.debug(f"Composed export URL: {export_url}")
     retry_strategy = RetryWithAuthRefresh(
         total=3,
-        status_forcelist=[429, 500, 502, 503, 504],
+        status_forcelist=[401, 429, 500, 502, 503, 504],
         allowed_methods=["HEAD", "GET", "OPTIONS"],
         cred_manager=cred_manager,
     )
@@ -170,7 +170,7 @@ def export_from_fhir_server(
 
         poll_response = export_from_fhir_server_poll(
             poll_url=response.headers.get("Content-Location"),
-            access_token=access_token,
+            cred_manager=cred_manager,
             poll_step=poll_step,
             poll_timeout=poll_timeout,
         )
@@ -230,7 +230,7 @@ def __export_from_fhir_server_poll_call(
     access_token = cred_manager.get_access_token().token
     retry_strategy = RetryWithAuthRefresh(
         total=3,
-        status_forcelist=[429, 500, 502, 503, 504],
+        status_forcelist=[401, 429, 500, 502, 503, 504],
         allowed_methods=["HEAD", "GET", "OPTIONS"],
         cred_manager=cred_manager,
     )
@@ -343,7 +343,7 @@ def fhir_server_get(
     header = {"Authorization": f"Bearer {access_token}"}
     retry_strategy = RetryWithAuthRefresh(
         total=3,
-        status_forcelist=[429, 500, 502, 503, 504],
+        status_forcelist=[401, 429, 500, 502, 503, 504],
         allowed_methods=["HEAD", "GET", "OPTIONS"],
         cred_manager=cred_manager,
     )

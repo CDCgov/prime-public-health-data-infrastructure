@@ -136,13 +136,21 @@ def test_convert_batch_messages_to_list():
     assert list3[0].startswith("MSH|")
 
 
-@mock.patch("requests.post")
-def test_convert_message_to_fhir_success(mock_fhir_post):
-    mock_fhir_post.return_value = mock.Mock(
+@mock.patch("requests.Session")
+def test_convert_message_to_fhir_success(mock_requests_session):
+
+    mock_requests_session_instance = mock_requests_session.return_value
+
+    mock_requests_session_instance.post.return_value = mock.Mock(
         status_code=200,
         json=lambda: {"resourceType": "Bundle", "entry": [{"hello": "world"}]},
     )
 
+    mock_access_token_value = "some-token"
+    mock_access_token = mock.Mock()
+    mock_access_token.token = mock_access_token_value
+    mock_cred_manager = mock.Mock()
+    mock_cred_manager.get_access_token.return_value = mock_access_token
     message = "MSH|blah|foo|test\nPID|some^text|blah\nOBX|foo||||bar^baz&foobar\n"
     response = convert_message_to_fhir(
         message,
@@ -150,11 +158,11 @@ def test_convert_message_to_fhir_success(mock_fhir_post):
         "Hl7v2",
         "VXU_V04",
         "microsofthealth/fhirconverter:default",
-        "some-token",
+        mock_cred_manager,
         "some-fhir-url",
     )
 
-    mock_fhir_post.assert_called_with(
+    mock_requests_session_instance.post.assert_called_with(
         url="some-fhir-url/$convert-data",
         json={
             "resourceType": "Parameters",
@@ -168,15 +176,23 @@ def test_convert_message_to_fhir_success(mock_fhir_post):
                 {"name": "rootTemplate", "valueString": "VXU_V04"},
             ],
         },
-        headers={"Authorization": "Bearer some-token"},
+        headers={"Authorization": f"Bearer {mock_access_token_value}"},
     )
 
     assert response == {"resourceType": "Bundle", "entry": [{"hello": "world"}]}
 
 
-@mock.patch("requests.post")
-def test_convert_message_to_fhir_failure(mock_fhir_post):
-    mock_fhir_post.return_value = mock.Mock(
+@mock.patch("requests.Session")
+def test_convert_message_to_fhir_failure(mock_requests_session):
+
+    mock_requests_session_instance = mock_requests_session.return_value
+
+    mock_access_token_value = "some-token"
+    mock_access_token = mock.Mock()
+    mock_access_token.token = mock_access_token_value
+    mock_cred_manager = mock.Mock()
+    mock_cred_manager.get_access_token.return_value = mock_access_token
+    mock_requests_session_instance.post.return_value = mock.Mock(
         status_code=400,
         text='{ "resourceType": "Bundle", "entry": [{"hello": "world"}] }',
     )
@@ -188,11 +204,11 @@ def test_convert_message_to_fhir_failure(mock_fhir_post):
         "Hl7v2",
         "VXU_V04",
         "microsofthealth/fhirconverter:default",
-        "some-token",
+        mock_cred_manager,
         "some-fhir-url",
     )
 
-    mock_fhir_post.assert_called_with(
+    mock_requests_session_instance.post.assert_called_with(
         url="some-fhir-url/$convert-data",
         json={
             "resourceType": "Parameters",
@@ -206,7 +222,7 @@ def test_convert_message_to_fhir_failure(mock_fhir_post):
                 {"name": "rootTemplate", "valueString": "VXU_V04"},
             ],
         },
-        headers={"Authorization": "Bearer some-token"},
+        headers={"Authorization": f"Bearer {mock_access_token_value}"},
     )
 
     assert response == {
@@ -216,14 +232,21 @@ def test_convert_message_to_fhir_failure(mock_fhir_post):
     }
 
 
-@mock.patch("requests.post")
+@mock.patch("requests.Session")
 @mock.patch("logging.error")
-def test_log_fhir_operationoutcome(mock_log, mock_fhir_post):
-    mock_fhir_post.return_value = mock.Mock(
+def test_log_fhir_operationoutcome(mock_log, mock_requests_session):
+    mock_requests_session_instance = mock_requests_session.return_value
+
+    mock_requests_session_instance.post.return_value = mock.Mock(
         status_code=400,
         text='{ "resourceType": "OperationOutcome", "diagnostics": "some-error" }',
     )
 
+    mock_access_token_value = "some-token"
+    mock_access_token = mock.Mock()
+    mock_access_token.token = mock_access_token_value
+    mock_cred_manager = mock.Mock()
+    mock_cred_manager.get_access_token.return_value = mock_access_token
     message = "MSH|blah|foo|test\nPID|some^text|blah\nOBX|foo||||bar^baz&foobar\n"
 
     response = convert_message_to_fhir(
@@ -232,11 +255,11 @@ def test_log_fhir_operationoutcome(mock_log, mock_fhir_post):
         "Hl7v2",
         "VXU_V04",
         "microsofthealth/fhirconverter:default",
-        "some-token",
+        mock_cred_manager,
         "some-fhir-url",
     )
 
-    mock_fhir_post.assert_called_with(
+    mock_requests_session_instance.post.assert_called_with(
         url="some-fhir-url/$convert-data",
         json={
             "resourceType": "Parameters",
@@ -250,7 +273,7 @@ def test_log_fhir_operationoutcome(mock_log, mock_fhir_post):
                 {"name": "rootTemplate", "valueString": "VXU_V04"},
             ],
         },
-        headers={"Authorization": "Bearer some-token"},
+        headers={"Authorization": f"Bearer {mock_access_token_value}"},
     )
 
     assert response == {
@@ -260,11 +283,19 @@ def test_log_fhir_operationoutcome(mock_log, mock_fhir_post):
     }
 
 
-@mock.patch("requests.post")
+@mock.patch("requests.Session")
 @mock.patch("logging.error")
-def test_log_generic_error(mock_log, mock_fhir_post):
-    mock_fhir_post.return_value = mock.Mock(status_code=400, text="some-error")
+def test_log_generic_error(mock_log, mock_requests_session):
+    mock_requests_session_instance = mock_requests_session.return_value
+    mock_requests_session_instance.post.return_value = mock.Mock(
+        status_code=400, text="some-error"
+    )
 
+    mock_access_token_value = "some-token"
+    mock_access_token = mock.Mock()
+    mock_access_token.token = mock_access_token_value
+    mock_cred_manager = mock.Mock()
+    mock_cred_manager.get_access_token.return_value = mock_access_token
     message = "MSH|blah|foo|test\nPID|some^text|blah\nOBX|foo||||bar^baz&foobar\n"
     convert_message_to_fhir(
         message,
@@ -272,11 +303,11 @@ def test_log_generic_error(mock_log, mock_fhir_post):
         "Hl7v2",
         "VXU_V04",
         "microsofthealth/fhirconverter:default",
-        "some-token",
+        mock_cred_manager,
         "some-fhir-url",
     )
 
-    mock_fhir_post.assert_called_with(
+    mock_requests_session_instance.post.assert_called_with(
         url="some-fhir-url/$convert-data",
         json={
             "resourceType": "Parameters",
@@ -290,7 +321,7 @@ def test_log_generic_error(mock_log, mock_fhir_post):
                 {"name": "rootTemplate", "valueString": "VXU_V04"},
             ],
         },
-        headers={"Authorization": "Bearer some-token"},
+        headers={"Authorization": f"Bearer {mock_access_token_value}"},
     )
 
     mock_log.assert_called_with(
@@ -298,11 +329,20 @@ def test_log_generic_error(mock_log, mock_fhir_post):
     )
 
 
-@mock.patch("requests.post")
+@mock.patch("requests.Session")
 @mock.patch("logging.error")
-def test_generic_error(mock_log, mock_fhir_post):
-    mock_fhir_post.return_value = mock.Mock(status_code=400, text="some-error")
+def test_generic_error(mock_log, mock_requests_session):
+    mock_requests_session_instance = mock_requests_session.return_value
 
+    mock_requests_session_instance.post.return_value = mock.Mock(
+        status_code=400, text="some-error"
+    )
+
+    mock_access_token_value = "some-token"
+    mock_access_token = mock.Mock()
+    mock_access_token.token = mock_access_token_value
+    mock_cred_manager = mock.Mock()
+    mock_cred_manager.get_access_token.return_value = mock_access_token
     message = "MSH|blah|foo|test\nPID|some^text|blah\nOBX|foo||||bar^baz&foobar\n"
 
     response = convert_message_to_fhir(
@@ -311,11 +351,11 @@ def test_generic_error(mock_log, mock_fhir_post):
         "Hl7v2",
         "VXU_V04",
         "microsofthealth/fhirconverter:default",
-        "some-token",
+        mock_cred_manager,
         "some-fhir-url",
     )
 
-    mock_fhir_post.assert_called_with(
+    mock_requests_session_instance.post.assert_called_with(
         url="some-fhir-url/$convert-data",
         json={
             "resourceType": "Parameters",
@@ -329,19 +369,26 @@ def test_generic_error(mock_log, mock_fhir_post):
                 {"name": "rootTemplate", "valueString": "VXU_V04"},
             ],
         },
-        headers={"Authorization": "Bearer some-token"},
+        headers={"Authorization": f"Bearer {mock_access_token_value}"},
     )
 
     assert response == {"http_status_code": 400, "response_content": "some-error"}
 
 
-@mock.patch("requests.post")
+@mock.patch("requests.Session")
 @mock.patch("logging.error")
-def test_error_with_special_chars(mock_log, mock_fhir_post):
-    mock_fhir_post.return_value = mock.Mock(
+def test_error_with_special_chars(mock_log, mock_requests_session):
+    mock_requests_session_instance = mock_requests_session.return_value
+
+    mock_requests_session_instance.post.return_value = mock.Mock(
         status_code=400, text="some-error with \" special ' characters \n"
     )
 
+    mock_access_token_value = "some-token"
+    mock_access_token = mock.Mock()
+    mock_access_token.token = mock_access_token_value
+    mock_cred_manager = mock.Mock()
+    mock_cred_manager.get_access_token.return_value = mock_access_token
     message = "MSH|blah|foo|test\nPID|some^text|blah\nOBX|foo||||bar^baz&foobar\n"
 
     response = convert_message_to_fhir(
@@ -350,11 +397,11 @@ def test_error_with_special_chars(mock_log, mock_fhir_post):
         "Hl7v2",
         "VXU_V04",
         "microsofthealth/fhirconverter:default",
-        "some-token",
+        mock_cred_manager,
         "some-fhir-url",
     )
 
-    mock_fhir_post.assert_called_with(
+    mock_requests_session_instance.post.assert_called_with(
         url="some-fhir-url/$convert-data",
         json={
             "resourceType": "Parameters",
@@ -368,7 +415,7 @@ def test_error_with_special_chars(mock_log, mock_fhir_post):
                 {"name": "rootTemplate", "valueString": "VXU_V04"},
             ],
         },
-        headers={"Authorization": "Bearer some-token"},
+        headers={"Authorization": f"Bearer {mock_access_token_value}"},
     )
 
     assert response == {

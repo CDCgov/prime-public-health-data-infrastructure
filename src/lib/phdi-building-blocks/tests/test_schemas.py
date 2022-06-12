@@ -91,6 +91,7 @@ def test_make_table_success(patch_query, patch_write):
     make_table(
         schema["my_table"],
         output_path,
+        {},
         output_format,
         fhir_url,
         mock_cred_manager,
@@ -161,6 +162,7 @@ def test_make_table_fail(patch_query, patch_write):
     make_table(
         schema,
         output_path,
+        {},
         output_format,
         fhir_url,
         mock_cred_manager,
@@ -190,6 +192,8 @@ def test_make_tables_from_schema(patched_load_schema, patched_make_table):
         open(pathlib.Path(__file__).parent / "assets" / "test_schema.yaml")
     )
 
+    schema_path
+
     patched_load_schema.return_value = schema
 
     make_schema_tables(
@@ -199,6 +203,7 @@ def test_make_tables_from_schema(patched_load_schema, patched_make_table):
     patched_make_table.assert_called_with(
         schema["my_table"],
         output_path,
+        {},
         output_format,
         fhir_url,
         mock_cred_manager,
