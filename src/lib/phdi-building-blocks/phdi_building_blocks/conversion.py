@@ -285,7 +285,7 @@ def convert_message_to_fhir(
     access_token = cred_manager.get_access_token().token
     retry_strategy = RetryWithAuthRefresh(
         total=3,
-        status_forcelist=[429, 500, 502, 503, 504],
+        status_forcelist=[401, 429, 500, 502, 503, 504],
         allowed_methods=["HEAD", "POST", "OPTIONS"],
         cred_manager=cred_manager,
     )
