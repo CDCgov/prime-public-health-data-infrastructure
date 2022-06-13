@@ -157,8 +157,7 @@ def test_make_table_fail(patch_query, patch_write):
         fhir_url,
         access_token,
     )
-
-    assert len(patch_write.call_args_list) == 0
+    patch_write.assert_not_called()
 
 
 @mock.patch("phdi_building_blocks.schemas.make_table")

@@ -21,8 +21,10 @@ def generate_filename(blob_name: str, message_index: int) -> str:
     return f"{fname}-{message_index}"
 
 
+"""Manager for handling Azure credentials for access to the FHIR server"""
+
+
 class AzureFhirserverCredentialManager:
-    """Manager for handling Azure credentials for access to the FHIR server"""
 
     # TODO: Generalize this class to decouple from Azure
     def __init__(self, fhir_url):
