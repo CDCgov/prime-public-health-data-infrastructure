@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import fhirpathpy
 import json
 import logging
@@ -13,6 +14,20 @@ from pathlib import Path
 from typing import Literal, List, Union
 
 from phdi_building_blocks.fhir import AzureFhirserverCredentialManager, fhir_server_get
+=======
+import pathlib
+import os
+import yaml
+import json
+import random
+from typing import Literal, List, Union
+import pyarrow as pa
+import pyarrow.parquet as pq
+import fhirpathpy
+from pathlib import Path
+
+from phdi_building_blocks.fhir import fhir_server_get
+>>>>>>> 57cfa7c (Dan/initial fhir to parquet (#129))
 
 
 def load_schema(path: str) -> dict:
@@ -80,12 +95,16 @@ def apply_schema_to_resource(resource: dict, schema: dict) -> dict:
         return data
     for field in resource_schema.keys():
         path = resource_schema[field]["fhir_path"]
+<<<<<<< HEAD
 
         try:
             value = fhirpathpy.evaluate(resource, path)
         except Exception:
             logging.exception(f"Error evalutating {field} path {path}")
             return {}
+=======
+        value = fhirpathpy.evaluate(resource, path)
+>>>>>>> 57cfa7c (Dan/initial fhir to parquet (#129))
 
         if len(value) == 0:
             data[resource_schema[field]["new_name"]] = ""
@@ -100,10 +119,16 @@ def apply_schema_to_resource(resource: dict, schema: dict) -> dict:
 def make_table(
     schema: dict,
     output_path: pathlib.Path,
+<<<<<<< HEAD
     search_parameters: dict,
     output_format: Literal["parquet"],
     fhir_url: str,
     cred_manager: str,
+=======
+    output_format: Literal["parquet"],
+    fhir_url: str,
+    access_token: str,
+>>>>>>> 57cfa7c (Dan/initial fhir to parquet (#129))
 ):
     """
     Given the schema for a single table, make the table.
@@ -112,8 +137,12 @@ def make_table(
     :param output_path: A path specifying where the table should be written.
     :param output_format: A string indicating the file format to be used.
     :param fhir_url: URL to a FHIR server.
+<<<<<<< HEAD
     :param cred_manager: Service used to get an access token used to make a
     request.
+=======
+    :param access_token: Bear token to authenticate with the FHIR server.
+>>>>>>> 57cfa7c (Dan/initial fhir to parquet (#129))
     """
     output_path.mkdir(parents=True, exist_ok=True)
     for resource_type in schema:
@@ -121,6 +150,7 @@ def make_table(
         output_file_name = output_path / f"{resource_type}.{output_format}"
 
         query = f"/{resource_type}"
+<<<<<<< HEAD
         if search_parameters:
             query += f"?{urllib.parse.urlencode(search_parameters)}"
         url = fhir_url + query
@@ -128,6 +158,14 @@ def make_table(
 
         writer = None
         while response is not None:
+=======
+        url = fhir_url + query
+
+        writer = None
+        next_page = True
+        while next_page:
+            response = fhir_server_get(url, access_token)
+>>>>>>> 57cfa7c (Dan/initial fhir to parquet (#129))
             if response.status_code != 200:
                 break
 
@@ -139,9 +177,15 @@ def make_table(
             # values_from_resource is a dictionary of the form:
             # {field1:value1, field2:value2, ...}.
 
+<<<<<<< HEAD
             for entry in query_result["entry"]:
                 values_from_resource = apply_schema_to_resource(
                     entry["resource"], schema
+=======
+            for resource in query_result["entry"]:
+                values_from_resource = apply_schema_to_resource(
+                    resource["resource"], schema
+>>>>>>> 57cfa7c (Dan/initial fhir to parquet (#129))
                 )
                 if values_from_resource != {}:
                     data.append(values_from_resource)
@@ -153,10 +197,16 @@ def make_table(
             for link in query_result.get("link"):
                 if link.get("relation") == "next":
                     url = link.get("url")
+<<<<<<< HEAD
                     response = fhir_server_get(url, cred_manager)
                     break
                 else:
                     response = None
+=======
+                    break
+                else:
+                    next_page = False
+>>>>>>> 57cfa7c (Dan/initial fhir to parquet (#129))
 
         if writer is not None:
             writer.close()
@@ -167,7 +217,11 @@ def make_schema_tables(
     base_output_path: pathlib.Path,
     output_format: Literal["parquet"],
     fhir_url: str,
+<<<<<<< HEAD
     cred_manager: AzureFhirserverCredentialManager,
+=======
+    access_token: str,
+>>>>>>> 57cfa7c (Dan/initial fhir to parquet (#129))
 ):
     """
     Given the url for a FHIR server, the location of a schema file, and and output
@@ -179,14 +233,19 @@ def make_schema_tables(
     be written.
     :param output_format: Specifies the file format of the tables to be generated.
     :param fhir_url: URL to a FHIR server.
+<<<<<<< HEAD
     :param cred_manager: Service used to get an access token used to make a
     request.
+=======
+    :param access_token: Bear token to authenticate with the FHIR server.
+>>>>>>> 57cfa7c (Dan/initial fhir to parquet (#129))
     """
 
     schema = load_schema(schema_path)
 
     for table in schema.keys():
         output_path = base_output_path / table
+<<<<<<< HEAD
         make_table(
             schema[table].get("Fields", {}),
             schema[table].get("Search Parameters", {}),
@@ -195,6 +254,9 @@ def make_schema_tables(
             fhir_url,
             cred_manager,
         )
+=======
+        make_table(schema[table], output_path, output_format, fhir_url, access_token)
+>>>>>>> 57cfa7c (Dan/initial fhir to parquet (#129))
 
 
 def write_schema_table(

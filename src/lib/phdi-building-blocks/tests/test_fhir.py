@@ -383,6 +383,7 @@ def test_log_fhir_server_error(patched_logger):
 
 
 @mock.patch("phdi_building_blocks.fhir.log_fhir_server_error")
+<<<<<<< HEAD
 @mock.patch("requests.Session")
 def test_fhir_server_get(patched_requests_session, patched_logger):
     mock_requests_session_instance = patched_requests_session.return_value
@@ -401,4 +402,18 @@ def test_fhir_server_get(patched_requests_session, patched_logger):
     mock_requests_session_instance.get.assert_called_with(url=url, headers=header)
 
     response = mock_requests_session_instance.get(url=url, headers=header)
+=======
+@mock.patch("phdi_building_blocks.fhir.requests")
+def test_fhir_server_get(patched_requests, patched_logger):
+
+    url = "url_for_FHIR_server_get_request"
+    access_token = "some_access_token_for_authentication"
+
+    fhir_server_get(url, access_token)
+
+    header = {"Authorization": f"Bearer {access_token}"}
+    patched_requests.get.assert_called_with(url=url, headers=header)
+
+    response = patched_requests.get(url=url, headers=header)
+>>>>>>> 57cfa7c (Dan/initial fhir to parquet (#129))
     patched_logger.assert_called_with(response.status_code)

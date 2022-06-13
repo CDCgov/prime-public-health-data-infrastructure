@@ -1,2 +1,6 @@
+<<<<<<< HEAD
 **/*.parquet
+=======
+*.parquet
+>>>>>>> 57cfa7c (Dan/initial fhir to parquet (#129))
 venv/

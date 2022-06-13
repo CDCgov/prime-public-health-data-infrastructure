@@ -1,6 +1,7 @@
 ---
 my_table:
   Patient:
+<<<<<<< HEAD
     Search Parameters:
       _since: "20000101T00:00:00Z"
     Fields:
@@ -28,3 +29,29 @@ my_table:
         include_unknowns: false
         selection_criteria: first
         new_name: phone_number
+=======
+    Patient ID:
+      fhir_path: Patient.id
+      include_nulls: false
+      include_unknowns: false
+      selection_criteria: first
+      new_name: patient_id
+    First Name:
+      fhir_path: Patient.name.given
+      include_nulls: false
+      include_unknowns: false
+      selection_criteria: first
+      new_name: first_name
+    Last Name:
+      fhir_path: Patient.name.family
+      include_nulls: false
+      include_unknowns: false
+      selection_criteria: first
+      new_name: last_name
+    Phone Number:
+      fhir_path: Patient.telecom.where(system = 'phone').value
+      include_nulls: false
+      include_unknowns: false
+      selection_criteria: first
+      new_name: phone_number
+>>>>>>> 57cfa7c (Dan/initial fhir to parquet (#129))
