@@ -1,66 +1,13 @@
 import io
-import json
 import logging
 import polling
 import requests
 
-from datetime import datetime, timezone
-from requests.adapters import HTTPAdapter
 from typing import Union, Iterator, Tuple, TextIO
-from urllib3 import Retry
 
-from azure.core.credentials import AccessToken
 from azure.identity import DefaultAzureCredential
 from azure.storage.blob import download_blob_from_url
-
-
-class AzureFhirServerCredentialManager:
-    """
-    A class that manages handling Azure credentials for access to the FHIR server.
-    """
-
-    def __init__(self, fhir_url: str):
-        self.access_token = None
-        self.fhir_url = fhir_url
-
-    def get_fhir_url(self) -> str:
-        return self.fhir_url
-
-    def get_access_token(self, token_reuse_tolerance: float = 10.0) -> AccessToken:
-        """
-        Obtain an access token for the FHIR server the manager is pointed at.
-        If the token is already set for this object and is not about to expire
-        (within token_reuse_tolerance parameter), then return the existing token.
-        Otherwise, request a new one.
-
-        :param token_reuse_tolerance: Number of seconds before expiration; it
-        is okay to reuse the currently assigned token
-        """
-        if not self._need_new_token(token_reuse_tolerance):
-            return self.access_token
-
-        # Obtain a new token if ours is going to expire soon
-        creds = DefaultAzureCredential()
-        scope = f"{self.fhir_url}/.default"
-        self.access_token = creds.get_token(scope)
-        return self.access_token
-
-    def _need_new_token(self, token_reuse_tolerance: float = 10.0) -> bool:
-        """
-        Determine whether the token already stored for this object can be reused,
-        or if it needs to be re-requested.
-
-        :param token_reuse_tolerance: Number of seconds before expiration
-        :return: Whether we need a new token (True means we do)
-        """
-        try:
-            current_time_utc = datetime.now(timezone.utc).timestamp()
-            return (
-                self.access_token.expires_on - token_reuse_tolerance
-            ) < current_time_utc
-        except AttributeError:
-            # access_token not set
-            return True
+from utils import http_request_with_retry
 
 
 def generate_filename(blob_name: str, message_index: int) -> str:
@@ -72,9 +19,9 @@ def generate_filename(blob_name: str, message_index: int) -> str:
     :param message_index: The index of this message in the batch
     :return: The derived filename
     """
-    filename = blob_name.split("/")[-1]
-    root_name, _ = filename.rsplit(".", 1)
-    return f"{root_name}-{message_index}"
+    full_filename = blob_name.split("/")[-1]
+    filename, ext = full_filename.rsplit(".", 1)
+    return f"{filename}-{message_index}"
 
 
 def upload_bundle_to_fhir_server(
@@ -89,31 +36,17 @@ def upload_bundle_to_fhir_server(
     :param fhir_url: The url of the FHIR server to upload to
     """
 
-    # Configure the settings of the 'requests' session we'll make
-    # the API call with
-    retry_strategy = Retry(
-        total=3,
-        status_forcelist=[429, 500, 502, 503, 504],
-        allowed_methods=["HEAD", "PUT", "POST", "OPTIONS"],
+    http_request_with_retry(
+        fhir_url,
+        3,
+        ["HEAD", "PUT", "POST", "OPTIONS"],
+        {
+            "Authorization": f"Bearer {access_token}",
+            "Accept": "application/fhir+json",
+            "Content-Type": "application/fhir+json",
+        },
+        data=bundle,
     )
-    adapter = HTTPAdapter(max_retries=retry_strategy)
-    http = requests.Session()
-    http.mount("https://", adapter)
-
-    # Now, actually try to complete the API request
-    try:
-        requests.post(
-            fhir_url,
-            headers={
-                "Authorization": f"Bearer {access_token}",
-                "Accept": "application/fhir+json",
-                "Content-Type": "application/fhir+json",
-            },
-            data=json.dumps(bundle),
-        )
-    except Exception:
-        logging.exception("Request to post Bundle failed for json: " + str(bundle))
-        return
 
 
 def export_from_fhir_server(
@@ -162,14 +95,18 @@ def export_from_fhir_server(
     logging.debug(f"Composed export URL: {export_url}")
 
     # Open connection to the export operation and kickoff process
-    response = requests.get(
+    response = http_request_with_retry(
         export_url,
-        headers={
+        3,
+        "GET",
+        ["GET"],
+        {
             "Authorization": f"Bearer {access_token}",
             "Accept": "application/fhir+json",
             "Prefer": "respond-async",
         },
     )
+
     logging.info(f"Export request completed with status {response.status_code}")
 
     if response.status_code == 202:
@@ -214,7 +151,7 @@ def _compose_export_url(
     back
     :param container: The container where we want to store the uploaded
     files
-    :return: The url built with our desired export endpoitn criteria
+    :return: The url built with our desired export endpoint criteria
     """
     export_url = fhir_url
     if export_scope == "Patient" or export_scope.startswith("Group/"):
@@ -281,7 +218,7 @@ def export_from_fhir_server_poll(
     poll_url: str, access_token: str, poll_step: float = 30, poll_timeout: float = 300
 ) -> requests.Response:
     """
-    The main polling function that determines export file avialability after
+    The main polling function that determines export file availability after
     an export run has been initiated.
 
     :param poll_url: URL to poll for export information
@@ -340,7 +277,7 @@ def _download_export_blob(blob_url: str, encoding: str = "utf-8") -> TextIO:
     """
     Download an export file blob.
 
-    :param blob_url: Blob URL location to download from Azure Blob storage
+    :param blob_url: Blob URL location to download from blob storage
     :param encoding: encoding to apply to the ndjson content, defaults to "utf-8"
     :return: Downloaded content wrapped in TextIO
     """

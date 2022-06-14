@@ -1,4 +1,4 @@
-from phdi_building_blocks.utils import find_patient_resources, get_one_line_address
+from phdi_building_blocks.utils import find_resource_by_type, get_one_line_address
 
 from smartystreets_python_sdk import StaticCredentials, ClientBuilder
 from smartystreets_python_sdk import us_street
@@ -112,7 +112,7 @@ def geocode_patients(
         bundle = copy.deepcopy(bundle)
 
     # Standardize each patient in turn
-    for resource in find_patient_resources(bundle):
+    for resource in find_resource_by_type(bundle, "Patient"):
         patient = resource.get("resource")
         standardize_addresses_for_patient(patient, client, add_address_metrics)
     return bundle

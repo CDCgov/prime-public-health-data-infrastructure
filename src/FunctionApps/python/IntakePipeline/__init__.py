@@ -101,6 +101,9 @@ def run_pipeline(
         upload_bundle_to_fhir_server(standardized_bundle, access_token, fhir_url)
 
     # For some reason, the HL7/CCDA message failed to convert
+    # This might be failure to communicate with the FHIR server due to
+    # access/authentication reasons, or potentially malformed timestamps
+    # in the data
     else:
         try:
             # First attempt is storing the message directly in the
@@ -137,7 +140,7 @@ def run_pipeline(
 
 def main(blob: func.InputStream) -> None:
     """
-    This is the main entry point for the IntakePipeline Azure function.
+    This is the main entry point for the IntakePipeline function.
     It is responsible for splitting an incoming batch file (or individual message)
     into a list of individual messages.  Each individual message is passed to the
     processing pipeline.

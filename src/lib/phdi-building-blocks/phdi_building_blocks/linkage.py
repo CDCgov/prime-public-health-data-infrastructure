@@ -1,15 +1,13 @@
 import hashlib
 import copy
 from phdi_building_blocks.utils import (
-    find_patient_resources,
+    find_resource_by_type,
     get_one_line_address,
-    get_field_with_use,
+    get_field,
 )
 
 
-def add_linking_identifier_to_patients(
-    bundle: dict, salt_str: str, overwrite: bool = True
-) -> dict:
+def add_patient_identifier(bundle: dict, salt_str: str, overwrite: bool = True) -> dict:
     """
     Given a FHIR resource bundle:
 
@@ -31,18 +29,18 @@ def add_linking_identifier_to_patients(
     if not overwrite:
         bundle = copy.deepcopy(bundle)
 
-    for resource in find_patient_resources(bundle):
+    for resource in find_resource_by_type(bundle, "Patient"):
         patient = resource.get("resource")
 
         # Combine given and family name
-        recent_name = get_field_with_use(patient, "name", "official", 0)
-        name_parts = recent_name.get("given", []) + [recent_name.get("family")]
+        recent_name = get_field(patient, "name", "official", 0)
+        name_parts = recent_name.get("given", []) + [recent_name.get("family", "")]
         name_str = "-".join([n for n in name_parts if n])
 
         # Compile one-line address string
         address_line = ""
         if "address" in patient:
-            address = get_field_with_use(patient, "address", "home", 0)
+            address = get_field(patient, "address", "home", 0)
             address_line = get_one_line_address(address)
 
         # Generate and store unique hash code

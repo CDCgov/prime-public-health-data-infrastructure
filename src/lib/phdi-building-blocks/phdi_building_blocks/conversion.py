@@ -9,7 +9,7 @@ def clean_message(message: str) -> str:
     """
     Prepare an HL7 message for conversion by normalizing / sanitizing
     fields that are known to contain data in problematic formats. This
-    function helps to-be-converted messages conform to Azure's expectations.
+    function helps to-be-converted messages conform to expectations.
     Cleaning operations include:
 
     * Convert segment terminators from ``\\n`` to ``\\r``
@@ -22,7 +22,7 @@ def clean_message(message: str) -> str:
     parsed_message = ""
     try:
         # Conversion from \n to \r EOL characters is needed for hl7
-        # module, and doesn't hurt the Azure converter
+        # module, and doesn't impact conversion ability
         parsed_message = hl7.parse(message.replace("\n", "\r"))
 
         # Normalize Dates
@@ -122,24 +122,27 @@ def normalize_hl7_datetime(hl7_datetime: str) -> str:
     :return: The cleaned datetime string appropriately segmented and
       truncated
     """
+
+    # Use regex to achieve the datetime formatting described above
     hl7_datetime_match = re.match(r"(\d{8}\d*)(\.\d+)?([+-]\d+)?", hl7_datetime)
 
-    if hl7_datetime_match:
-        hl7_datetime_parts = hl7_datetime_match.groups()
+    if not hl7_datetime_match:
+        return hl7_datetime
 
-        # Start with date base
-        normalized_datetime = hl7_datetime_parts[0][:14]  # First 14 digits
+    hl7_datetime_parts = hl7_datetime_match.groups()
 
-        # Add date decimal if present
-        if hl7_datetime_parts[1]:
-            normalized_datetime += hl7_datetime_parts[1][:5]  # . plus first 4 digits
+    # Start with date base
+    normalized_datetime = hl7_datetime_parts[0][:14]  # First 14 digits
 
-        # Add timezone information if present
-        if hl7_datetime_parts[2] and len(hl7_datetime_parts[2]) >= 5:
-            normalized_datetime += hl7_datetime_parts[2][:5]  # +/- plus 4 digits
+    # Add date decimal if present
+    if hl7_datetime_parts[1]:
+        normalized_datetime += hl7_datetime_parts[1][:5]  # . plus first 4 digits
 
-        return normalized_datetime
-    return hl7_datetime
+    # Add timezone information if present
+    if hl7_datetime_parts[2] and len(hl7_datetime_parts[2]) >= 5:
+        normalized_datetime += hl7_datetime_parts[2][:5]  # +/- plus 4 digits
+
+    return normalized_datetime
 
 
 def clean_batch(batch: str, delimiter: str = "\n") -> str:
@@ -283,7 +286,7 @@ def convert_message_to_fhir(
     fhir_url: str,
 ) -> dict:
     """
-    Given a message in either HL7 v2 (pipe-delimited flat file) or HL7 v3
+    Given a message in either HL7 v2 (pipe-delimited flat file) or CCDA
     (XML), attempt to convert that message into FHIR format (JSON) for
     further processing using the FHIR server. The FHIR server will respond
     with a status code of 400 if the message itself is invalid, such as
@@ -294,7 +297,7 @@ def convert_message_to_fhir(
     clean_message function prior to conversion.
 
     :param message: The raw message that needs to be converted to FHIR.
-        Must be HL7v2 or HL7 v3
+        Must be HL7v2 or CCDA
     :param input_data_type: The data type of the message. Must be one
         of Hl7v2 or Ccda
     :param root_template: The core template that should be used when

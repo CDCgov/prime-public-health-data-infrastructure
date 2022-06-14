@@ -1,7 +1,7 @@
 import phonenumbers
 import pycountry
 from typing import Callable, Literal, List
-from phdi_building_blocks.utils import find_patient_resources
+from phdi_building_blocks.utils import find_resource_by_type
 import copy
 
 
@@ -55,7 +55,7 @@ def standardize_patient_names(
         bundle = copy.deepcopy(bundle)
 
     # Handle all patients individually
-    for resource in find_patient_resources(bundle):
+    for resource in find_resource_by_type(bundle, "Patient"):
         patient = resource.get("resource")
         if standardization_mode == "non_numeric_caps":
             standardize_names_for_patient(
@@ -292,7 +292,7 @@ def standardize_all_phones(
     """
     if not overwrite:
         bundle = copy.deepcopy(bundle)
-    for resource in find_patient_resources(bundle):
+    for resource in find_resource_by_type(bundle, "Patient"):
         patient = resource.get("resource")
         if standardization_mode == "truncation":
             standardize_phone_numbers_for_patient(
