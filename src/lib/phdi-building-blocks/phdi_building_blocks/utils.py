@@ -108,7 +108,7 @@ def standardize_text(raw_text: str, **kwargs) -> str:
             [ltr for ltr in text if not ltr.isnumeric()]
         ),
         "remove_punctuation": lambda text, _: "".join(
-            [ltr for ltr in text if ltr.isalnum()]
+            [ltr for ltr in text if ltr.isalnum() or ltr == " "]
         ),
         "remove_characters": lambda text, characters: "".join(
             [ltr for ltr in text if ltr not in characters]

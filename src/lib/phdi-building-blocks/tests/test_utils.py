@@ -24,8 +24,8 @@ def test_get_one_line_address():
         open(pathlib.Path(__file__).parent / "assets" / "patient_bundle.json")
     )
     patient = bundle["entry"][1]["resource"]
-    result_address = "123 Fake St Unit #F, NY 10001-0001"
-    assert get_one_line_address(patient.get("address")) == result_address
+    result_address = "123 Fake St Unit #F Faketon, NY 10001-0001"
+    assert get_one_line_address(patient.get("address", [])[0]) == result_address
 
 
 def test_get_field():
@@ -57,8 +57,11 @@ def test_standardize_text():
     answer_1 = "12 phdi is really kewl !@#$ 34"
     set_2 = {"remove_numbers": True, "trim": True}
     answer_2 = "PhDi is ReaLLy KEWL !@#$"
-    set_3 = {"remove_punctuation": True, "remove_characters": ["R", "a", "l", "y", "k"]}
+    set_3 = {
+        "remove_punctuation": True,
+        "remove_characters": ["R", "a", "l", "L", "y", "K"],
+    }
     answer_3 = " 12 PhDi is e EW  34"
-    assert standardize_text(raw_text, set_1) == answer_1
-    assert standardize_text(raw_text, set_2) == answer_2
-    assert standardize_text(raw_text, set_3) == answer_3
+    assert standardize_text(raw_text, **set_1) == answer_1
+    assert standardize_text(raw_text, **set_2) == answer_2
+    assert standardize_text(raw_text, **set_3) == answer_3
