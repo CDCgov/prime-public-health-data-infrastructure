@@ -8,8 +8,8 @@ from unittest import mock
 
 from azure.identity import DefaultAzureCredential
 
+from phdi_building_blocks.azure import AzureFhirServerCredentialManager
 from phdi_building_blocks.fhir import (
-    AzureFhirServerCredentialManager,
     upload_bundle_to_fhir_server,
     export_from_fhir_server,
     _compose_export_url,

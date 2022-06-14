@@ -7,7 +7,7 @@ from typing import Union, Iterator, Tuple, TextIO
 
 from azure.identity import DefaultAzureCredential
 from azure.storage.blob import download_blob_from_url
-from utils import http_request_with_retry
+from phdi_building_blocks.utils import http_request_with_retry
 
 
 def generate_filename(blob_name: str, message_index: int) -> str:

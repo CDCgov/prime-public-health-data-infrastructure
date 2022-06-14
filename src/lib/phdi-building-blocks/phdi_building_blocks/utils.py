@@ -84,6 +84,9 @@ def standardize_text(raw_text: str, **kwargs) -> str:
     string. Only recognized transformations will be utilized; all other specified
     transformations will be ignore. The recognized transformations are as follows:
         - trim (Bool): Indicates if leading and trailing whitespace should be removed.
+        If trimming is desired, it should be supplied as the LAST argument in the
+        dictionary of transformations to-be-performed, so that if characters/numbers
+        are removed but had spaces around them, this extra space will be trimmed too
         - case (Literal["upper", "lower", "title"]): Defines what casing should be
         applied to the string.
         - remove_numbers (Bool): Indicates if numbers should removed from the string.
@@ -100,7 +103,6 @@ def standardize_text(raw_text: str, **kwargs) -> str:
     # others don't. In order to generalize this, if the second parameter is uneeded,
     # we'll pass "_".
     func_map = {
-        "trim": lambda text, _: text.strip(),
         "case": convert_to_case,
         "remove_numbers": lambda text, _: "".join(
             [ltr for ltr in text if not ltr.isnumeric()]
@@ -111,6 +113,7 @@ def standardize_text(raw_text: str, **kwargs) -> str:
         "remove_characters": lambda text, characters: "".join(
             [ltr for ltr in text if ltr not in characters]
         ),
+        "trim": lambda text, _: text.strip(),
     }
     text = raw_text
 
