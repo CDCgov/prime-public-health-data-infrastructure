@@ -287,3 +287,47 @@ def _download_export_blob(blob_url: str, encoding: str = "utf-8") -> TextIO:
     text_buffer = io.TextIOWrapper(buffer=bytes_buffer, encoding=encoding, newline="\n")
     text_buffer.seek(0)
     return text_buffer
+
+
+def fhir_server_get(url: str, access_token: str) -> requests.models.Response:
+    """
+    Submit a GET request to a FHIR server given a url and access token for
+    authentication.
+
+    :param url: URL specifying a GET request on a FHIR server.
+    :param access_token: A bearer token to authenticate with the FHIR server.
+    """
+
+    header = {"Authorization": f"Bearer {access_token}"}
+    response = requests.get(url=url, headers=header)
+    log_fhir_server_error(response.status_code)
+
+    return response
+
+
+def log_fhir_server_error(status_code: int) -> None:
+    """Given an HTTP status code from a FHIR server's response, log the specified error.
+
+    :param status_code: Status code returned by a FHIR server
+    """
+    if status_code == 401:
+        logging.error("FHIR SERVER ERROR - Status Code 401: Failed to authenticate.")
+
+    elif status_code == 403:
+        logging.error(
+            "FHIR SERVER ERROR - Status Code 403: User does not have permission to make that request."  # noqa
+        )
+
+    elif status_code == 404:
+        logging.error(
+            "FHIR SERVER ERROR - Status Code 404: Server or requested data not found."
+        )
+
+    elif status_code == 410:
+        logging.error(
+            "FHIR SERVER ERROR - Status Code 410: Server has deleted this cached data."
+        )
+
+    elif str(status_code).startswith(("4", "5")):
+        error_message = f"FHIR SERVER ERROR - Status code {status_code}"
+        logging.error(error_message)
