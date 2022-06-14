@@ -65,6 +65,68 @@ def get_field(resource: dict, field: str, use: str, default_field: int) -> str:
     )
 
 
+def convert_to_case(text: str, case: str) -> str:
+    if case == "upper":
+        return text.upper()
+    if case == "lower":
+        return text.lower()
+    if case == "title":
+        return text.title()
+    return text
+
+
+def standardize_text(raw_text: str, **kwargs) -> str:
+    """
+    Perform standardization on a provided text string, given a set of transformations.
+
+    :param raw_text: The raw text string to standardize
+    :param **kwargs: A series of transformations that should be applied to the text
+    string. Only recognized transformations will be utilized; all other specified
+    transformations will be ignore. The recognized transformations are as follows:
+        - trim (Bool): Indicates if leading and trailing whitespace should be removed.
+        - case (Literal["upper", "lower", "title"]): Defines what casing should be
+        applied to the string.
+        - remove_numbers (Bool): Indicates if numbers should removed from the string.
+        - remove_punctuation (Bool): Indicates if characters that are not letters nor
+        numbers should be removed.
+        - remove_characters (List[str]): Provides a list of characters that should be
+        removed from the string.
+    """
+
+    # TODO Figure out the order of operations. .title on a string with numbers acts
+    # differently than a string without them, so we'd need to decide what to do first.
+
+    # Some transformations require a second parameter, like "remove_characers", but
+    # others don't. In order to generalize this, if the second parameter is uneeded,
+    # we'll pass "_".
+    func_map = {
+        "trim": lambda text, _: text.strip(),
+        "case": convert_to_case,
+        "remove_numbers": lambda text, _: "".join(
+            [ltr for ltr in text if not ltr.isnumeric()]
+        ),
+        "remove_punctuation": lambda text, _: "".join(
+            [ltr for ltr in text if ltr.isalnum()]
+        ),
+        "remove_characters": lambda text, characters: "".join(
+            [ltr for ltr in text if ltr not in characters]
+        ),
+    }
+    text = raw_text
+
+    # Keys represent the transformation to be applied, and the value specifies what
+    # should happen. For example, if trim=True is passed, then the key is trim and the
+    # value is True.
+    for key, value in kwargs.items():
+        # we use Python's truthiness evaluation to sort of cheat in checking if booleans
+        # are true while also checking if non-booleans hold values.
+        if key in func_map and value:
+            f = func_map[key]
+            text = f(text, value)
+
+    return text
+
+
 def http_request_with_retry(
     url: str,
     retry_count: int,

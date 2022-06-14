@@ -4,7 +4,7 @@ from smartystreets_python_sdk import StaticCredentials, ClientBuilder
 from smartystreets_python_sdk import us_street
 from smartystreets_python_sdk.us_street.lookup import Lookup
 
-from typing import List, Tuple, Union
+from typing import List, Union
 from pydantic import BaseModel
 import copy
 
@@ -28,7 +28,7 @@ class GeocodeResult(BaseModel):
 
 
 def get_geocoder_result(
-    client: us_street.Client, address: str
+    address: str, client: us_street.Client
 ) -> Union[GeocodeResult, None]:
     """
     Given an API client and an address, attempt to call the smartystreets API
@@ -36,10 +36,9 @@ def get_geocoder_result(
     a valid result is found, it will be returned. Otherwise, the function
     returns None.
 
-    :param client: the SmartyStreets API Client suitable
-        for use with street addresses in the US
     :param address: The address to perform a geocoding lookup for
-    :return: The geocoded result wrapped in our result class, or None
+    :param client: the SmartyStreets API Client suitable for use with street addresses
+    in the US
     """
 
     lookup = Lookup(street=address)
@@ -48,12 +47,12 @@ def get_geocoder_result(
     # Valid responses have results with lat/long
     if lookup.result and lookup.result[0].metadata.latitude:
         smartystreets_result = lookup.result[0]
-        coded_address = [smartystreets_result.delivery_line_1]
+        street_address = [smartystreets_result.delivery_line_1]
         if smartystreets_result.delivery_line_2:
-            coded_address.append(smartystreets_result.delivery_line_2)
+            street_address.append(smartystreets_result.delivery_line_2)
 
         return GeocodeResult(
-            address=coded_address,
+            address=street_address,
             city=smartystreets_result.components.city_name,
             state=smartystreets_result.components.state_abbreviation,
             zipcode=smartystreets_result.components.zipcode,
@@ -84,10 +83,10 @@ def get_smartystreets_client(auth_id: str, auth_token: str) -> us_street.Client:
     )
 
 
+# TODO Find a way to generalize this such that it's applicable to all resource types
 def geocode_patients(
     bundle: dict,
     client: us_street.Client,
-    add_address_metrics: bool = True,
     overwrite: bool = True,
 ) -> dict:
     """
@@ -100,12 +99,8 @@ def geocode_patients(
     :param dict bundle: A FHIR resource bundle
     :param us_street.Client client: The smartystreets API client to geocode
         with
-    :param add_address_metrics: Whether to add tracking information into
-        the patient resource denoting whether one or more addresses were
-        standardized
     :param overwrite: Whether to write the new standardizations directly
         into the given bundle, changing the original data (True is yes)
-    :return: The standardized bundle of data
     """
     # Copy the data if we don't want to alter the original
     if not overwrite:
@@ -114,63 +109,42 @@ def geocode_patients(
     # Standardize each patient in turn
     for resource in find_resource_by_type(bundle, "Patient"):
         patient = resource.get("resource")
-        standardize_addresses_for_patient(patient, client, add_address_metrics)
+        geocode_and_parse_addresses_for_patient(patient, client)
     return bundle
 
 
-def geocode_single_address(
-    client: us_street.Client, address: dict
-) -> Tuple[GeocodeResult, bool]:
+def _geocode_and_parse_address(
+    address: dict, client: us_street.Client
+) -> GeocodeResult:
     """
     Helper function to perform geocoding on a single address from a patient
     resource. Here, the address is expressed in dictionary form, as it comes
-    straight out of a FHIR bundle. This function also determines whether the
-    geocoded standardized address is different from the raw address.
+    straight out of a FHIR bundle.
 
-    :param client: The API client to geocode with
     :param address: A patient's address in FHIR / JSON
-    :return: Tuple containing the standardized geocoding result as well as
-        whether the information in the result is different than the information
-        held in the raw address
+    :param client: The API client to geocode with
     """
 
     raw_one_line = get_one_line_address(address)
     geocoded_result = get_geocoder_result(client, raw_one_line)
 
-    # Determine if standardized result is different from raw data
-    # Default assumption is addresses are same, in case there's no
-    # valid geocoder result
-    address_is_different = False
-    if geocoded_result is not None:
-        std_one_line = f"{geocoded_result.address} {geocoded_result.city}, {geocoded_result.state} {geocoded_result.zipcode}"  # noqa
-        address_is_different = raw_one_line != std_one_line
-
-    return (geocoded_result, address_is_different)
+    return geocoded_result
 
 
-def standardize_addresses_for_patient(
-    patient: dict, client: us_street.Client, add_metrics_extension: bool = True
+# TODO: Find a way to generalize this such that it's applicable to all resource types
+def geocode_and_parse_addresses_for_patient(
+    patient: dict, client: us_street.Client
 ) -> None:
     """
-    Helper function to handle the standardizing of all addresses belonging to
-    a single patient in a FHIR resource bundle. This function also determines
-    whether any of that patient's addresses were improved through geocoding and
-    tracks this in an extension on the patient profile.
+    Helper function to handle the parsing, standardizing, and geocoding of all addresses
+    belonging to a single patient in a FHIR resource bundle.
 
     :param patient: A Patient resource FHIR profile
     :param client: The API client to geocode with
-    :param add_metrics_extension: Whether to add tracking metrics into the
-        patient resource denoting that one or more addresses was standardized.
     """
 
-    # We can track whether geocoding improved addresses by taking the logical
-    # OR everytime we geocode a new address
-    any_address_was_changed = False
     for address in patient.get("address", []):
-        standardized_address, address_is_different = geocode_single_address(
-            client, address
-        )
-        any_address_was_changed = any_address_was_changed or address_is_different
+        standardized_address = _geocode_and_parse_address(client, address)
 
         # Update fields with new, standardized information
         if standardized_address:
@@ -197,14 +171,3 @@ def standardize_addresses_for_patient(
                     ],
                 }
             )
-
-    # Need an extension to track whether geocoding improved any addresses
-    if add_metrics_extension:
-        if "extension" not in patient:
-            patient["extension"] = []
-        patient["extension"].append(
-            {
-                "url": "http://usds.gov/fhir/phdi/StructureDefinition/address-was-standardized",  # noqa
-                "valueBoolean": any_address_was_changed,
-            }
-        )
