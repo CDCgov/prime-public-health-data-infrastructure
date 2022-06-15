@@ -6,12 +6,14 @@ from azure.core.exceptions import ResourceExistsError
 
 from config import get_required_config
 
-from phdi_building_blocks.azure_blob import store_data
+from phdi_building_blocks.azure import (
+    store_data,
+    AzureFhirServerCredentialManager,
+)
 
 from phdi_building_blocks.fhir import (
     upload_bundle_to_fhir_server,
     generate_filename,
-    AzureFhirServerCredentialManager,
 )
 from phdi_building_blocks.conversion import (
     convert_batch_messages_to_list,

@@ -14,7 +14,7 @@ from phdi_building_blocks.geo import (
 from phdi_building_blocks.geo import GeocodeResult
 
 
-def test_get_geocoder_result():
+def test_get_geocoder_result_success():
     """
     Make sure to return the correct dict attribs from the SmartyStreets
     response object on a successful call
@@ -59,13 +59,13 @@ def test_get_geocoder_result():
     client.send_lookup.assert_called()
 
 
-def test_failed_geocode():
+def test_get_geocoder_result_failure():
     """If it doesn't fill in results, return None"""
     assert get_geocoder_result(mock.Mock(), "123 Nowhere St, Atlantis GA") is None
 
 
 @mock.patch("phdi_building_blocks.geo.get_geocoder_result")
-def test_geocode_patient_address(patched_geocoder):
+def test_geocode_patients(patched_geocoder):
     raw_bundle = json.load(
         open(pathlib.Path(__file__).parent / "assets" / "patient_bundle.json")
     )
