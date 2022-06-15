@@ -23,12 +23,9 @@ def generate_filename(blob_name: str, message_index: int) -> str:
 
 """Manager for handling Azure credentials for access to the FHIR server"""
 
-<<<<<<< HEAD
-=======
 
 class AzureFhirserverCredentialManager:
 
->>>>>>> 57cfa7c (Dan/initial fhir to parquet (#129))
     # TODO: Generalize this class to decouple from Azure
     def __init__(self, fhir_url):
         """Credential manager constructor"""
@@ -333,19 +330,14 @@ def _download_export_blob(blob_url: str, encoding: str = "utf-8") -> TextIO:
     return text_buffer
 
 
-<<<<<<< HEAD
 def fhir_server_get(
     url: str, cred_manager: AzureFhirserverCredentialManager
 ) -> requests.models.Response:
-=======
-def fhir_server_get(url: str, access_token: str) -> requests.models.Response:
->>>>>>> 57cfa7c (Dan/initial fhir to parquet (#129))
     """
     Submit a GET request to a FHIR server given a url and access token for
     authentication.
 
     :param url: URL specifying a GET request on a FHIR server.
-<<<<<<< HEAD
     :param cred_manager: Service used to get an access token used to make a
     request.
     """
@@ -361,13 +353,6 @@ def fhir_server_get(url: str, access_token: str) -> requests.models.Response:
     http_session = requests.Session()
     http_session.mount("https://", adapter)
     response = http_session.get(url=url, headers=header)
-=======
-    :param access_token: A bearer token to authenticate with the FHIR server.
-    """
-
-    header = {"Authorization": f"Bearer {access_token}"}
-    response = requests.get(url=url, headers=header)
->>>>>>> 57cfa7c (Dan/initial fhir to parquet (#129))
     log_fhir_server_error(response.status_code)
 
     return response
@@ -399,7 +384,6 @@ def log_fhir_server_error(status_code: int) -> None:
     elif str(status_code).startswith(("4", "5")):
         error_message = f"FHIR SERVER ERROR - Status code {status_code}"
         logging.error(error_message)
-<<<<<<< HEAD
 
 
 class RetryWithAuthRefresh(Retry):
@@ -418,5 +402,3 @@ class RetryWithAuthRefresh(Retry):
         return super(RetryWithAuthRefresh, self).increment(
             method, url, response, *args, **kwargs
         )
-=======
->>>>>>> 57cfa7c (Dan/initial fhir to parquet (#129))

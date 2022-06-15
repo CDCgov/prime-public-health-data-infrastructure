@@ -18,10 +18,6 @@ PyYAML = "^6.0"
 pyarrow = "^8.0.0"
 fhirpathpy = {git = "https://github.com/beda-software/fhirpath-py.git"}
 pandas = "^1.4.2"
-<<<<<<< HEAD
-=======
-coverage = "^6.4.1"
->>>>>>> 57cfa7c (Dan/initial fhir to parquet (#129))
 
 [tool.poetry.dev-dependencies]
 Sphinx = "^4.4.0"

@@ -852,11 +852,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-<<<<<<< HEAD
 content-hash = "0385f88d6eec006b3921aa488e0b55c861ab1b6fba68e2db713b104c37fc3a01"
-=======
-content-hash = "8190eacb8f51df27fc97529e21c1a25246cd9f840f3000be45dfd58ef6e45dcd"
->>>>>>> 57cfa7c (Dan/initial fhir to parquet (#129))
 
 [metadata.files]
 alabaster = [
