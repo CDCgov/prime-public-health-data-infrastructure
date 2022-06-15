@@ -54,14 +54,14 @@ def test_get_geocoder_result_success():
         "county_name": "New York",
         "zipcode": "10001",
         "precision": "Zip9",
-    } == get_geocoder_result(client, "123 Fake St, New York, NY 10001")
+    } == get_geocoder_result("123 Fake St, New York, NY 10001", client)
 
     client.send_lookup.assert_called()
 
 
 def test_get_geocoder_result_failure():
     """If it doesn't fill in results, return None"""
-    assert get_geocoder_result(mock.Mock(), "123 Nowhere St, Atlantis GA") is None
+    assert get_geocoder_result("123 Nowhere St, Atlantis GA", mock.Mock()) is None
 
 
 @mock.patch("phdi_building_blocks.geo.get_geocoder_result")
@@ -99,13 +99,6 @@ def test_geocode_patients(patched_geocoder):
         }
     )
 
-    patient["extension"] = []
-    patient["extension"].append(
-        {
-            "url": "http://usds.gov/fhir/phdi/StructureDefinition/address-was-standardized",  # noqa
-            "valueBoolean": True,
-        }
-    )
     patched_geocoder.return_value = geocoded_response
 
     assert geocode_patients(raw_bundle, mock.Mock()) == standardized_bundle

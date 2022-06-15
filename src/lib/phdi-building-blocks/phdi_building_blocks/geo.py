@@ -126,7 +126,7 @@ def _geocode_and_parse_address(
     """
 
     raw_one_line = get_one_line_address(address)
-    geocoded_result = get_geocoder_result(client, raw_one_line)
+    geocoded_result = get_geocoder_result(raw_one_line, client)
 
     return geocoded_result
 
@@ -144,7 +144,7 @@ def geocode_and_parse_addresses_for_patient(
     """
 
     for address in patient.get("address", []):
-        standardized_address = _geocode_and_parse_address(client, address)
+        standardized_address = _geocode_and_parse_address(address, client)
 
         # Update fields with new, standardized information
         if standardized_address:
