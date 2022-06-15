@@ -10,7 +10,6 @@ from phdi_building_blocks.azure import (
     store_data,
     AzureFhirServerCredentialManager,
 )
-
 from phdi_building_blocks.fhir import (
     upload_bundle_to_fhir_server,
     generate_filename,
@@ -29,7 +28,7 @@ from phdi_building_blocks.standardize import (
     standardize_patient_names,
     standardize_all_phones,
 )
-from phdi_building_blocks.linkage import add_linking_identifier_to_patients
+from phdi_building_blocks.linkage import add_patient_identifier
 
 
 def run_pipeline(
@@ -80,9 +79,7 @@ def run_pipeline(
         standardized_bundle = standardize_patient_names(bundle)
         standardized_bundle = standardize_all_phones(standardized_bundle)
         standardized_bundle = geocode_patients(standardized_bundle, geocoder)
-        standardized_bundle = add_linking_identifier_to_patients(
-            standardized_bundle, salt
-        )
+        standardized_bundle = add_patient_identifier(standardized_bundle, salt)
 
         # Now store the data in the desired container
         try:
