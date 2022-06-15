@@ -2,7 +2,6 @@ import io
 import logging
 
 from FhirServerExport import main
-from phdi_building_blocks.fhir import AzureFhirserverCredentialManager
 
 from unittest import mock
 
@@ -15,9 +14,11 @@ ENVIRONMENT = {
 
 @mock.patch("FhirServerExport.fhir.download_from_export_response")
 @mock.patch("FhirServerExport.fhir.export_from_fhir_server")
-@mock.patch.object(AzureFhirserverCredentialManager)
+@mock.patch("FhirServerExport.fhir.AzureFhirserverCredentialManager")
 @mock.patch.dict("os.environ", ENVIRONMENT)
-def test_main(mock_cred_manager, mock_export, mock_download):
+def test_main(mock_cred_manager_constructor, mock_export, mock_download):
+    mock_cred_manager = mock_cred_manager_constructor.return_value
+
     logging.basicConfig(level=logging.DEBUG)
     req = mock.Mock()
     req.params = {
