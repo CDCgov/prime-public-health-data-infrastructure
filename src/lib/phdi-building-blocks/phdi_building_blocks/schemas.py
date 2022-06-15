@@ -80,8 +80,8 @@ def apply_schema_to_resource(resource: dict, schema: dict) -> dict:
         return data
 
     resource_schema_fields = resource_schema.get("Fields", {})
-    for field in resource_schema.keys():
-        path = resource_schema[field]["fhir_path"]
+    for field in resource_schema_fields.keys():
+        path = resource_schema_fields[field]["fhir_path"]
 
         try:
             value = fhirpathpy.evaluate(resource, path)
@@ -102,7 +102,6 @@ def apply_schema_to_resource(resource: dict, schema: dict) -> dict:
 def make_table(
     schema: dict,
     output_path: pathlib.Path,
-    search_parameters: dict,
     output_format: Literal["parquet"],
     fhir_url: str,
     cred_manager: str,
@@ -123,6 +122,9 @@ def make_table(
         output_file_name = output_path / f"{resource_type}.{output_format}"
 
         query = f"/{resource_type}"
+
+        search_parameters = schema[resource_type].get("Search Parameters", {})
+
         if search_parameters:
             query += f"?{urllib.parse.urlencode(search_parameters)}"
         url = fhir_url + query
