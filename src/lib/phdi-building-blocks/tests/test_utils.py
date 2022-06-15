@@ -2,9 +2,7 @@ from phdi_building_blocks.utils import (
     find_resource_by_type,
     get_one_line_address,
     get_field,
-    convert_to_case,
     standardize_text,
-    http_request_with_retry,
 )
 import pathlib
 import json
@@ -42,13 +40,6 @@ def test_get_field():
         "value": "johndanger@doe.net",
         "system": "email",
     }
-
-
-def test_convert_to_case():
-    test_str = "PhDi is ReaLLy KEWL"
-    assert convert_to_case(test_str, "upper") == "PHDI IS REALLY KEWL"
-    assert convert_to_case(test_str, "lower") == "phdi is really kewl"
-    assert convert_to_case(test_str, "title") == "Phdi Is Really Kewl"
 
 
 def test_standardize_text():
