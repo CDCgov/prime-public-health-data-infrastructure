@@ -37,10 +37,11 @@ def upload_bundle_to_fhir_server(
     """
 
     http_request_with_retry(
-        fhir_url,
-        3,
-        ["HEAD", "PUT", "POST", "OPTIONS"],
-        {
+        url=fhir_url,
+        retry_count=3,
+        request_type="POST",
+        allowed_methods=["HEAD", "PUT", "POST", "OPTIONS"],
+        headers={
             "Authorization": f"Bearer {access_token}",
             "Accept": "application/fhir+json",
             "Content-Type": "application/fhir+json",
