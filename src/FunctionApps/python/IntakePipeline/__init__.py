@@ -12,6 +12,7 @@ from phdi_building_blocks.fhir import (
     upload_bundle_to_fhir_server,
     generate_filename,
     get_fhirserver_cred_manager,
+    AzureFhirserverCredentialManager,
 )
 from phdi_building_blocks.conversion import (
     convert_batch_messages_to_list,
@@ -31,7 +32,7 @@ def run_pipeline(
     message: str,
     message_mappings: Dict[str, str],
     fhir_url: str,
-    cred_manager: str,
+    cred_manager: AzureFhirserverCredentialManager,
 ) -> None:
     """
     This function takes in a single message and attempts to convert, transform, and
