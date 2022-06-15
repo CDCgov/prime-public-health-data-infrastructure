@@ -402,3 +402,49 @@ def test_fhir_server_get(patched_requests_session, patched_logger):
 
     response = mock_requests_session_instance.get(url=url, headers=header)
     patched_logger.assert_called_with(response.status_code)
+
+
+@mock.patch("requests.Session")
+def test_auth_retry(patched_requests_session):
+    mock_requests_session_instance = patched_requests_session.return_value
+
+    response_content = '{"resourceType": "Patient", "id": "some-id"}'
+
+    mock_requests_session_instance.get.side_effect = [
+        mock.Mock(status_code=401),
+        mock.Mock(status_code=200, text=response_content),
+    ]
+
+    mock_access_token_value1 = "some-token1"
+    mock_access_token1 = mock.Mock()
+    mock_access_token1.token = mock_access_token_value1
+
+    mock_access_token_value2 = "some-token2"
+    mock_access_token2 = mock.Mock()
+    mock_access_token2.token = mock_access_token_value2
+
+    mock_cred_manager = mock.Mock()
+    mock_cred_manager.get_access_token.side_effect = [
+        mock_access_token1,
+        mock_access_token2,
+    ]
+
+    url = "https://fhir-url"
+
+    response = fhir_server_get(url, mock_cred_manager)
+
+    assert response.status_code == 200
+    assert response.text == response_content
+
+    mock_cred_manager.get_access_token.call_count == 2
+
+    mock_requests_session_instance.get.assert_has_calls(
+        [
+            mock.call(
+                url=url, headers={"Authorization": f"Bearer {mock_access_token_value1}"}
+            ),
+            mock.call(
+                url=url, headers={"Authorization": f"Bearer {mock_access_token_value2}"}
+            ),
+        ]
+    )

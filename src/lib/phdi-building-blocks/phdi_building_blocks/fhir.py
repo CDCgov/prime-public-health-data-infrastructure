@@ -88,28 +88,38 @@ def upload_bundle_to_fhir_server(
     :param str method: HTTP method to use (currently PUT or POST supported)
     """
     access_token = cred_manager.get_access_token().token
-    retry_strategy = RetryWithAuthRefresh(
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Accept": "application/fhir+json",
+        "Content-Type": "application/fhir+json",
+    }
+    data = json.dumps(bundle)
+
+    retry_strategy = Retry(
         total=3,
-        status_forcelist=[401, 429, 500, 502, 503, 504],
+        status_forcelist=[429, 500, 502, 503, 504],
         allowed_methods=["HEAD", "POST", "OPTIONS"],
-        cred_manager=cred_manager,
     )
     adapter = HTTPAdapter(max_retries=retry_strategy)
     http_session = requests.Session()
     http_session.mount("https://", adapter)
     try:
-        http_session.post(
+        response = http_session.post(
             fhir_url,
-            headers={
-                "Authorization": f"Bearer {access_token}",
-                "Accept": "application/fhir+json",
-                "Content-Type": "application/fhir+json",
-            },
-            data=json.dumps(bundle),
+            headers=headers,
+            data=data,
         )
+
     except Exception:
         logging.exception("Request to post Bundle failed for json: " + str(bundle))
         return
+
+    # Retry with new token in case it expired since creation (or from cache)
+    if response.status_code == 401:
+        access_token = cred_manager.get_access_token().token
+        reauth_headers = headers.copy()
+        reauth_headers["Authorization"] = f"Bearer {access_token}"
+        response = http_session.post(url=fhir_url, headers=reauth_headers, data=data)
 
 
 def export_from_fhir_server(
@@ -141,6 +151,12 @@ def export_from_fhir_server(
     """
     logging.debug("Initiating export from FHIR server.")
     access_token = cred_manager.get_access_token().token
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Accept": "application/fhir+json",
+        "Prefer": "respond-async",
+    }
+
     export_url = _compose_export_url(
         fhir_url=fhir_url,
         export_scope=export_scope,
@@ -149,24 +165,26 @@ def export_from_fhir_server(
         container=container,
     )
     logging.debug(f"Composed export URL: {export_url}")
-    retry_strategy = RetryWithAuthRefresh(
+    retry_strategy = Retry(
         total=3,
-        status_forcelist=[401, 429, 500, 502, 503, 504],
+        status_forcelist=[429, 500, 502, 503, 504],
         allowed_methods=["HEAD", "GET", "OPTIONS"],
-        cred_manager=cred_manager,
     )
     adapter = HTTPAdapter(max_retries=retry_strategy)
     http_session = requests.Session()
     http_session.mount("https://", adapter)
     response = http_session.get(
         export_url,
-        headers={
-            "Authorization": f"Bearer {access_token}",
-            "Accept": "application/fhir+json",
-            "Prefer": "respond-async",
-        },
+        headers=headers,
     )
     logging.info(f"Export request completed with status {response.status_code}")
+
+    # Retry with new token in case it expired since creation (or from cache)
+    if response.status_code == 401:
+        access_token = cred_manager.get_access_token().token
+        reauth_headers = headers.copy()
+        reauth_headers["Authorization"] = f"Bearer {access_token}"
+        response = http_session.get(url=export_url, headers=reauth_headers)
 
     if response.status_code == 202:
 
@@ -230,22 +248,31 @@ def __export_from_fhir_server_poll_call(
     """
     logging.debug(f"Polling endpoint {poll_url}")
     access_token = cred_manager.get_access_token().token
-    retry_strategy = RetryWithAuthRefresh(
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Accept": "application/fhir+ndjson",
+    }
+    retry_strategy = Retry(
         total=3,
-        status_forcelist=[401, 429, 500, 502, 503, 504],
+        status_forcelist=[429, 500, 502, 503, 504],
         allowed_methods=["HEAD", "GET", "OPTIONS"],
-        cred_manager=cred_manager,
     )
     adapter = HTTPAdapter(max_retries=retry_strategy)
     http_session = requests.Session()
     http_session.mount("https://", adapter)
+
     response = http_session.get(
         poll_url,
-        headers={
-            "Authorization": f"Bearer {access_token}",
-            "Accept": "application/fhir+ndjson",
-        },
+        headers=headers,
     )
+
+    # Retry with new token in case it expired since creation (or from cache)
+    if response.status_code == 401:
+        access_token = cred_manager.get_access_token().token
+        reauth_headers = headers.copy()
+        reauth_headers["Authorization"] = f"Bearer {access_token}"
+        response = http_session.get(url=poll_url, headers=reauth_headers)
+
     if response.status_code == 202:
         # In progress - return None to keep polling
         return
@@ -342,17 +369,24 @@ def fhir_server_get(
     request.
     """
     access_token = cred_manager.get_access_token().token
-    header = {"Authorization": f"Bearer {access_token}"}
-    retry_strategy = RetryWithAuthRefresh(
+    headers = {"Authorization": f"Bearer {access_token}"}
+    retry_strategy = Retry(
         total=3,
-        status_forcelist=[401, 429, 500, 502, 503, 504],
+        status_forcelist=[429, 500, 502, 503, 504],
         allowed_methods=["HEAD", "GET", "OPTIONS"],
-        cred_manager=cred_manager,
     )
     adapter = HTTPAdapter(max_retries=retry_strategy)
     http_session = requests.Session()
     http_session.mount("https://", adapter)
-    response = http_session.get(url=url, headers=header)
+    response = http_session.get(url=url, headers=headers)
+
+    # Retry with new token in case it expired since creation (or from cache)
+    if response.status_code == 401:
+        access_token = cred_manager.get_access_token().token
+        reauth_headers = headers.copy()
+        reauth_headers["Authorization"] = f"Bearer {access_token}"
+        response = http_session.get(url=url, headers=reauth_headers)
+
     log_fhir_server_error(response.status_code)
 
     return response
@@ -384,21 +418,3 @@ def log_fhir_server_error(status_code: int) -> None:
     elif str(status_code).startswith(("4", "5")):
         error_message = f"FHIR SERVER ERROR - Status code {status_code}"
         logging.error(error_message)
-
-
-class RetryWithAuthRefresh(Retry):
-    def __init__(self, *args, **kwargs):
-        self._cred_manager = kwargs.pop("cred_manager", None)
-        super(RetryWithAuthRefresh, self).__init__(*args, **kwargs)
-
-    def new(self, **kw):
-        kw["cred_manager"] = self._cred_manager
-        return super(RetryWithAuthRefresh, self).new(**kw)
-
-    def increment(self, method, url, response=None, *args, **kwargs):
-        if response and response.status_code == 401 and self._cred_manager:
-            access_token = self._cred_manager.get_access_token().token
-            response.request.headers["Authorization"] = f"Bearer {access_token}"
-        return super(RetryWithAuthRefresh, self).increment(
-            method, url, response, *args, **kwargs
-        )

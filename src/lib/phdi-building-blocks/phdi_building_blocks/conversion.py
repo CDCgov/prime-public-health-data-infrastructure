@@ -5,10 +5,10 @@ import hl7
 
 from phdi_building_blocks.fhir import (
     AzureFhirserverCredentialManager,
-    RetryWithAuthRefresh,
 )
 from requests.adapters import HTTPAdapter
 from typing import List, Dict
+from urllib3 import Retry
 
 
 def clean_message(message: str) -> str:
@@ -283,18 +283,24 @@ def convert_message_to_fhir(
         ],
     }
     access_token = cred_manager.get_access_token().token
-    retry_strategy = RetryWithAuthRefresh(
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    retry_strategy = Retry(
         total=3,
-        status_forcelist=[401, 429, 500, 502, 503, 504],
+        status_forcelist=[429, 500, 502, 503, 504],
         allowed_methods=["HEAD", "POST", "OPTIONS"],
-        cred_manager=cred_manager,
     )
     adapter = HTTPAdapter(max_retries=retry_strategy)
     http_session = requests.Session()
     http_session.mount("https://", adapter)
-    response = http_session.post(
-        url=url, json=data, headers={"Authorization": f"Bearer {access_token}"}
-    )
+    response = http_session.post(url=url, json=data, headers=headers)
+
+    # Retry with new token in case it expired since creation (or from cache)
+    if response.status_code == 401:
+        access_token = cred_manager.get_access_token().token
+        reauth_headers = headers.copy()
+        reauth_headers["Authorization"] = f"Bearer {access_token}"
+        response = http_session.get(url=url, headers=reauth_headers)
 
     if response.status_code != 200:
         logging.error(
