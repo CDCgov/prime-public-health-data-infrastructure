@@ -78,6 +78,8 @@ def apply_schema_to_resource(resource: dict, schema: dict) -> dict:
     resource_schema = schema.get(resource.get("resourceType", ""))
     if resource_schema is None:
         return data
+
+    resource_schema_fields = resource_schema.get("Fields", {})
     for field in resource_schema.keys():
         path = resource_schema[field]["fhir_path"]
 
@@ -88,11 +90,11 @@ def apply_schema_to_resource(resource: dict, schema: dict) -> dict:
             return {}
 
         if len(value) == 0:
-            data[resource_schema[field]["new_name"]] = ""
+            data[resource_schema_fields[field]["new_name"]] = ""
         else:
-            selection_criteria = resource_schema[field]["selection_criteria"]
+            selection_criteria = resource_schema_fields[field]["selection_criteria"]
             value = apply_selection_criteria(value, selection_criteria)
-            data[resource_schema[field]["new_name"]] = value
+            data[resource_schema_fields[field]["new_name"]] = value
 
     return data
 
@@ -188,8 +190,7 @@ def make_schema_tables(
     for table in schema.keys():
         output_path = base_output_path / table
         make_table(
-            schema[table].get("Fields", {}),
-            schema[table].get("Search Parameters", {}),
+            schema[table],
             output_path,
             output_format,
             fhir_url,

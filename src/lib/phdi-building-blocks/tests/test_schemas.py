@@ -191,8 +191,6 @@ def test_make_tables_from_schema(patched_load_schema, patched_make_table):
         open(pathlib.Path(__file__).parent / "assets" / "test_schema.yaml")
     )
 
-    schema_path
-
     patched_load_schema.return_value = schema
 
     make_schema_tables(
