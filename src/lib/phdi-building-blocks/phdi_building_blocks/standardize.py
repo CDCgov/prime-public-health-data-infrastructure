@@ -1,6 +1,6 @@
 import phonenumbers
 import pycountry
-from typing import Callable, Literal, List
+from typing import Literal, List
 from phdi_building_blocks.utils import (
     find_resource_by_type,
     standardize_text,
@@ -171,17 +171,14 @@ def standardize_country(
 
 def standardize_all_phones(
     bundle: dict,
-    standardization_mode: str = "country",
     overwrite: bool = True,
 ) -> dict:
     """
     Given a FHIR bundle and a type of phone number standardization,
     transform all phone numberes for all patient resources in the
-    bundle. The default mode of standardization is "truncation".
+    bundle.
 
     :param bundle: The FHIR bundle to standardize patients in
-    :param standardization_mode: The type of standardization to
-        perform. Valid options include: "country"
     :param overwrite: Whether to overwrite the original data
         with the transformed values. Default is yes.
     """
@@ -190,32 +187,26 @@ def standardize_all_phones(
 
     for resource in find_resource_by_type(bundle, "Patient"):
         patient = resource.get("resource")
-        if standardization_mode == "country":
-            standardize_phone_numbers_for_patient(
-                patient, phone_country_standardization
-            )
-        else:
-            raise ValueError("Invalid standardization mode supplied.")
+        standardize_phone_numbers_for_patient(patient)
+
     return bundle
 
 
 def standardize_phone_numbers_for_patient(
     patient: dict,
-    transform_func: Callable = phone_country_standardization,
 ) -> None:
     """
     Helper method to standardize all phone numbers in a single patient
     resource using the caller-supplied transformation function.
 
     :param patient: The patient to standardize all numbers for
-    :param transform_func: The specific standardization
-        function to invoke on the numbers. Default behavior is truncation
-        standardization.
     """
     for telecom in patient.get("telecom", []):
         if telecom.get("system") == "phone" and "value" in telecom:
             countries = country_extractor(patient)
-            transformed_phone = transform_func(telecom.get("value", ""), countries)
+            transformed_phone = phone_country_standardization(
+                telecom.get("value", ""), countries
+            )
             telecom["value"] = transformed_phone
 
     return None

@@ -65,16 +65,6 @@ def get_field(resource: dict, field: str, use: str, default_field: int) -> str:
     )
 
 
-def convert_to_case(text: str, case: str) -> str:
-    if case == "upper":
-        return text.upper()
-    if case == "lower":
-        return text.lower()
-    if case == "title":
-        return text.title()
-    return text
-
-
 def standardize_text(raw_text: str, **kwargs) -> str:
     """
     Perform standardization on a provided text string, given a set of transformations.
@@ -84,48 +74,47 @@ def standardize_text(raw_text: str, **kwargs) -> str:
     string. Only recognized transformations will be utilized; all other specified
     transformations will be ignore. The recognized transformations are as follows:
         - trim (Bool): Indicates if leading and trailing whitespace should be removed.
-        If trimming is desired, it should be supplied as the LAST argument in the
-        dictionary of transformations to-be-performed, so that if characters/numbers
-        are removed but had spaces around them, this extra space will be trimmed too
         - case (Literal["upper", "lower", "title"]): Defines what casing should be
         applied to the string.
         - remove_numbers (Bool): Indicates if numbers should removed from the string.
-        - remove_punctuation (Bool): Indicates if characters that are not letters nor
-        numbers should be removed.
+        - remove_punctuation (Bool): Indicates if characters that are not letters,
+        numbers, nor spaces should be removed.
         - remove_characters (List[str]): Provides a list of characters that should be
         removed from the string.
     """
 
-    # TODO Figure out the order of operations. .title on a string with numbers acts
-    # differently than a string without them, so we'd need to decide what to do first.
-
-    # Some transformations require a second parameter, like "remove_characers", but
-    # others don't. In order to generalize this, if the second parameter is uneeded,
-    # we'll pass "_".
-    func_map = {
-        "case": convert_to_case,
-        "remove_numbers": lambda text, _: "".join(
-            [ltr for ltr in text if not ltr.isnumeric()]
-        ),
-        "remove_punctuation": lambda text, _: "".join(
-            [ltr for ltr in text if ltr.isalnum() or ltr == " "]
-        ),
-        "remove_characters": lambda text, characters: "".join(
-            [ltr for ltr in text if ltr not in characters]
-        ),
-        "trim": lambda text, _: text.strip(),
-    }
+    # A certain order of operations needs to be imposed in order to make the output
+    # deterministic, and as close to the user's intent as possible. While it may see
+    # at first glance that this code could be cleaned up with a creative for loop,
+    # the current understanding is that the fact that Python doesn't maintain the order
+    # of keys in dictionaries, there's no easy to way to ensure that transformations are
+    # processed in the appropriate way. An example of where this becomes an issue is
+    # when the user makes the following call:
+    #     standardize_text(" 123 hi 456 ", trim=True, remove_numbers=True)
+    # Because dictionaries and kwargs are unordered in Python prior to version 3.6, the
+    # outcome could either be "hi" or " hi ", depending on if numbers are removed prior
+    # to stripping the string or not. As of Python 3.6, the order of **kwargs is
+    # preserved, but we can't assume that the user will pass the parameters in the
+    # proper order. All of this is to say that a series of if statements appears to be
+    # the most straightforward means by which we can ensure that the transformations are
+    # applied in the appropriate order.
     text = raw_text
 
-    # Keys represent the transformation to be applied, and the value specifies what
-    # should happen. For example, if trim=True is passed, then the key is trim and the
-    # value is True.
-    for key, value in kwargs.items():
-        # we use Python's truthiness evaluation to sort of cheat in checking if booleans
-        # are true while also checking if non-booleans hold values.
-        if key in func_map and value:
-            f = func_map[key]
-            text = f(text, value)
+    if "remove_numbers" in kwargs:
+        text = "".join([ltr for ltr in text if not ltr.isnumeric()])
+    if "remove_punctuation" in kwargs:
+        text = "".join([ltr for ltr in text if ltr.isalnum() or ltr == " "])
+    if "remove_characters" in kwargs:
+        text = "".join([ltr for ltr in text if ltr not in kwargs["remove_characters"]])
+    if "trim" in kwargs:
+        text = text.strip()
+    if "case" in kwargs:
+        if kwargs["case"] == "upper":
+            text = text.upper()
+        if kwargs["case"] == "lower":
+            text = text.lower()
+        if kwargs["case"] == "title":
+            text = text.title()
 
     return text
 
