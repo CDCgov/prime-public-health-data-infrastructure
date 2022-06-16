@@ -90,7 +90,7 @@ def extract_countries_from_resource(
     countries = []
     resource_type = resource.get("resource").get("resourceType")
     if resource_type == "Patient":
-        for address in resource.get("address"):
+        for address in resource.get("resource").get("address"):
             country = address.get("country")
             countries.append(standardize_country(country, code_type))
     return countries
