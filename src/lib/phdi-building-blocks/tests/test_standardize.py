@@ -10,10 +10,7 @@ from phdi_building_blocks.standardize import (
     standardize_country,
 )
 
-
-# def test_standardize_name():
-#     assert "JOHN DOE" == non_numeric_caps_standardization(" JOHN DOE ")
-#     assert "JOHN DOE" == non_numeric_caps_standardization(" John Doe3 ")
+# TODO: Implement missing unit test for standardize.standardize_phone()
 
 
 def test_standardize_patient_name():

@@ -96,7 +96,7 @@ def extract_countries_from_resource(
     return countries
 
 
-def phone_country_standardization(raw: str, countries: List = [None, "US"]) -> str:
+def standardize_phone(raw: str, countries: List = [None, "US"]) -> str:
     """
     Given a phone number and optionally an associated FHIR resource and country
     extraction function if able to parse the phone number return it in the E.164
@@ -206,9 +206,7 @@ def standardize_phone_numbers_for_patient(
     for telecom in patient_resource.get("resource").get("telecom", []):
         if telecom.get("system") == "phone" and "value" in telecom:
             countries = extract_countries_from_resource(patient_resource)
-            transformed_phone = phone_country_standardization(
-                telecom.get("value", ""), countries
-            )
+            transformed_phone = standardize_phone(telecom.get("value", ""), countries)
             telecom["value"] = transformed_phone
 
     return None
