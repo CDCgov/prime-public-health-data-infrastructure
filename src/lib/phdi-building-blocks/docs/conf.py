@@ -18,6 +18,7 @@ sys.path.insert(0, os.path.abspath(".."))
 
 # -- Project information -----------------------------------------------------
 
+# TODO Figure out if these attributions are correct. May need to change to USDS or CDC
 project = "PHDI Building Blocks"
 copyright = "2022, PHDI Team"
 author = "PHDI Team"

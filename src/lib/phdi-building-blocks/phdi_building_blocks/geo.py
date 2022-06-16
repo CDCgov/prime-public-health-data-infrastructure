@@ -72,7 +72,6 @@ def get_smartystreets_client(auth_id: str, auth_token: str) -> us_street.Client:
 
     :param auth_id: Authentication ID to build the client with
     :param auth_token: The token that allows us to access the client
-    :return: Built smartystreets API client
     """
 
     creds = StaticCredentials(auth_id, auth_token)
@@ -110,6 +109,7 @@ def geocode_patients(
     for resource in find_resource_by_type(bundle, "Patient"):
         patient = resource.get("resource")
         geocode_and_parse_addresses_for_patient(patient, client)
+
     return bundle
 
 

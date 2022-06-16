@@ -13,7 +13,6 @@ def find_resource_by_type(bundle: dict, resource_type: str) -> List[dict]:
 
     :param bundle: The FHIR bundle to find patients in
     :param resource_type: The type of FHIR resource to find
-    :return: A list of references to patient dictionaries
     """
     return [
         resource
@@ -28,7 +27,6 @@ def get_one_line_address(address: dict) -> str:
     FHIR-type dictionary holding address information.
 
     :param address: The address bundle
-    :return: The one-line string of the address
     """
     raw_one_line = " ".join(address.get("line", []))
     raw_one_line += f" {address.get('city')}, {address.get('state')}"
@@ -54,7 +52,6 @@ def get_field(resource: dict, field: str, use: str, default_field: int) -> str:
     :param default_field: The index of the field type to treat as
         the default return type if no field with the requested use case is
         found
-    :return: The requested use-case-type field
     """
     # The next function returns the "next" (in our case first) item from an
     # iterator that meets a given condition; if non exists, we index the
@@ -142,7 +139,6 @@ def http_request_with_retry(
     including Authorization and content-type
     :param data: JSON data in the case that the request requires data to be
     posted. Defaults to none.
-    :return: None, or Response
     """
     # Configure the settings of the 'requests' session we'll make
     # the API call with

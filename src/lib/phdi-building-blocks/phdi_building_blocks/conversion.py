@@ -17,7 +17,6 @@ def clean_message(message: str) -> str:
     * Convert segment terminators back from ``\\r`` to ``\\n``
 
     :param message: The raw HL7 message to sanitize
-    :return: The parsed, normalized message with delimiters removed
     """
     parsed_message = ""
     try:
@@ -119,8 +118,6 @@ def normalize_hl7_datetime(hl7_datetime: str) -> str:
     providers that have particular requirements for dates.
 
     :param hl7_datetime: The raw datetime string to clean
-    :return: The cleaned datetime string appropriately segmented and
-      truncated
     """
 
     # Use regex to achieve the datetime formatting described above
@@ -153,7 +150,6 @@ def clean_batch(batch: str, delimiter: str = "\n") -> str:
 
     :param batch: The batch file data to clean
     :param delimiter: The newline character to standardize
-    :return: The batch data with newlines correctly substituted
     """
     cleaned_batch = re.sub("[\r\n]+", delimiter, batch)
 
@@ -238,8 +234,6 @@ def get_file_type_mappings(blob_name: str) -> Dict[str, str]:
 
     :param blob_name: The name of the blob to determine conversion
         mappings for
-    :return: Mappings of key conversion variable to their appropriate
-        values for this data type
     """
 
     # Determine if the blob can be processed with our heuristics
@@ -310,7 +304,6 @@ def convert_message_to_fhir(
         FHIR server
     :param fhir_url: A URL that points to the location of the FHIR
         server
-    :return: The converted message expressed in FHIR as a json dictionary
     """
     if input_data_type == "Hl7v2":
         message = clean_message(message)

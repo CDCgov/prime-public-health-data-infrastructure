@@ -17,7 +17,6 @@ def generate_filename(blob_name: str, message_index: int) -> str:
 
     :param blob_name: The name of the blob to modify
     :param message_index: The index of this message in the batch
-    :return: The derived filename
     """
     full_filename = blob_name.split("/")[-1]
     filename, ext = full_filename.rsplit(".", 1)
@@ -80,8 +79,6 @@ def export_from_fhir_server(
         for export files to be generated.
     :param poll_timeout: the maximum number of seconds to wait for export files to
         be generated.
-    :return: The response from the FHIR export, containing the records that were
-        processed
     """
 
     # Combine template variables into export endpoint
@@ -97,11 +94,11 @@ def export_from_fhir_server(
 
     # Open connection to the export operation and kickoff process
     response = http_request_with_retry(
-        export_url,
-        3,
-        "GET",
-        ["GET"],
-        {
+        url=export_url,
+        retry_count=3,
+        request_type="GET",
+        allowed_methods=["GET"],
+        headers={
             "Authorization": f"Bearer {access_token}",
             "Accept": "application/fhir+json",
             "Prefer": "respond-async",
@@ -152,7 +149,6 @@ def _compose_export_url(
     back
     :param container: The container where we want to store the uploaded
     files
-    :return: The url built with our desired export endpoint criteria
     """
     export_url = fhir_url
     if export_scope == "Patient" or export_scope.startswith("Group/"):
@@ -194,8 +190,6 @@ def __export_from_fhir_server_poll_call(
     our files are ready
     :param access_token: The access token we use to authenticate with the
     FHIR server
-    :return: None if the files didn't get processed in time, OR a response with
-    the relevant status codes and exported records if the files did get processed
     """
     logging.debug(f"Polling endpoint {poll_url}")
     response = requests.get(
@@ -231,7 +225,6 @@ def export_from_fhir_server_poll(
     :raises polling.TimeoutException: If the FHIR server continually returns a 202
         status indicating in progress until the timeout is reached.
     :raises requests.HTTPError: If an unexpected status code is returned.
-    :return: The export response obtained from the FHIR server (200 status code)
     """
     response = polling.poll(
         target=__export_from_fhir_server_poll_call,
@@ -263,8 +256,6 @@ def download_from_export_response(
 
     :param export_response: JSON-type dictionary holding the response from
         the export URL the FHIR server set up.
-    :yield: tuple containing resource type (e.g. Patient) AND the TextIO of the
-        downloaded ndjson content for that resource type
     """
     # TODO: Handle error array that could be contained in the response content.
 
@@ -280,13 +271,13 @@ def _download_export_blob(blob_url: str, encoding: str = "utf-8") -> TextIO:
 
     :param blob_url: Blob URL location to download from blob storage
     :param encoding: encoding to apply to the ndjson content, defaults to "utf-8"
-    :return: Downloaded content wrapped in TextIO
     """
     bytes_buffer = io.BytesIO()
     cred = DefaultAzureCredential()
     download_blob_from_url(blob_url=blob_url, output=bytes_buffer, credential=cred)
     text_buffer = io.TextIOWrapper(buffer=bytes_buffer, encoding=encoding, newline="\n")
     text_buffer.seek(0)
+
     return text_buffer
 
 

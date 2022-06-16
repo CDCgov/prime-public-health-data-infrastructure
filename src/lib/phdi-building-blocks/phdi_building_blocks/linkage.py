@@ -23,7 +23,6 @@ def add_patient_identifier(bundle: dict, salt_str: str, overwrite: bool = True) 
     :param overwrite: Whether to write the new standardizations
         directly into the given bundle, changing the original data (True
         is yes)
-    :return: The bundle of data with patients having unique identifiers
     """
     # Copy the data if we don't want to overwrite the original
     if not overwrite:
@@ -43,6 +42,8 @@ def add_patient_identifier(bundle: dict, salt_str: str, overwrite: bool = True) 
             address = get_field(patient, "address", "home", 0)
             address_line = get_one_line_address(address)
 
+        # TODO Determine if minimum quality criteria should be included, such as min
+        # number of characters in last name, valid birth date, or address line
         # Generate and store unique hash code
         link_str = name_str + "-" + patient["birthDate"] + "-" + address_line
         hashcode = generate_hash_str(link_str, salt_str)
@@ -50,6 +51,9 @@ def add_patient_identifier(bundle: dict, salt_str: str, overwrite: bool = True) 
         if "identifier" not in patient:
             patient["identifier"] = []
 
+        # TODO Follow up on the validity and source of the comment about the system
+        # value corresponding to the FHIR specification. Need to either add a citation
+        # or correct the wording to more properly reflect what it represents.
         patient["identifier"].append(
             {
                 "value": hashcode,
@@ -60,6 +64,7 @@ def add_patient_identifier(bundle: dict, salt_str: str, overwrite: bool = True) 
                 "use": "temp",
             }
         )
+
     return bundle
 
 
@@ -73,7 +78,6 @@ def generate_hash_str(linking_identifier: str, salt_str: str) -> str:
         address, and date of birth, delimited by dashes
     :param salt_str: The salt to concatenate onto the end to prevent
         being able to reverse-engineer PII
-    :return: The unique patient hash
     """
     hash_obj = hashlib.sha256()
     to_encode = (linking_identifier + salt_str).encode("utf-8")
