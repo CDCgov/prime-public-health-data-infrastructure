@@ -188,15 +188,14 @@ def standardize_all_phones(
     if not overwrite:
         bundle = copy.deepcopy(bundle)
 
-    for resource in find_resource_by_type(bundle, "Patient"):
-        patient = resource.get("resource")
+    for patient in find_resource_by_type(bundle, "Patient"):
         standardize_phone_numbers_for_patient(patient)
 
     return bundle
 
 
 def standardize_phone_numbers_for_patient(
-    patient: dict,
+    patient_resource: dict,
 ) -> None:
     """
     Helper method to standardize all phone numbers in a single patient
@@ -204,9 +203,9 @@ def standardize_phone_numbers_for_patient(
 
     :param patient: The patient to standardize all numbers for
     """
-    for telecom in patient.get("telecom", []):
+    for telecom in patient_resource.get("resource").get("telecom", []):
         if telecom.get("system") == "phone" and "value" in telecom:
-            countries = extract_countries_from_resource(patient)
+            countries = extract_countries_from_resource(patient_resource)
             transformed_phone = phone_country_standardization(
                 telecom.get("value", ""), countries
             )

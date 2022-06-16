@@ -27,21 +27,24 @@ def test_standardize_patient_name():
     assert standardize_patient_names(raw_bundle) == standardized_bundle
 
 
-def test_extract_country_from_resource():
+def test_extract_countries_from_resource():
     raw_bundle = json.load(
         open(pathlib.Path(__file__).parent / "assets" / "patient_bundle.json")
     )
     patient = raw_bundle["entry"][1].get("resource")
     patient["address"].append(patient["address"][0])
     patient["address"].append(patient["address"][0])
-    assert [country for country in extract_countries_from_resource(patient)] == [
-        "US"
-    ] * 3
+    patient_resource = raw_bundle["entry"][1]
     assert [
-        country for country in extract_countries_from_resource(patient, "alpha_3")
+        country for country in extract_countries_from_resource(patient_resource)
+    ] == ["US"] * 3
+    assert [
+        country
+        for country in extract_countries_from_resource(patient_resource, "alpha_3")
     ] == ["USA"] * 3
     assert [
-        country for country in extract_countries_from_resource(patient, "numeric")
+        country
+        for country in extract_countries_from_resource(patient_resource, "numeric")
     ] == ["840"] * 3
 
 
