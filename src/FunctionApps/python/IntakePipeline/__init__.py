@@ -72,6 +72,9 @@ def run_pipeline(
         fhir_url=fhir_url,
     )
 
+    # TODO: Determine if we still need this code. At the moment, I believe it's
+    # duplicating storage with no benefit.
+
     # We got a valid conversion so apply desired standardizations
     # sequentially and then add the linking identifier
     if response and response.get("resourceType") == "Bundle":
@@ -99,7 +102,7 @@ def run_pipeline(
         # Don't forget to import the bundle to the FHIR server as well
         upload_bundle_to_fhir_server(standardized_bundle, access_token, fhir_url)
 
-    # For some reason, the HL7/CCDA message failed to convert
+    # For some reason, the HL7/CCDA message failed to convert.
     # This might be failure to communicate with the FHIR server due to
     # access/authentication reasons, or potentially malformed timestamps
     # in the data
@@ -144,8 +147,7 @@ def main(blob: func.InputStream) -> None:
     into a list of individual messages.  Each individual message is passed to the
     processing pipeline.
 
-    :param blob: The blob that's about to go on
-        the journey of a lifetime
+    :param blob: The HL7 message to be processed
     """
     # Set up logging, retrieve configuration variables
     logging.debug("Entering intake pipeline ")
