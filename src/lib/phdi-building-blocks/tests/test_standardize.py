@@ -24,19 +24,6 @@ def test_standardize_patient_name():
     patient = standardized_bundle["entry"][1]["resource"]
     patient["name"][0]["family"] = "DOE"
     patient["name"][0]["given"] = ["JOHN", "DANGER"]
-    patient["extension"] = []
-    patient["extension"].append(
-        {
-            "url": "http://usds.gov/fhir/phdi/StructureDefinition/given-name-was-standardized",  # noqa
-            "valueBoolean": True,
-        }
-    )
-    patient["extension"].append(
-        {
-            "url": "http://usds.gov/fhir/phdi/StructureDefinition/family-name-was-standardized",  # noqa
-            "valueBoolean": True,
-        }
-    )
     assert standardize_patient_names(raw_bundle) == standardized_bundle
 
 
@@ -68,14 +55,4 @@ def test_standardize_patient_phone():
     standardized_bundle = copy.deepcopy(raw_bundle.copy())
     patient = standardized_bundle["entry"][1]["resource"]
     patient["telecom"][0]["value"] = "+11234567890"
-    patient["extension"] = []
-    patient["extension"].append(
-        {
-            "url": "http://usds.gov/fhir/phdi/StructureDefinition/phone-was-standardized",  # noqa
-            "valueBoolean": True,
-        }
-    )
-    assert (
-        standardize_all_phones(raw_bundle, standardization_mode="country")
-        == standardized_bundle
-    )
+    assert standardize_all_phones(raw_bundle) == standardized_bundle
