@@ -1,6 +1,8 @@
 import json
-import yaml
 import pathlib
+import urllib
+import yaml
+
 from unittest import mock
 
 from phdi_building_blocks.schemas import (
@@ -63,7 +65,7 @@ def test_make_table_success(patch_query, patch_write):
         lambda x, y: x
     )
     output_format = "parquet"
-    fhir_url = "some_fhir_server_url"
+    fhir_url = "https://some_fhir_server_url"
     access_token = "some_access_token"
 
     fhir_server_responses = json.load(
@@ -91,6 +93,26 @@ def test_make_table_success(patch_query, patch_write):
         fhir_url,
         access_token,
     )
+
+    search_parameters = urllib.parse.urlencode(
+        schema["my_table"]["Patient"]["Search Parameters"]
+    )
+
+    patch_query.assert_has_calls(
+        [
+            # main search
+            mock.call(
+                f"{fhir_url}/Patient?{search_parameters}",
+                access_token,
+            ),
+            # "next" link
+            mock.call(
+                f"{fhir_url}/Patient?ct=long_random_string",
+                access_token,
+            ),
+        ]
+    )
+    assert patch_query.call_count == 2
 
     assert len(patch_write.call_args_list[0]) == 2
 
@@ -134,6 +156,54 @@ def test_make_table_success(patch_query, patch_write):
 @mock.patch("phdi_building_blocks.schemas.fhir_server_get")
 def test_make_table_fail(patch_query, patch_write):
 
+    schema = yaml.safe_load(
+        open(pathlib.Path(__file__).parent / "assets" / "test_schema.yaml")
+    )
+
+    output_path = mock.Mock()
+    output_path.__truediv__ = (  # Redefine division operator to prevent failure.
+        lambda x, y: x
+    )
+
+    output_format = "parquet"
+
+    fhir_url = "https://some_fhir_server_url"
+    access_token = "some_access_token"
+
+    response = mock.Mock()
+    response.status_code = 400
+    patch_query.return_value = response
+
+    make_table(
+        schema["my_table"],
+        output_path,
+        output_format,
+        fhir_url,
+        access_token,
+    )
+
+    search_parameters = urllib.parse.urlencode(
+        schema["my_table"]["Patient"]["Search Parameters"]
+    )
+
+    patch_query.assert_has_calls(
+        [
+            # main search
+            mock.call(
+                f"{fhir_url}/Patient?{search_parameters}",
+                access_token,
+            ),
+        ]
+    )
+    assert patch_query.call_count == 1
+
+    patch_write.assert_not_called()
+
+
+@mock.patch("phdi_building_blocks.schemas.write_schema_table")
+@mock.patch("phdi_building_blocks.schemas.fhir_server_get")
+def test_make_table_empty_schema(patch_query, patch_write):
+
     schema = {}
 
     output_path = mock.Mock()
@@ -143,7 +213,7 @@ def test_make_table_fail(patch_query, patch_write):
 
     output_format = "parquet"
 
-    fhir_url = "some_fhir_server_url"
+    fhir_url = "https://some_fhir_server_url"
     access_token = "some_access_token"
 
     response = mock.Mock()
@@ -157,6 +227,9 @@ def test_make_table_fail(patch_query, patch_write):
         fhir_url,
         access_token,
     )
+
+    patch_query.assert_not_called()
+
     patch_write.assert_not_called()
 
 
@@ -170,7 +243,7 @@ def test_make_tables_from_schema(patched_load_schema, patched_make_table):
         lambda x, y: x
     )
     output_format = "parquet"
-    fhir_url = "some_fhir_url"
+    fhir_url = "https://some_fhir_url"
     access_token = "some_access_token"
 
     schema = yaml.safe_load(
