@@ -8,7 +8,7 @@ import logging
 
 def find_resource_by_type(bundle: dict, resource_type: str) -> List[dict]:
     """
-    Collect all patient resources in a given bundle of FHIR data and
+    Collect all resources of a specific type in a bundle of FHIR data and
     return references to them in a list.
 
     :param bundle: The FHIR bundle to find patients in
@@ -24,7 +24,7 @@ def find_resource_by_type(bundle: dict, resource_type: str) -> List[dict]:
 def get_one_line_address(address: dict) -> str:
     """
     Extract a one-line string representation of an address from a
-    FHIR-type dictionary holding address information.
+    JSON dictionary holding address information.
 
     :param address: The address bundle
     """
@@ -38,9 +38,9 @@ def get_one_line_address(address: dict) -> str:
 def get_field(resource: dict, field: str, use: str, default_field: int) -> str:
     """
     For a given field (such as name or address), find the first-occuring
-    instance of the field in a given patient JSON dict such that the
-    instance is associated with a particular "use" case or qualifier (use
-    case here referring to the FHIR-based usage of classifying how a
+    instance of the field in a given patient JSON dict, such that the
+    instance is associated with a particular "use" case of the field (use
+    case here refers to the FHIR-based usage of classifying how a
     value is used in reporting). For example, find the first name for a
     patient that has a "use" of "official" (meaning the name is used
     for official reports). If no instance of a field with the requested
@@ -53,8 +53,12 @@ def get_field(resource: dict, field: str, use: str, default_field: int) -> str:
         the default return type if no field with the requested use case is
         found
     """
+    # TODO Determine if we need to implement .get() to ensure KeyErrors are not thrown
+    # or if we want the KeyError functionality and thus just need to document that
+    # behavior.
+
     # The next function returns the "next" (in our case first) item from an
-    # iterator that meets a given condition; if non exists, we index the
+    # iterator that meets a given condition; if non exist, we index the
     # field for a default value
     return next(
         (item for item in resource[field] if item.get("use") == use),

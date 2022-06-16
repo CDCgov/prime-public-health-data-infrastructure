@@ -17,6 +17,8 @@ ENVIRONMENT = {
 @mock.patch("FhirServerExport.fhir.export_from_fhir_server")
 @mock.patch.object(AzureFhirServerCredentialManager, "get_access_token")
 @mock.patch.dict("os.environ", ENVIRONMENT)
+# TODO: Either remove the unusued mock_download parameter, or otherwise
+# make use of it in the test
 def test_main(mock_get_access_token, mock_export, mock_download):
     logging.basicConfig(level=logging.DEBUG)
     req = mock.Mock()

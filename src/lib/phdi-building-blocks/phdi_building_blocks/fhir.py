@@ -19,7 +19,9 @@ def generate_filename(blob_name: str, message_index: int) -> str:
     :param message_index: The index of this message in the batch
     """
     full_filename = blob_name.split("/")[-1]
-    filename, ext = full_filename.rsplit(".", 1)
+
+    # Don't need to keep the extension around after the split
+    filename, _ = full_filename.rsplit(".", 1)
     return f"{filename}-{message_index}"
 
 

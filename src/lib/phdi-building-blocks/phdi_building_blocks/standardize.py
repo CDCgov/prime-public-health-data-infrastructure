@@ -75,21 +75,24 @@ def standardize_names_for_patient(patient: dict, **kwargs) -> None:
     return None
 
 
-def country_extractor(
-    patient: dict, code_type: Literal["alpha_2", "alpha_3", "numeric"] = "alpha_2"
+def extract_countries_from_resource(
+    resource: dict, code_type: Literal["alpha_2", "alpha_3", "numeric"] = "alpha_2"
 ) -> List[str]:
     """
-    Given a patient, build a list containing all of the counries found in the
-    patient's addresses in a standard form sepcified by code_type.
+    Given a FHIR resource, build a list containing all of the counries found in the
+    addresses associated with that resource in a standardized form sepcified by
+    code_type.
 
-    :param patient: A patient from a FHIR resource
+    :param resource: A patient from a FHIR resource
     :param code_type: A string equal to 'alpha_2', 'alpha_3', or 'numeric' to
         specify which type of standard country identifier to generate
     """
     countries = []
-    for address in patient.get("address"):
-        country = address.get("country")
-        countries.append(standardize_country(country, code_type))
+    resource_type = resource.get("resource").get("resourceType")
+    if resource_type == "Patient":
+        for address in resource.get("address"):
+            country = address.get("country")
+            countries.append(standardize_country(country, code_type))
     return countries
 
 
@@ -203,7 +206,7 @@ def standardize_phone_numbers_for_patient(
     """
     for telecom in patient.get("telecom", []):
         if telecom.get("system") == "phone" and "value" in telecom:
-            countries = country_extractor(patient)
+            countries = extract_countries_from_resource(patient)
             transformed_phone = phone_country_standardization(
                 telecom.get("value", ""), countries
             )
