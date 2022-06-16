@@ -1,14 +1,16 @@
-import pathlib
-import os
-import yaml
+import fhirpathpy
 import json
-import random
-from typing import Literal, List, Union
+import logging
+import os
+import pathlib
 import pyarrow as pa
 import pyarrow.parquet as pq
-import fhirpathpy
-from pathlib import Path
+import random
+import urllib
+import yaml
 
+from typing import Literal, List, Union
+from pathlib import Path
 from phdi_building_blocks.fhir import fhir_server_get
 
 
@@ -75,16 +77,23 @@ def apply_schema_to_resource(resource: dict, schema: dict) -> dict:
     resource_schema = schema.get(resource.get("resourceType", ""))
     if resource_schema is None:
         return data
-    for field in resource_schema.keys():
-        path = resource_schema[field]["fhir_path"]
-        value = fhirpathpy.evaluate(resource, path)
+
+    resource_schema_fields = resource_schema.get("Fields", {})
+    for field in resource_schema_fields.keys():
+        path = resource_schema_fields[field]["fhir_path"]
+
+        try:
+            value = fhirpathpy.evaluate(resource, path)
+        except Exception:
+            logging.exception(f"Error evalutating {field} path {path}")
+            return {}
 
         if len(value) == 0:
-            data[resource_schema[field]["new_name"]] = ""
+            data[resource_schema_fields[field]["new_name"]] = ""
         else:
-            selection_criteria = resource_schema[field]["selection_criteria"]
+            selection_criteria = resource_schema_fields[field]["selection_criteria"]
             value = apply_selection_criteria(value, selection_criteria)
-            data[resource_schema[field]["new_name"]] = value
+            data[resource_schema_fields[field]["new_name"]] = value
 
     return data
 
@@ -111,6 +120,12 @@ def make_table(
         output_file_name = output_path / f"{resource_type}.{output_format}"
 
         query = f"/{resource_type}"
+
+        search_parameters = schema[resource_type].get("Search Parameters", {})
+
+        if search_parameters:
+            query += f"?{urllib.parse.urlencode(search_parameters)}"
+
         url = fhir_url + query
 
         writer = None
@@ -128,9 +143,9 @@ def make_table(
             # values_from_resource is a dictionary of the form:
             # {field1:value1, field2:value2, ...}.
 
-            for resource in query_result["entry"]:
+            for entry in query_result["entry"]:
                 values_from_resource = apply_schema_to_resource(
-                    resource["resource"], schema
+                    entry["resource"], schema
                 )
                 if values_from_resource != {}:
                     data.append(values_from_resource)

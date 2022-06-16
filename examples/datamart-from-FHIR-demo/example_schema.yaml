@@ -1,37 +1,39 @@
 ---
 table_1:
   Patient:
-    Patient ID:
-      fhir_path: Patient.id
-      include_nulls: false
-      include_unknowns: false
-      selection_criteria: first
-      new_name: patient_id
-    Identifier:
-      fhir_path: Patient.identifier
-      include_nulls: false
-      include_unknowns: false
-      selection_criteria: first
-      new_name: identifier
-    First Name:
-      fhir_path: Patient.name.given
-      include_nulls: false
-      include_unknowns: false
-      selection_criteria: first
-      new_name: first_name
-    Last Name:
-      fhir_path: Patient.name.family
-      include_nulls: false
-      include_unknowns: false
-      selection_criteria: first
-      new_name: last_name
-    Phone Number:
-      fhir_path: Patient.telecom.where(system = 'phone').value
-      include_nulls: false
-      include_unknowns: false
-      selection_criteria: first
-      new_name: phone_number
+    Fields:
+      Patient ID:
+        fhir_path: Patient.id
+        include_nulls: false
+        include_unknowns: false
+        selection_criteria: first
+        new_name: patient_id
+      Identifier:
+        fhir_path: Patient.identifier
+        include_nulls: false
+        include_unknowns: false
+        selection_criteria: first
+        new_name: identifier
+      First Name:
+        fhir_path: Patient.name.given
+        include_nulls: false
+        include_unknowns: false
+        selection_criteria: first
+        new_name: first_name
+      Last Name:
+        fhir_path: Patient.name.family
+        include_nulls: false
+        include_unknowns: false
+        selection_criteria: first
+        new_name: last_name
+      Phone Number:
+        fhir_path: Patient.telecom.where(system = 'phone').value
+        include_nulls: false
+        include_unknowns: false
+        selection_criteria: first
+        new_name: phone_number
   Observation:
+    Fields:
       Observation ID:
         fhir_path: Observation.id
         include_nulls: false
@@ -52,37 +54,39 @@ table_1:
         new_name: effective_datetime
 table_2:
   Patient:
-    Patient ID:
-      fhir_path: Patient.id
-      include_nulls: false
-      include_unknowns: false
-      selection_criteria: first
-      new_name: patient_id
-    Identifier:
-      fhir_path: Patient.identifier
-      include_nulls: false
-      include_unknowns: false
-      selection_criteria: first
-      new_name: identifier
-    First Name:
-      fhir_path: Patient.name.given
-      include_nulls: false
-      include_unknowns: false
-      selection_criteria: first
-      new_name: first_name
-    Last Name:
-      fhir_path: Patient.name.family
-      include_nulls: false
-      include_unknowns: false
-      selection_criteria: first
-      new_name: last_name
-    Phone Number:
-      fhir_path: Patient.telecom.where(system = 'phone').value
-      include_nulls: false
-      include_unknowns: false
-      selection_criteria: first
-      new_name: phone_number
+    Fields:
+      Patient ID:
+        fhir_path: Patient.id
+        include_nulls: false
+        include_unknowns: false
+        selection_criteria: first
+        new_name: patient_id
+      Identifier:
+        fhir_path: Patient.identifier
+        include_nulls: false
+        include_unknowns: false
+        selection_criteria: first
+        new_name: identifier
+      First Name:
+        fhir_path: Patient.name.given
+        include_nulls: false
+        include_unknowns: false
+        selection_criteria: first
+        new_name: first_name
+      Last Name:
+        fhir_path: Patient.name.family
+        include_nulls: false
+        include_unknowns: false
+        selection_criteria: first
+        new_name: last_name
+      Phone Number:
+        fhir_path: Patient.telecom.where(system = 'phone').value
+        include_nulls: false
+        include_unknowns: false
+        selection_criteria: first
+        new_name: phone_number
   Observation:
+    Fields:
       Observation ID:
         fhir_path: Observation.id
         include_nulls: false
