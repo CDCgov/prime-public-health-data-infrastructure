@@ -1,16 +1,13 @@
-import fhirpathpy
-import json
-import logging
-import os
 import pathlib
+import os
+import yaml
+import json
+import random
+from typing import Literal, List, Union
 import pyarrow as pa
 import pyarrow.parquet as pq
-import random
-import urllib
-import yaml
-
+import fhirpathpy
 from pathlib import Path
-from typing import Literal, List, Union
 
 from phdi_building_blocks.fhir import AzureFhirserverCredentialManager, fhir_server_get
 
@@ -78,23 +75,16 @@ def apply_schema_to_resource(resource: dict, schema: dict) -> dict:
     resource_schema = schema.get(resource.get("resourceType", ""))
     if resource_schema is None:
         return data
-
-    resource_schema_fields = resource_schema.get("Fields", {})
-    for field in resource_schema_fields.keys():
-        path = resource_schema_fields[field]["fhir_path"]
-
-        try:
-            value = fhirpathpy.evaluate(resource, path)
-        except Exception:
-            logging.exception(f"Error evalutating {field} path {path}")
-            return {}
+    for field in resource_schema.keys():
+        path = resource_schema[field]["fhir_path"]
+        value = fhirpathpy.evaluate(resource, path)
 
         if len(value) == 0:
-            data[resource_schema_fields[field]["new_name"]] = ""
+            data[resource_schema[field]["new_name"]] = ""
         else:
-            selection_criteria = resource_schema_fields[field]["selection_criteria"]
+            selection_criteria = resource_schema[field]["selection_criteria"]
             value = apply_selection_criteria(value, selection_criteria)
-            data[resource_schema_fields[field]["new_name"]] = value
+            data[resource_schema[field]["new_name"]] = value
 
     return data
 
@@ -104,7 +94,7 @@ def make_table(
     output_path: pathlib.Path,
     output_format: Literal["parquet"],
     fhir_url: str,
-    cred_manager: str,
+    cred_manager: AzureFhirserverCredentialManager,
 ):
     """
     Given the schema for a single table, make the table.
@@ -122,16 +112,12 @@ def make_table(
         output_file_name = output_path / f"{resource_type}.{output_format}"
 
         query = f"/{resource_type}"
-
-        search_parameters = schema[resource_type].get("Search Parameters", {})
-
-        if search_parameters:
-            query += f"?{urllib.parse.urlencode(search_parameters)}"
         url = fhir_url + query
-        response = fhir_server_get(url, cred_manager)
 
         writer = None
-        while response is not None:
+        next_page = True
+        while next_page:
+            response = fhir_server_get(url, cred_manager)
             if response.status_code != 200:
                 break
 
@@ -143,9 +129,9 @@ def make_table(
             # values_from_resource is a dictionary of the form:
             # {field1:value1, field2:value2, ...}.
 
-            for entry in query_result["entry"]:
+            for resource in query_result["entry"]:
                 values_from_resource = apply_schema_to_resource(
-                    entry["resource"], schema
+                    resource["resource"], schema
                 )
                 if values_from_resource != {}:
                     data.append(values_from_resource)
@@ -157,10 +143,9 @@ def make_table(
             for link in query_result.get("link"):
                 if link.get("relation") == "next":
                     url = link.get("url")
-                    response = fhir_server_get(url, cred_manager)
                     break
                 else:
-                    response = None
+                    next_page = False
 
         if writer is not None:
             writer.close()
@@ -191,13 +176,7 @@ def make_schema_tables(
 
     for table in schema.keys():
         output_path = base_output_path / table
-        make_table(
-            schema[table],
-            output_path,
-            output_format,
-            fhir_url,
-            cred_manager,
-        )
+        make_table(schema[table], output_path, output_format, fhir_url, cred_manager)
 
 
 def write_schema_table(
