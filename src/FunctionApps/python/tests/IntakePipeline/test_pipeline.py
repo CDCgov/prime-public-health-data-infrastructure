@@ -38,7 +38,7 @@ MESSAGE_MAPPINGS = {
 @mock.patch("IntakePipeline.standardize_patient_names")
 @mock.patch("IntakePipeline.standardize_all_phones")
 @mock.patch("IntakePipeline.geocode_patients")
-@mock.patch("IntakePipeline.add_linking_identifier_to_patients")
+@mock.patch("IntakePipeline.add_patient_identifier")
 @mock.patch("IntakePipeline.upload_bundle_to_fhir_server")
 @mock.patch("IntakePipeline.store_data")
 @mock.patch("IntakePipeline.get_smartystreets_client")
