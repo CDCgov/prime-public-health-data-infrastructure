@@ -58,7 +58,7 @@ jobs:
       - name: Install dependencies
         working-directory: ./src/FunctionApps/${{matrix.function-to-test}}
         run: |
-          pip install -U pip
+          git branch --show-current
           sed -i "\|prime-public-health-data-infrastructure@|s|main|$(git branch --show-current)|" requirements.txt
           pip install -r requirements.txt
           pip install pytest
