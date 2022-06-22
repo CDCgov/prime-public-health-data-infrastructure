@@ -226,9 +226,7 @@ def print_schema_summary(
     :param display_head: Print the head of each table when true. Note depending on the
     file format this may require reading large amounts of data into memory.
     """
-
     for (directory_path, _, file_names) in os.walk(schema_directory):
-        print('hi')
         for file_name in file_names:
             if file_name.endswith("parquet"):
                 # Read metadata from parquet file without loading the actual data.

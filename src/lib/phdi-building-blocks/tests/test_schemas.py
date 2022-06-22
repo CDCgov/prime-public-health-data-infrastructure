@@ -229,7 +229,7 @@ def test_write_schema_table_with_writer(patched_pa_table, patched_writer):
 
 def test_write_schema_table_new_csv():
     data = [{"some_column": "some value", "some_other_column": "some other value"}]
-    output_file_name = r'./phdi-building-blocks/tests/output/create_new.csv';
+    output_file_name = 'create_new.csv'
     file_format = "csv"
 
     if os.path.isfile(output_file_name):
@@ -241,9 +241,11 @@ def test_write_schema_table_new_csv():
         reader = csv.reader(csv_file, dialect='excel')
         assert next(reader) == list(data[0].keys())
 
+    os.remove(output_file_name)
+
 def test_write_schema_table_append_csv():
     data = [{"some_column": "some value", "some_other_column": "some other value"}]
-    output_file_name = r'./phdi-building-blocks/tests/output/append.csv';
+    output_file_name = 'append.csv';
     file_format = "csv"
 
     if os.path.isfile(output_file_name):
@@ -258,6 +260,7 @@ def test_write_schema_table_append_csv():
         reader = csv.reader(csv_file, dialect='excel')
         assert next(reader) == list(data[0].keys())
         assert len(csv_file.readlines()) == 3
+    os.remove(output_file_name)
 
 @mock.patch("phdi_building_blocks.schemas.pq.read_table")
 @mock.patch("phdi_building_blocks.schemas.pq.ParquetFile")
@@ -281,24 +284,25 @@ def test_print_schema_summary_parquet(patched_os_walk, patched_ParquetFile, patc
     )
     patched_reader.assert_called_with(pathlib.Path("some_path") / "filename.parquet")
 
-# def test_print_schema_summary_csv(capsys):
-#     data = [{"some_column": "some value", "some_other_column": "some other value"}]
-#     output_file_name = r'./phdi-building-blocks/tests/output/print_schema.csv';
-#     file_format = "csv"
+@mock.patch("phdi_building_blocks.schemas.os.walk")
+def test_print_schema_summary_csv(patched_os_walk, capsys):
+    data = [{"some_column": "some value", "some_other_column": "some other value"}]
+    output_file_name = "print_schema.csv"
+    file_format = "csv"
 
-#     if os.path.isfile(output_file_name):
-#         os.remove(output_file_name)
+    patched_os_walk.return_value = [("", None, ["print_schema.csv"])]
+    schema_directory = mock.Mock()
 
-#     write_schema_table(data, output_file_name, file_format)
+    if os.path.isfile(output_file_name):
+        os.remove(output_file_name)
 
-#     # captured_print = io.StringIO()                  
-#     # sys.stdout = captured_print                     
-#     test = print_schema_summary(output_file_name)
-#     # sys.stdout = sys.__stdout__    
-#     # assert captured_print.getvalue() == "some_column,some_other_column"                 
+    write_schema_table(data, output_file_name, file_format)
 
-#     captured = capsys.readouterr()
-#     assert test == 'hi'
-#     assert captured.out == "some_column,some_other_column" 
+    print_schema_summary(schema_directory)            
+    captured = capsys.readouterr()
+    # the \n is because print in python automatically adds \n
+    assert captured.out == "['some_column', 'some_other_column']\n" 
+
+    os.remove(output_file_name)
     
     
