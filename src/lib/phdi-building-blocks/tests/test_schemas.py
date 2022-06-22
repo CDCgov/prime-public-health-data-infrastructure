@@ -1,4 +1,9 @@
+import csv
+import io
 import json
+import os
+import sys
+import pytest
 import yaml
 import pathlib
 from unittest import mock
@@ -222,11 +227,42 @@ def test_write_schema_table_with_writer(patched_pa_table, patched_writer):
     writer.write_table.assert_called_with(table=table)
     assert len(patched_writer.call_args_list) == 0
 
+def test_write_schema_table_new_csv():
+    data = [{"some_column": "some value", "some_other_column": "some other value"}]
+    output_file_name = r'./phdi-building-blocks/tests/output/create_new.csv';
+    file_format = "csv"
+
+    if os.path.isfile(output_file_name):
+        os.remove(output_file_name)
+    
+    write_schema_table(data, output_file_name, file_format)
+
+    with open(output_file_name, 'r') as csv_file:
+        reader = csv.reader(csv_file, dialect='excel')
+        assert next(reader) == list(data[0].keys())
+
+def test_write_schema_table_append_csv():
+    data = [{"some_column": "some value", "some_other_column": "some other value"}]
+    output_file_name = r'./phdi-building-blocks/tests/output/append.csv';
+    file_format = "csv"
+
+    if os.path.isfile(output_file_name):
+        os.remove(output_file_name)
+    
+    # do it thrice to append
+    write_schema_table(data, output_file_name, file_format)
+    write_schema_table(data, output_file_name, file_format)
+    write_schema_table(data, output_file_name, file_format)
+
+    with open(output_file_name, 'r') as csv_file:
+        reader = csv.reader(csv_file, dialect='excel')
+        assert next(reader) == list(data[0].keys())
+        assert len(csv_file.readlines()) == 3
 
 @mock.patch("phdi_building_blocks.schemas.pq.read_table")
 @mock.patch("phdi_building_blocks.schemas.pq.ParquetFile")
 @mock.patch("phdi_building_blocks.schemas.os.walk")
-def test_print_schema_summary(patched_os_walk, patched_ParquetFile, patched_reader):
+def test_print_schema_summary_parquet(patched_os_walk, patched_ParquetFile, patched_reader):
 
     patched_os_walk.return_value = [("some_path", None, ["filename.parquet"])]
 
@@ -244,3 +280,25 @@ def test_print_schema_summary(patched_os_walk, patched_ParquetFile, patched_read
         pathlib.Path("some_path") / "filename.parquet"
     )
     patched_reader.assert_called_with(pathlib.Path("some_path") / "filename.parquet")
+
+# def test_print_schema_summary_csv(capsys):
+#     data = [{"some_column": "some value", "some_other_column": "some other value"}]
+#     output_file_name = r'./phdi-building-blocks/tests/output/print_schema.csv';
+#     file_format = "csv"
+
+#     if os.path.isfile(output_file_name):
+#         os.remove(output_file_name)
+
+#     write_schema_table(data, output_file_name, file_format)
+
+#     # captured_print = io.StringIO()                  
+#     # sys.stdout = captured_print                     
+#     test = print_schema_summary(output_file_name)
+#     # sys.stdout = sys.__stdout__    
+#     # assert captured_print.getvalue() == "some_column,some_other_column"                 
+
+#     captured = capsys.readouterr()
+#     assert test == 'hi'
+#     assert captured.out == "some_column,some_other_column" 
+    
+    
