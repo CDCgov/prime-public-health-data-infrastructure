@@ -207,7 +207,7 @@ def write_schema_table(
     if file_format == "csv":
         keys = data[0].keys()
         new_file = False if os.path.isfile(output_file_name) else True
-        with open(output_file_name, 'a', newline='') as output_file:
+        with open(output_file_name, "a", newline="") as output_file:
             dict_writer = csv.DictWriter(output_file, keys)
             if new_file:
                 dict_writer.writeheader()
@@ -240,7 +240,7 @@ def print_schema_summary(
                     print(df.head())
                     print(df.info())
             if file_name.endswith("csv"):
-                with open(file_name, 'r') as csv_file:
-                    reader = csv.reader(csv_file, dialect='excel')
+                with open(file_name, "r") as csv_file:
+                    reader = csv.reader(csv_file, dialect="excel")
                     print(next(reader))
-                    return 'hi'
+                    return "hi"
