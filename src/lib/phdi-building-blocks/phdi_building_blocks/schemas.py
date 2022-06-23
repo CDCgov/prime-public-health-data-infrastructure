@@ -1,29 +1,17 @@
-<<<<<<< HEAD
 import csv
 import fhirpathpy
-=======
->>>>>>> 71c5441 (Back out schema format changes)
-import pathlib
-import os
-import yaml
 import json
-<<<<<<< HEAD
-import logging
+import os
+import pathlib
 import pyarrow as pa
 import pyarrow.parquet as pq
 import random
-import urllib
+import yaml
 
-=======
-import random
-from typing import Literal, List, Union
-import pyarrow as pa
-import pyarrow.parquet as pq
-import fhirpathpy
->>>>>>> 71c5441 (Back out schema format changes)
 from pathlib import Path
-
-from phdi_building_blocks.fhir import AzureFhirserverCredentialManager, fhir_server_get
+from phdi_building_blocks.azure import AzureFhirServerCredentialManager
+from phdi_building_blocks.fhir import fhir_server_get
+from typing import Literal, List, Union
 
 
 def load_schema(path: str) -> dict:
@@ -108,7 +96,7 @@ def make_table(
     output_path: pathlib.Path,
     output_format: Literal["parquet"],
     fhir_url: str,
-    cred_manager: AzureFhirserverCredentialManager,
+    cred_manager: AzureFhirServerCredentialManager,
 ):
     """
     Given the schema for a single table, make the table.
@@ -170,7 +158,7 @@ def make_schema_tables(
     base_output_path: pathlib.Path,
     output_format: Literal["parquet"],
     fhir_url: str,
-    cred_manager: AzureFhirserverCredentialManager,
+    cred_manager: AzureFhirServerCredentialManager,
 ):
     """
     Given the url for a FHIR server, the location of a schema file, and and output

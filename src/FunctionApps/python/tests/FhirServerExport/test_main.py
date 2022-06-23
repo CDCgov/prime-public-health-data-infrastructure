@@ -14,7 +14,7 @@ ENVIRONMENT = {
 
 
 @mock.patch("FhirServerExport.fhir.export_from_fhir_server")
-@mock.patch.object(AzureFhirServerCredentialManager)
+@mock.patch("FhirServerExport.AzureFhirServerCredentialManager")
 @mock.patch.dict("os.environ", ENVIRONMENT)
 def test_main(mock_cred_manager_constructor, mock_export):
     mock_cred_manager = mock_cred_manager_constructor.return_value

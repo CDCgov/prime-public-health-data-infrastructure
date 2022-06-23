@@ -158,7 +158,7 @@ def http_request_with_retry(
     if request_type == "POST":
         try:
             response = http.post(
-                url,
+                url=url,
                 headers=headers,
                 json=data,
             )
@@ -170,7 +170,7 @@ def http_request_with_retry(
     elif request_type == "GET":
         try:
             response = http.get(
-                url,
+                url=url,
                 headers=headers,
             )
             return response

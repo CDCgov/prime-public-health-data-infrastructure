@@ -45,7 +45,7 @@ def test_upload_bundle_to_fhir_server(mock_requests_session):
     )
 
     mock_requests_session_instance.post.assert_called_with(
-        "https://some-fhir-url",
+        url="https://some-fhir-url",
         headers={
             "Authorization": f"Bearer {mock_access_token_value}",
             "Accept": "application/fhir+json",
@@ -154,7 +154,7 @@ def test_export_from_fhir_server(mock_requests_session):
     mock_requests_session_instance.get.assert_has_calls(
         [
             mock.call(
-                f"{fhir_url}/$export",
+                url=f"{fhir_url}/$export",
                 headers={
                     "Authorization": f"Bearer {mock_access_token_value}",
                     "Accept": "application/fhir+json",
@@ -162,28 +162,28 @@ def test_export_from_fhir_server(mock_requests_session):
                 },
             ),
             mock.call(
-                "https://export-download-url",
+                url="https://export-download-url",
                 headers={
                     "Authorization": f"Bearer {mock_access_token_value}",
                     "Accept": "application/fhir+ndjson",
                 },
             ),
             mock.call(
-                "https://export-download-url",
+                url="https://export-download-url",
                 headers={
                     "Authorization": f"Bearer {mock_access_token_value}",
                     "Accept": "application/fhir+ndjson",
                 },
             ),
             mock.call(
-                "https://export-download-url",
+                url="https://export-download-url",
                 headers={
                     "Authorization": f"Bearer {mock_access_token_value}",
                     "Accept": "application/fhir+ndjson",
                 },
             ),
             mock.call(
-                "https://export-download-url",
+                url="https://export-download-url",
                 headers={
                     "Authorization": f"Bearer {mock_access_token_value}",
                     "Accept": "application/fhir+ndjson",

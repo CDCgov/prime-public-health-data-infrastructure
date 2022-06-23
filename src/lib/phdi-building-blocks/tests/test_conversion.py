@@ -163,7 +163,7 @@ def test_convert_message_to_fhir_success(mock_requests_session):
     )
 
     mock_requests_session_instance.post.assert_called_with(
-        "some-fhir-url/$convert-data",
+        url="some-fhir-url/$convert-data",
         headers={"Authorization": f"Bearer {mock_access_token_value}"},
         json={
             "resourceType": "Parameters",
@@ -209,7 +209,7 @@ def test_convert_message_to_fhir_failure(mock_requests_session):
     )
 
     mock_requests_session_instance.post.assert_called_with(
-        "some-fhir-url/$convert-data",
+        url="some-fhir-url/$convert-data",
         headers={"Authorization": f"Bearer {mock_access_token_value}"},
         json={
             "resourceType": "Parameters",
@@ -260,7 +260,7 @@ def test_log_fhir_operationoutcome(mock_log, mock_requests_session):
     )
 
     mock_requests_session_instance.post.assert_called_with(
-        "some-fhir-url/$convert-data",
+        url="some-fhir-url/$convert-data",
         headers={"Authorization": f"Bearer {mock_access_token_value}"},
         json={
             "resourceType": "Parameters",
@@ -308,7 +308,7 @@ def test_log_generic_error(mock_log, mock_requests_session):
     )
 
     mock_requests_session_instance.post.assert_called_with(
-        "some-fhir-url/$convert-data",
+        url="some-fhir-url/$convert-data",
         headers={"Authorization": f"Bearer {mock_access_token_value}"},
         json={
             "resourceType": "Parameters",
@@ -356,7 +356,7 @@ def test_generic_error(mock_log, mock_requests_session):
     )
 
     mock_requests_session_instance.post.assert_called_with(
-        "some-fhir-url/$convert-data",
+        url="some-fhir-url/$convert-data",
         headers={"Authorization": f"Bearer {mock_access_token_value}"},
         json={
             "resourceType": "Parameters",
@@ -402,7 +402,7 @@ def test_error_with_special_chars(mock_log, mock_requests_session):
     )
 
     mock_requests_session_instance.post.assert_called_with(
-        "some-fhir-url/$convert-data",
+        url="some-fhir-url/$convert-data",
         headers={"Authorization": f"Bearer {mock_access_token_value}"},
         json={
             "resourceType": "Parameters",

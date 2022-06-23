@@ -124,7 +124,7 @@ def export_from_fhir_server(
         # we have the response in hand
         poll_response = export_from_fhir_server_poll(
             poll_url=response.headers.get("Content-Location"),
-            access_token=access_token,
+            cred_manager=cred_manager,
             poll_step=poll_step,
             poll_timeout=poll_timeout,
         )

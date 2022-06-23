@@ -70,7 +70,7 @@ def test_auth_retry(patched_requests_session):
     mock_cred_manager.get_access_token.call_count == 2
 
     mock_requests_session_instance.get.assert_called_with(
-        url, headers={"Authorization": f"Bearer {mock_access_token_value2}"}
+        url=url, headers={"Authorization": f"Bearer {mock_access_token_value2}"}
     )
     mock_requests_session_instance.get.call_count == 2
 
@@ -115,6 +115,6 @@ def test_auth_retry_double_fail(patched_requests_session):
     mock_cred_manager.get_access_token.call_count == 2
 
     mock_requests_session_instance.get.assert_called_with(
-        url, headers={"Authorization": f"Bearer {mock_access_token_value2}"}
+        url=url, headers={"Authorization": f"Bearer {mock_access_token_value2}"}
     )
     mock_requests_session_instance.get.call_count == 2
