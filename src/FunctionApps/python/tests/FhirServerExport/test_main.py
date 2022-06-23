@@ -2,7 +2,6 @@ import io
 import logging
 
 from FhirServerExport import main
-from phdi_building_blocks.azure import AzureFhirServerCredentialManager
 
 from unittest import mock
 
