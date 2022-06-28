@@ -72,8 +72,6 @@ def __get_fhirpathpy_parser(fhirpath_expression: str) -> Callable:
     `fhirpath_expression`
 
     :param fhirpath_expression: The FHIRPath expression to evaluate
-    :return: A callable function that accepts a FHIR resource `dict` and
-        evaluates `fhirpath_expression` on it
     """
     return fhirpathpy.compile(fhirpath_expression)
 
