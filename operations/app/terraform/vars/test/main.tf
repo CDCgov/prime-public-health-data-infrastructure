@@ -33,6 +33,7 @@ module "network" {
   service_subnet_ip   = var.service_subnet_ip
   route_table_id      = module.route_table.cdc_managed_route_table_id
   dns_vars            = var.dns_vars
+  sa_data_id          = module.storage.sa_data_id
 }
 
 ##########
