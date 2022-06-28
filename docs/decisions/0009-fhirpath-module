@@ -1,0 +1,72 @@
+# [0009]. [FHIRPath Python Module]
+
+Date: 2022-06-27
+
+## Status
+
+Accepted 
+
+## Context and Problem Statement
+
+FHIRPath is a path based extraction language that helps traverse throguh FHIR data files much like XPath. It uses expressions to return values based on the specified path. 
+
+`Bundle.entry.resource.as(MessageHeader).id`
+
+Would be indexed by the following expression: 
+
+```
+{
+  "resourceType": "Bundle",
+  "type": "message",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "MessageHeader",
+        "id": "123"
+      }
+    }
+  ]
+}
+```
+
+In FHIRPath, like XPath, operations are expressed in terms of the logical content of hierarchical data models, and support traversal, selection and filtering of data.
+
+FHIRPath uses a tree model that abstracts away the actual underlying data model of the data being queried. For FHIR, this means that the contents of the resources and data types as described in the Logical views (or the UML diagrams) are used as the model, rather than the JSON and XML formats, so specific xml or json features are not visible to the FHIRPath language (such as comments and the split representation of primitives). 
+
+## Decision Drivers
+
+The team wanted a FHIRPath python module that could be quickly implemented in our application to traverse fhir documents. The team valued an open source solution so we can assist with maintaining the project going forward. 
+
+## Considered Options 
+
+### fhirpath 
+
+Pros: 
+- Potentially a robust implementation
+- Open source
+
+Cons: 
+- Not primarily used for Python
+- Tougher to install
+- Requires dependencies that use Java or Javascript
+
+### fhirpath-py
+
+Pros:
+- Lighter weight
+- Simple to implement with python
+- Open source 
+
+Cons:
+- Less documentation 
+
+## Decision Outcome
+
+`fhirpath-py `
+
+The team felt that a lighter weight and easier to use a solution would be best for the current state of our project. fhirpath-py also is friendlier with Python so if we wanted to maintain and contribute to the fhirpath-py project, it would be less of a headache. 
+
+## Appendix 
+- [HL7's FHIRPath documentation](https://www.hl7.org/fhir/fhirpath.html) 
+- [fhirpath-py github](https://github.com/beda-software/fhirpath-py)
+- [fhirpath github](https://github.com/nazrulworld/fhirpath)
