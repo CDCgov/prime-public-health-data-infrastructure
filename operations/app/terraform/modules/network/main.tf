@@ -338,7 +338,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "pdi" {
 
 # Virtual network for databricks service
 
-resource "azurerm_network_security_group" "databricks_sg" {
+resource "azurerm_network_security_group" "databricks_vnet_nsg" {
   name                = "${var.resource_prefix}-databricks-security-group"
   location            = var.location
   resource_group_name = var.resource_group_name
@@ -349,7 +349,7 @@ resource "azurerm_network_security_group" "databricks_sg" {
   }
 }
 
-resource "azurerm_virtual_network" "databricks_vnet_nsg" {
+resource "azurerm_virtual_network" "databricks_vnet" {
   name                = "${var.resource_prefix}-databricks-VNET"
   location            = var.location
   resource_group_name = var.resource_group_name
