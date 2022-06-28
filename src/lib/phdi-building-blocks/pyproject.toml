@@ -5,7 +5,7 @@ description = ""
 authors = []
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.8"
 smartystreets-python-sdk = "^4.10.6"
 pydantic = "^1.9.0"
 hl7 = "^0.4.5"
