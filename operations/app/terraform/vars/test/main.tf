@@ -68,6 +68,7 @@ module "storage" {
   terraform_caller_ip_address = var.terraform_caller_ip_address
   use_cdc_managed_vnet        = var.use_cdc_managed_vnet
   app_subnet_ids              = module.network.app_subnet_ids
+  databricks_subnet_ids       = module.network.databricks_subnet_ids
   resource_group_id           = module.resource_group.cdc_managed_resource_group_id
   data_access_group           = var.data_access_group
   data_access_sp              = var.data_access_sp
@@ -76,11 +77,14 @@ module "storage" {
 }
 
 module "databricks" {
-  source              = "../../modules/databricks"
-  environment         = var.environment
-  location            = var.location
-  resource_group_name = var.resource_group_name
-  resource_prefix     = var.resource_prefix
+  source                                                          = "../../modules/databricks"
+  environment                                                     = var.environment
+  location                                                        = var.location
+  resource_group_name                                             = var.resource_group_name
+  resource_prefix                                                 = var.resource_prefix
+  databricks_managed_vnet_id                                      = module.network.databricks_managed_vnet_id
+  databricks_public_subnet_network_security_group_association_id  = module.network.databricks_public_subnet_nsg_association_id
+  databricks_private_subnet_network_security_group_association_id = module.network.databricks_private_subnet_nsg_association_id
 }
 
 ##########
