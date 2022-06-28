@@ -353,7 +353,7 @@ resource "azurerm_virtual_network" "databricks_vnet" {
   name                = "${var.resource_prefix}-databricks-VNET"
   location            = var.location
   resource_group_name = var.resource_group_name
-  address_space       = ["10.0.0.0/24"]
+  address_space       = ["10.0.0.0/16"]
 
   tags = {
     environment = var.environment
