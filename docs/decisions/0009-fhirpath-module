@@ -1,4 +1,4 @@
-# [0009]. [FHIRPath Python Module]
+# [0010]. [FHIRPath Python Module]
 
 Date: 2022-06-27
 
@@ -35,30 +35,43 @@ FHIRPath uses a tree model that abstracts away the actual underlying data model 
 
 ## Decision Drivers
 
-The team wanted a FHIRPath python module that could be quickly implemented in our application to traverse fhir documents. The team valued an open source solution so we can assist with maintaining the project going forward. 
+**Python Friendly** - The team wanted a FHIRPath python module that could be quickly implemented in our application to traverse fhir documents. 
+
+**Open Source** - The team valued an open source solution so we can assist with maintaining the project going forward. 
 
 ## Considered Options 
 
 ### fhirpath 
+FHIRPath is a library that supports Python and leverages their own providers to read FHIRPath expressions. 
+
+The providers are 
+- fhirpath-guillotina
+- collective.fhirpath
+
+Developers can create their own providers as well
 
 Pros: 
-- Potentially a robust implementation
+- Potentially a robust implementation with a variety of applications.
+- Potentially some better optimization using tools such as Elasticsearch.
 - Open source
 
 Cons: 
 - Not primarily used for Python
-- Tougher to install
+- There is a lot more set up necessary to use this library because you have to use their provider or create your own provider. 
 - Requires dependencies that use Java or Javascript
 
 ### fhirpath-py
 
+fhirpath-py is a Python speicifc implementation of FHIRPath. It uses as simple `evaluate` function that uses a FHIRPath expression to locate the resource requested. 
+
 Pros:
-- Lighter weight
+- Because it is specifically meant to use with Python, it is lighter weight.
 - Simple to implement with python
 - Open source 
 
 Cons:
-- Less documentation 
+- There is less documentation on the module given that it mainly uses the `evaluate` function
+- Should the team decide not to use Python in the future, this module will not suit those future use cases. 
 
 ## Decision Outcome
 
