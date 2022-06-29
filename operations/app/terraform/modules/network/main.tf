@@ -366,6 +366,7 @@ resource "azurerm_subnet" "databricks_vnet_public_subnet" {
   resource_group_name  = var.resource_group_name
   virtual_network_name = azurerm_virtual_network.databricks_vnet.name
   address_prefixes     = ["10.0.1.0/24"]
+  service_endpoints    = ["Microsoft.Storage"]
 }
 
 resource "azurerm_subnet" "databricks_vnet_private_subnet" {
@@ -373,6 +374,7 @@ resource "azurerm_subnet" "databricks_vnet_private_subnet" {
   resource_group_name  = var.resource_group_name
   virtual_network_name = azurerm_virtual_network.databricks_vnet.name
   address_prefixes     = ["10.0.2.0/24"]
+  service_endpoints    = ["Microsoft.Storage"]
 }
 
 resource "azurerm_subnet_network_security_group_association" "databricks_vnet_public_subnet_nsg_association" {
@@ -383,30 +385,4 @@ resource "azurerm_subnet_network_security_group_association" "databricks_vnet_pu
 resource "azurerm_subnet_network_security_group_association" "databricks_vnet_private_subnet_nsg_association" {
   subnet_id                 = azurerm_subnet.databricks_vnet_private_subnet.id
   network_security_group_id = azurerm_network_security_group.databricks_vnet_nsg.id
-}
-
-resource "azurerm_subnet_service_endpoint_storage_policy" "databricks_vnet_public_subnet_service_endpoint" {
-  name                = "databricks-public-service-endpoint"
-  location            = var.location
-  resource_group_name = var.resource_group_name
-  definition {
-    name        = "Storage"
-    description = "Public subnet can access storage"
-    service_resources = [
-      var.sa_data_id
-    ]
-  }
-}
-
-resource "azurerm_subnet_service_endpoint_storage_policy" "databricks_vnet_private_subnet_service_endpoint" {
-  name                = "databricks-private-service-endpoint"
-  location            = var.location
-  resource_group_name = var.resource_group_name
-  definition {
-    name        = "Storage"
-    description = "Private subnet can access storage"
-    service_resources = [
-      var.sa_data_id
-    ]
-  }
 }
