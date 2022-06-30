@@ -59,7 +59,7 @@ As the PHDI building blocks software continues to develop, documenting the versi
 
 ## Decision Outcome
 
-We are adopting Semantic Versioning to document the PHDI building blocks library's development. It is robust, standardized, and well-documented with precise protocols for when things change and what those changes should be. It will achieve all three major decision drivers and provide additional clarity for both users and developers.
+We are adopting Semantic Versioning to document the PHDI building blocks library's development. It is robust, standardized, and well-documented with precise protocols for when things change and what those changes should be. It will achieve both decision drivers and provide additional clarity for both users and developers.
 
 ## Appendix
 
