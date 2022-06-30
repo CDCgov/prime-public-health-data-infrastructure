@@ -46,7 +46,7 @@ As the PHDI building blocks software continues to develop, documenting the versi
   * Also susceptible to version verbosity, as with date versioning
   * The optics of a massively large number for a version number (i.e. 427) could reduce confidence in our ability to make correct software the first time
   * Creates the temptation to not increment the version number to avoid the above problem, which then eliminates consistency as well
-5. **Semantic Versioning (SemVer)**
+4. **Semantic Versioning (SemVer)**
 - Defined as versioning of the form A.B.C. _A_ corresponds to the "major release" number and documents the addition, alteration, or removal of features sufficient to break the existing API. _B_ corresponds to the "minor release" number and documents the addition or removal of features which _do not_ break the existing API. _C_ corresponds to the "patch version" and documents the bug fixes that have been applied to the software.
 - Examples: All of Google's internal and external software platforms; the R kernel
 - Pros:
