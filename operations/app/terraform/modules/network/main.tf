@@ -381,6 +381,12 @@ resource "azurerm_subnet" "databricks_vnet_public_subnet" {
       ]
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      delegation
+    ]
+  }
 }
 
 resource "azurerm_subnet" "databricks_vnet_private_subnet" {
@@ -402,6 +408,12 @@ resource "azurerm_subnet" "databricks_vnet_private_subnet" {
         "Microsoft.Network/virtualNetworks/subnets/unprepareNetworkPolicies/action"
       ]
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      delegation
+    ]
   }
 }
 
