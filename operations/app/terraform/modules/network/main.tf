@@ -367,6 +367,26 @@ resource "azurerm_subnet" "databricks_vnet_public_subnet" {
   virtual_network_name = azurerm_virtual_network.databricks_vnet.name
   address_prefixes     = ["10.0.1.0/24"]
   service_endpoints    = ["Microsoft.Storage"]
+
+  delegation {
+    name = "databricks-del-public"
+
+    service_delegation {
+      name = "Microsoft.Databricks/workspaces"
+      actions = [
+        "Microsoft.Network/virtualNetworks/subnets/action",
+        "Microsoft.Network/virtualNetworks/subnets/join/action",
+        "Microsoft.Network/virtualNetworks/subnets/prepareNetworkPolicies/action",
+        "Microsoft.Network/virtualNetworks/subnets/unprepareNetworkPolicies/action"
+      ]
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      delegation
+    ]
+  }
 }
 
 resource "azurerm_subnet" "databricks_vnet_private_subnet" {
@@ -375,6 +395,26 @@ resource "azurerm_subnet" "databricks_vnet_private_subnet" {
   virtual_network_name = azurerm_virtual_network.databricks_vnet.name
   address_prefixes     = ["10.0.2.0/24"]
   service_endpoints    = ["Microsoft.Storage"]
+
+  delegation {
+    name = "databricks-del-private"
+
+    service_delegation {
+      name = "Microsoft.Databricks/workspaces"
+      actions = [
+        "Microsoft.Network/virtualNetworks/subnets/action",
+        "Microsoft.Network/virtualNetworks/subnets/join/action",
+        "Microsoft.Network/virtualNetworks/subnets/prepareNetworkPolicies/action",
+        "Microsoft.Network/virtualNetworks/subnets/unprepareNetworkPolicies/action"
+      ]
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      delegation
+    ]
+  }
 }
 
 resource "azurerm_subnet_network_security_group_association" "databricks_vnet_public_subnet_nsg_association" {
