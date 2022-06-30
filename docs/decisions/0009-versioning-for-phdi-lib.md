@@ -1,6 +1,6 @@
-# 9. Formalize software version numbers using Semantic Versioning (SemVer)
+# 9. Implement Semantic Versioning
 
-Date: 2022-6-28
+Date: 2022-06-28
 
 ## Status
 
@@ -8,13 +8,12 @@ Accepted
 
 ## Context and Problem Statement
 
-As the PHDI building blocks software continues to develop, documenting the versions that the software goes through will become increasingly important. Users will need to be able to track released versions of the software to ensure that they're using the correct version for their use cases, and so that they can receive proper support in the event they experience a software problem. Developers need to be able to document introductions of new features and bug fixes in existing features. Software versioning allows both groups to avoid confusion around the state of PHDI building blocks library.
+As the PHDI building blocks software continues to develop, documenting the versions that the software goes through will become increasingly important. Users will need to be able to track released versions of the software to ensure that they're using the correct version for their use cases, as well as to identify when updating the library could break their current functionality. Knowledge of their version number also allows users to receive proper support in the event they experience a software problem. Similarly, developers need to be able to document introductions of new features and bug fixes in existing features. Software versioning allows both groups to avoid confusion around the state of the PHDI building blocks library. This ADR documents the rationale for adopting a versioning system overall, as well as explores options for what the most suitable versioning system for PHDI is.
 
 ## Decision Drivers
 
-* **Transparency**: The adopted versioning should clearly convey relevant information about the software, such as the presence or absence of major features as well as the presence or absence of particular fixes.
-* **Consistency**: The adopted versioning should communicate that two identically-versioned instances of the software should behave identically; in other words, version X of the software on one machine should have the exact same characteristics as version X of the software on a different machine.
-* **Interpretability**: The adopted versioning should be easily interpretable to both a user and a developer. Users should be able to tell at a glance what version of the software they are using, and they should be able to understand the differences between two similarly-versioned instances of the software.
+* **Consistency**: Adopting a versioning system facilitates informed use and conversation about the software. Users are able to employ identically-versioned instances of the software in the same fashion, regardless of the machine on which the software is running. Moreover, establishing a versioning system makes it easier for users to obtain help when using the software, whether they're filing bug reports about a particular version or chatting with a developer or other support personnel about a problem. Thus, a good versioning system will allow users and developers alike to communicate information about bugfixes while also ensuring that major or minor functionality present in one version of the software is present in any other similarly-versioned instance.
+* **Interpretability**: A user's ability to understand when upgrading their software might break functionality is a key driver in the decision to adopt a versioning system. The adopted versioning should clearly convey information about when functionality or features of the library change, as well as the magnitude of the impact those changes might have on a user's workflow.
 
 ## Considered Options
 
@@ -26,17 +25,16 @@ As the PHDI building blocks software continues to develop, documenting the versi
     * Names should achieve some degree of consistency
   - Cons:
     * Unrelated names do not convey information about major or minor features, or bug fixes, that may be present in the software
-    * Doesn't allow for small changes, such as bug fixes, without tooling an entirely new name
-    * Cannot be clearly interpreted to convey differences in two versions without a likely long release notes document
+    * Doesn't allow for small changes, such as bug fixes, without tooling an entirely new name; or, even worse, small fixes are released without changing the name, which could lead to the software running inconsistently despite the version ostensibly being the same.
 2. **Date-of-release Versioning**
   - Defined as versioning marked simply by the standard date on which the version was released
   - Examples: Anaconda package manager
   - Pros:
-    * Achieves consistency by being precise about the exact version achieved
-    * Highly interpretable by virtue of dates
+    * Achieves consistency by being precise about the exact version achieved, which makes discussing or using a version straightforward
   - Cons:
     * Prone to "version verbosity" that becomes hard to separate from one another--did that bug fix patch come out on the 16th or the 17th?
     * No clear relationship between aspects of the version numbers that are changing and what's changing in the software--in fact, it may artificially create the notion that there's a predefined monthly major release schedule
+    * Impossible for users to tell at a glance whether a given version upgrade will break their existing functionality
 3. **Sequential Number Versioning**
 - Defined as versioning that begins with "1" and increments the count with each successive software push
 - Examples: Not really any that work out in the wild
@@ -46,7 +44,7 @@ As the PHDI building blocks software continues to develop, documenting the versi
   * Also susceptible to version verbosity, as with date versioning
   * The optics of a massively large number for a version number (i.e. 427) could reduce confidence in our ability to make correct software the first time
   * Creates the temptation to not increment the version number to avoid the above problem, which then eliminates consistency as well
-4. **Semantic Versioning (SemVer)**
+4. **Semantic Versioning**
 - Defined as versioning of the form A.B.C. _A_ corresponds to the "major release" number and documents the addition, alteration, or removal of features sufficient to break the existing API. _B_ corresponds to the "minor release" number and documents the addition or removal of features which _do not_ break the existing API. _C_ corresponds to the "patch version" and documents the bug fixes that have been applied to the software.
 - Examples: All of Google's internal and external software platforms; the R kernel
 - Pros:
@@ -65,4 +63,4 @@ We are adopting Semantic Versioning to document the PHDI building blocks library
 
 ## Appendix
 
-The full specification of SemVer can be found (here)[https://semver.org/]
+The full specification for Semantic Versioning can be found (here)[https://semver.org/]
