@@ -6,6 +6,8 @@ from phdi_building_blocks.conversion import convert_batch_messages_to_list
 
 from IntakePipeline import run_pipeline
 
+from IntakePipeline import __record_error_response
+
 
 @pytest.fixture()
 def partial_failure_message():
@@ -55,10 +57,13 @@ def test_pipeline_valid_message(
     patched_name_standardization,
 ):
 
-    patched_converter.return_value = {
-        "resourceType": "Bundle",
-        "entry": [{"hello": "world"}],
-    }
+    patched_converter.return_value = mock.Mock(
+        status_code=200,
+        json=lambda: {
+            "resourceType": "Bundle",
+            "entry": [{"hello": "world"}],
+        },
+    )
 
     patched_geocoder = mock.Mock()
     patched_get_geocoder.return_value = patched_geocoder
@@ -71,6 +76,14 @@ def test_pipeline_valid_message(
     patched_address_standardization.return_value = patched_standardized_address_data
     patched_linked_id_data = mock.Mock()
     patched_patient_id.return_value = patched_linked_id_data
+
+    patched_upload.return_value = mock.Mock(
+        status_code=200,
+        json=lambda: {
+            "resourceType": "Bundle",
+            "entry": [{"resource": {}, "response": {"status": "200 OK"}}],
+        },
+    )
 
     patched_access_token = mock.Mock()
     patched_access_token.token = "some-token"
@@ -136,10 +149,10 @@ def test_pipeline_invalid_message(
     patched_phone_standardization,
     patched_name_standardization,
 ):
-    patched_converter.return_value = {
-        "http_status_code": 400,
-        "response_content": "some-error",
-    }
+    patched_converter.return_value = mock.Mock(
+        status_code=400,
+        json=lambda: {"resourceType": "OperationOutcome", "severity": "error"},
+    )
 
     patched_geocoder = mock.Mock()
     patched_get_geocoder.return_value = patched_geocoder
@@ -179,10 +192,7 @@ def test_pipeline_invalid_message(
                 "output/invalid/path",
                 f"{MESSAGE_MAPPINGS['filename']}.hl7.convert-resp",
                 MESSAGE_MAPPINGS["bundle_type"],
-                message_json={
-                    "http_status_code": 400,
-                    "response_content": "some-error",
-                },
+                message_json={"resourceType": "OperationOutcome", "severity": "error"},
             ),
         ]
     )
@@ -209,11 +219,29 @@ def test_pipeline_partial_invalid_message(
     partial_failure_message,
 ):
     patched_converter.side_effect = [
-        {"resourceType": "Bundle", "entry": [{"hello": "world"}]},
-        {"resourceType": "Bundle", "entry": [{"hello": "world"}]},
-        {"http_status_code": 400, "response_content": '"some-error"'},
-        {"resourceType": "Bundle", "entry": [{"hello": "world"}]},
-        {"resourceType": "Bundle", "entry": [{"hello": "world"}]},
+        mock.Mock(
+            status_code=200,
+            json=lambda: {"resourceType": "Bundle", "entry": [{"hello": "world"}]},
+        ),
+        mock.Mock(
+            status_code=200,
+            json=lambda: {"resourceType": "Bundle", "entry": [{"hello": "world"}]},
+        ),
+        mock.Mock(
+            status_code=400,
+            json=lambda: {
+                "http_status_code": 400,
+                "response_content": '"some-error"',
+            },
+        ),
+        mock.Mock(
+            status_code=200,
+            json=lambda: {"resourceType": "Bundle", "entry": [{"hello": "world"}]},
+        ),
+        mock.Mock(
+            status_code=200,
+            json=lambda: {"resourceType": "Bundle", "entry": [{"hello": "world"}]},
+        ),
     ]
 
     patched_geocoder = mock.Mock()
@@ -227,6 +255,15 @@ def test_pipeline_partial_invalid_message(
     patched_address_standardization.return_value = patched_standardized_address_data
     patched_linked_id_data = mock.Mock()
     patched_patient_id.return_value = patched_linked_id_data
+    patched_upload.return_value = mock.Mock(
+        status_code=200,
+        json=lambda: {
+            "resourceType": "Bundle",
+            "entry": [
+                {"resource": {"hello": "world"}, "response": {"status": "200 OK"}}
+            ],
+        },
+    )
 
     messages = convert_batch_messages_to_list(partial_failure_message)
     message_mappings = {
@@ -367,3 +404,168 @@ def test_pipeline_partial_invalid_message(
             ),
         ]
     )
+
+
+@mock.patch("IntakePipeline.standardize_patient_names")
+@mock.patch("IntakePipeline.standardize_all_phones")
+@mock.patch("IntakePipeline.geocode_patients")
+@mock.patch("IntakePipeline.add_patient_identifier")
+@mock.patch("IntakePipeline.upload_bundle_to_fhir_server")
+@mock.patch("IntakePipeline.store_data")
+@mock.patch("IntakePipeline.get_smartystreets_client")
+@mock.patch("IntakePipeline.convert_message_to_fhir")
+@mock.patch.dict("os.environ", TEST_ENV)
+def test_pipeline_partial_failed_upload(
+    patched_converter,
+    patched_get_geocoder,
+    patched_store,
+    patched_upload,
+    patched_patient_id,
+    patched_address_standardization,
+    patched_phone_standardization,
+    patched_name_standardization,
+):
+
+    patched_converter.return_value = mock.Mock(
+        status_code=200,
+        json=lambda: {
+            "resourceType": "Bundle",
+            "entry": [{"hello": "world"}],
+        },
+    )
+
+    patched_geocoder = mock.Mock()
+    patched_get_geocoder.return_value = patched_geocoder
+
+    patched_standardized_name_data = mock.Mock()
+    patched_name_standardization.return_value = patched_standardized_name_data
+    patched_standardized_phone_data = mock.Mock()
+    patched_phone_standardization.return_value = patched_standardized_phone_data
+    patched_standardized_address_data = mock.Mock()
+    patched_address_standardization.return_value = patched_standardized_address_data
+    patched_linked_id_data = mock.Mock()
+    patched_patient_id.return_value = patched_linked_id_data
+
+    patched_upload.return_value = mock.Mock(
+        status_code=200,
+        json=lambda: {
+            "resourceType": "Bundle",
+            "entry": [
+                {
+                    "resource": {"resourceType": "Patient"},
+                    "response": {"status": "200 OK"},
+                },
+                {
+                    "resource": {"resourceType": "Organization"},
+                    "response": {"status": "400 Bad Request"},
+                },
+                {
+                    "resource": {"resourceType": "Vaccination"},
+                    "response": {"status": "200 OK"},
+                },
+            ],
+        },
+    )
+
+    patched_access_token = mock.Mock()
+    patched_access_token.token = "some-token"
+    patched_cred_manager = mock.Mock()
+    patched_cred_manager.get_access_token.return_value = patched_access_token
+
+    run_pipeline(
+        "MSH|Hello World", MESSAGE_MAPPINGS, "some-fhir-url", patched_cred_manager
+    )
+
+    patched_get_geocoder.assert_called_with("smarty-auth-id", "smarty-auth-token")
+    patched_converter.assert_called_with(
+        message="MSH|Hello World",
+        filename="some-filename-1",
+        input_data_type=MESSAGE_MAPPINGS["input_data_type"],
+        root_template=MESSAGE_MAPPINGS["root_template"],
+        template_collection=MESSAGE_MAPPINGS["template_collection"],
+        cred_manager=patched_cred_manager,
+        fhir_url="some-fhir-url",
+    )
+
+    patched_name_standardization.assert_called_with(
+        {"resourceType": "Bundle", "entry": [{"hello": "world"}]}
+    )
+    patched_phone_standardization.assert_called_with(patched_standardized_name_data)
+    patched_address_standardization.assert_called_with(
+        patched_standardized_phone_data, patched_geocoder
+    )
+
+    patched_patient_id.assert_called_with(
+        patched_standardized_address_data, TEST_ENV["HASH_SALT"]
+    )
+    patched_upload.assert_called_with(
+        patched_linked_id_data,
+        patched_cred_manager,
+        "some-fhir-url",
+    )
+    patched_store.assert_has_calls(
+        [
+            # Overall successful upload
+            mock.call(
+                "some-url",
+                "output/valid/path",
+                f"{MESSAGE_MAPPINGS['filename']}.fhir",
+                MESSAGE_MAPPINGS["bundle_type"],
+                message_json=patched_linked_id_data,
+            ),
+            # Individual unsuccessful entry
+            mock.call(
+                container_url="some-url",
+                prefix="output/invalid/path",
+                filename=f"{MESSAGE_MAPPINGS['filename']}.entry-1"
+                + f".{MESSAGE_MAPPINGS['file_suffix']}",
+                bundle_type=MESSAGE_MAPPINGS["bundle_type"],
+                message_json={
+                    "entry_index": 1,
+                    "entry": {
+                        "resource": {"resourceType": "Organization"},
+                        "response": {"status": "400 Bad Request"},
+                    },
+                },
+            ),
+        ]
+    )
+
+
+@mock.patch("IntakePipeline.store_data")
+def test_record_error_response(patched_store):
+    container_url = "some-url"
+    output_path = "some/path"
+    transaction_type = "trantype"
+    message = "original-message"
+    response = mock.Mock(json=lambda: {"resourceType": "Bundle"})
+    __record_error_response(
+        container_url=container_url,
+        output_path=output_path,
+        message_mappings=MESSAGE_MAPPINGS,
+        transaction_type=transaction_type,
+        message=message,
+        response=response,
+    )
+
+    patched_store.has_calls(
+        [
+            mock.call(
+                container_url,
+                output_path,
+                f"{MESSAGE_MAPPINGS['filename']}.{MESSAGE_MAPPINGS['file_suffix']}",
+                MESSAGE_MAPPINGS["bundle_type"],
+                message=message,
+            ),
+            mock.call(
+                container_url,
+                output_path,
+                f"{MESSAGE_MAPPINGS['filename']}.{MESSAGE_MAPPINGS['file_suffix']}"
+                + f".{transaction_type}-resp",
+                MESSAGE_MAPPINGS["bundle_type"],
+                message_json=response.json(),
+            ),
+        ]
+    )
+
+    patched_store.call_count = 2

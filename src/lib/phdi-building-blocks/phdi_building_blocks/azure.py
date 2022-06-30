@@ -6,6 +6,7 @@ from azure.identity import DefaultAzureCredential
 from azure.storage.blob import ContainerClient
 from datetime import datetime, timezone
 from phdi_building_blocks.utils import http_request_with_retry
+from requests import Response
 
 
 class AzureFhirServerCredentialManager:
@@ -60,7 +61,7 @@ class AzureFhirServerCredentialManager:
 def _http_request_with_reauth(
     cred_manager: AzureFhirServerCredentialManager,
     **kwargs: dict,
-):
+) -> Response:
     """
     First, call :func:`utils.http_request_with_retry`.  If the first call failed
     with an authorization error (HTTP status 401), obtain a new token using the
