@@ -140,7 +140,6 @@ def test_upload_bundle_failure(mock_requests_session, mock_log_error):
     )
 
     assert response == mock_requests_return_value
-    print(mock_log_error.return_value)
     mock_log_error.assert_called_with(400)
     assert mock_log_error.call_count == 1
 
@@ -214,7 +213,6 @@ def test_upload_bundle_partial_failure(mock_requests_session, mock_log_error):
     )
 
     assert response == mock_requests_return_value
-    print(mock_log_error.return_value)
     mock_log_error.assert_called_with(status_code=400, batch_entry_index=1)
     assert mock_log_error.call_count == 1
 

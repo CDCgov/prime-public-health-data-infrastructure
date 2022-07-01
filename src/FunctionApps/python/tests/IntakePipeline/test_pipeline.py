@@ -1,3 +1,4 @@
+import json
 import pathlib
 import pytest
 from unittest import mock
@@ -5,8 +6,6 @@ from unittest import mock
 from phdi_building_blocks.conversion import convert_batch_messages_to_list
 
 from IntakePipeline import run_pipeline
-
-from IntakePipeline import __record_error_response
 
 
 @pytest.fixture()
@@ -135,14 +134,14 @@ def test_pipeline_valid_message(
 @mock.patch("IntakePipeline.geocode_patients")
 @mock.patch("IntakePipeline.add_patient_identifier")
 @mock.patch("IntakePipeline.upload_bundle_to_fhir_server")
-@mock.patch("IntakePipeline.store_data")
+@mock.patch("IntakePipeline.store_message_and_response")
 @mock.patch("IntakePipeline.get_smartystreets_client")
 @mock.patch("IntakePipeline.convert_message_to_fhir")
 @mock.patch.dict("os.environ", TEST_ENV)
 def test_pipeline_invalid_message(
     patched_converter,
     patched_get_geocoder,
-    patched_store,
+    patched_store_msg_resp,
     patched_upload,
     patched_patient_id,
     patched_address_standardization,
@@ -178,23 +177,14 @@ def test_pipeline_invalid_message(
     patched_name_standardization.assert_not_called()
     patched_patient_id.assert_not_called()
     patched_upload.assert_not_called()
-    patched_store.assert_has_calls(
-        [
-            mock.call(
-                "some-url",
-                "output/invalid/path",
-                f"{MESSAGE_MAPPINGS['filename']}.hl7",
-                MESSAGE_MAPPINGS["bundle_type"],
-                message="MSH|Hello World",
-            ),
-            mock.call(
-                "some-url",
-                "output/invalid/path",
-                f"{MESSAGE_MAPPINGS['filename']}.hl7.convert-resp",
-                MESSAGE_MAPPINGS["bundle_type"],
-                message_json={"resourceType": "OperationOutcome", "severity": "error"},
-            ),
-        ]
+    patched_store_msg_resp.assert_called_with(
+        container_url="some-url",
+        prefix="output/invalid/path",
+        message_filename="some-filename-1.hl7",
+        response_filename="some-filename-1.hl7.convert-resp",
+        bundle_type=MESSAGE_MAPPINGS["bundle_type"],
+        message="MSH|Hello World",
+        response=patched_converter.return_value,
     )
 
 
@@ -203,6 +193,7 @@ def test_pipeline_invalid_message(
 @mock.patch("IntakePipeline.geocode_patients")
 @mock.patch("IntakePipeline.add_patient_identifier")
 @mock.patch("IntakePipeline.upload_bundle_to_fhir_server")
+@mock.patch("IntakePipeline.store_message_and_response")
 @mock.patch("IntakePipeline.store_data")
 @mock.patch("IntakePipeline.get_smartystreets_client")
 @mock.patch("IntakePipeline.convert_message_to_fhir")
@@ -211,6 +202,7 @@ def test_pipeline_partial_invalid_message(
     patched_converter,
     patched_get_geocoder,
     patched_store,
+    patched_store_msg_resp,
     patched_upload,
     patched_patient_id,
     patched_address_standardization,
@@ -218,30 +210,25 @@ def test_pipeline_partial_invalid_message(
     patched_name_standardization,
     partial_failure_message,
 ):
+    convert_success_response = mock.Mock(
+        status_code=200,
+        json=lambda: {"resourceType": "Bundle", "entry": [{"hello": "world"}]},
+    )
+    convert_failure_response = mock.Mock(
+        status_code=400,
+        text=json.dumps(
+            {
+                "resourceType": "OperationOutcome",
+                "severity": "error",
+            }
+        ),
+    )
     patched_converter.side_effect = [
-        mock.Mock(
-            status_code=200,
-            json=lambda: {"resourceType": "Bundle", "entry": [{"hello": "world"}]},
-        ),
-        mock.Mock(
-            status_code=200,
-            json=lambda: {"resourceType": "Bundle", "entry": [{"hello": "world"}]},
-        ),
-        mock.Mock(
-            status_code=400,
-            json=lambda: {
-                "http_status_code": 400,
-                "response_content": '"some-error"',
-            },
-        ),
-        mock.Mock(
-            status_code=200,
-            json=lambda: {"resourceType": "Bundle", "entry": [{"hello": "world"}]},
-        ),
-        mock.Mock(
-            status_code=200,
-            json=lambda: {"resourceType": "Bundle", "entry": [{"hello": "world"}]},
-        ),
+        convert_success_response,
+        convert_success_response,
+        convert_failure_response,
+        convert_success_response,
+        convert_success_response,
     ]
 
     patched_geocoder = mock.Mock()
@@ -255,14 +242,13 @@ def test_pipeline_partial_invalid_message(
     patched_address_standardization.return_value = patched_standardized_address_data
     patched_linked_id_data = mock.Mock()
     patched_patient_id.return_value = patched_linked_id_data
+    upload_response_dict = {
+        "resourceType": "Bundle",
+        "entry": [{"resource": {"hello": "world"}, "response": {"status": "200 OK"}}],
+    }
     patched_upload.return_value = mock.Mock(
         status_code=200,
-        json=lambda: {
-            "resourceType": "Bundle",
-            "entry": [
-                {"resource": {"hello": "world"}, "response": {"status": "200 OK"}}
-            ],
-        },
+        json=lambda: upload_response_dict,
     )
 
     messages = convert_batch_messages_to_list(partial_failure_message)
@@ -373,23 +359,6 @@ def test_pipeline_partial_invalid_message(
             ),
             mock.call(
                 "some-url",
-                "output/invalid/path",
-                "some-filename-2.hl7",
-                "VXU",
-                message=messages[2],
-            ),
-            mock.call(
-                "some-url",
-                "output/invalid/path",
-                "some-filename-2.hl7.convert-resp",
-                "VXU",
-                message_json={
-                    "http_status_code": 400,
-                    "response_content": '"some-error"',
-                },
-            ),
-            mock.call(
-                "some-url",
                 "output/valid/path",
                 "some-filename-3.fhir",
                 "VXU",
@@ -403,6 +372,16 @@ def test_pipeline_partial_invalid_message(
                 message_json=patched_linked_id_data,
             ),
         ]
+    )
+
+    patched_store_msg_resp.assert_called_with(
+        container_url="some-url",
+        prefix="output/invalid/path",
+        message_filename="some-filename-2.hl7",
+        response_filename="some-filename-2.hl7.convert-resp",
+        bundle_type="VXU",
+        message=messages[2],
+        response=convert_failure_response,
     )
 
 
@@ -530,42 +509,3 @@ def test_pipeline_partial_failed_upload(
             ),
         ]
     )
-
-
-@mock.patch("IntakePipeline.store_data")
-def test_record_error_response(patched_store):
-    container_url = "some-url"
-    output_path = "some/path"
-    transaction_type = "trantype"
-    message = "original-message"
-    response = mock.Mock(json=lambda: {"resourceType": "Bundle"})
-    __record_error_response(
-        container_url=container_url,
-        output_path=output_path,
-        message_mappings=MESSAGE_MAPPINGS,
-        transaction_type=transaction_type,
-        message=message,
-        response=response,
-    )
-
-    patched_store.has_calls(
-        [
-            mock.call(
-                container_url,
-                output_path,
-                f"{MESSAGE_MAPPINGS['filename']}.{MESSAGE_MAPPINGS['file_suffix']}",
-                MESSAGE_MAPPINGS["bundle_type"],
-                message=message,
-            ),
-            mock.call(
-                container_url,
-                output_path,
-                f"{MESSAGE_MAPPINGS['filename']}.{MESSAGE_MAPPINGS['file_suffix']}"
-                + f".{transaction_type}-resp",
-                MESSAGE_MAPPINGS["bundle_type"],
-                message_json=response.json(),
-            ),
-        ]
-    )
-
-    patched_store.call_count = 2

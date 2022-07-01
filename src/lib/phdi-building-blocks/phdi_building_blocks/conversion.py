@@ -337,7 +337,6 @@ def convert_message_to_fhir(
         headers=headers,
         data=data,
     )
-    print(response)
 
     if response.status_code != 200:
         logging.error(

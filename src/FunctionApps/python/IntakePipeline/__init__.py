@@ -3,12 +3,12 @@ from typing import Dict
 
 import azure.functions as func
 from azure.core.exceptions import ResourceExistsError
-from requests import Response
 
 from config import get_required_config
 
 from phdi_building_blocks.azure import (
     store_data,
+    store_message_and_response,
     AzureFhirServerCredentialManager,
 )
 from phdi_building_blocks.fhir import (
@@ -107,11 +107,14 @@ def run_pipeline(
 
         if upload_response.status_code != 200:
             # Record when the entire upload batch request fails
-            __record_error_response(
+            store_message_and_response(
                 container_url=container_url,
-                output_path=invalid_output_path,
-                message_mappings=message_mappings,
-                transaction_type="upload",
+                prefix=invalid_output_path,
+                message_filename=f"{message_mappings['filename']}"
+                + f".{message_mappings['file_suffix']}",
+                response_filename=f"{message_mappings['filename']}"
+                + f".{message_mappings['file_suffix']}.upload-resp",
+                bundle_type=message_mappings["bundle_type"],
                 message=message,
                 response=upload_response,
             )
@@ -139,54 +142,16 @@ def run_pipeline(
     # access/authentication reasons, or potentially malformed timestamps
     # in the data
     else:
-        __record_error_response(
+        store_message_and_response(
             container_url=container_url,
-            output_path=invalid_output_path,
-            message_mappings=message_mappings,
-            transaction_type="convert",
+            prefix=invalid_output_path,
+            message_filename=f"{message_mappings['filename']}"
+            + f".{message_mappings['file_suffix']}",
+            response_filename=f"{message_mappings['filename']}"
+            + f".{message_mappings['file_suffix']}.convert-resp",
+            bundle_type=message_mappings["bundle_type"],
             message=message,
             response=convert_response,
-        )
-
-
-def __record_error_response(
-    container_url: str,
-    output_path: str,
-    message_mappings: dict,
-    transaction_type: str,
-    message: str,
-    response: Response,
-):
-    try:
-        # First attempt is storing the message directly in the
-        # invalid messages container
-        store_data(
-            container_url,
-            output_path,
-            f"{message_mappings['filename']}.{message_mappings['file_suffix']}",
-            message_mappings["bundle_type"],
-            message=message,
-        )
-    except ResourceExistsError:
-        logging.warning(
-            "Attempted to store preexisting resource: "
-            + f"{message_mappings['filename']}.{message_mappings['file_suffix']}"
-        )
-    try:
-        # Then, try to store the response information
-        store_data(
-            container_url,
-            output_path,
-            f"{message_mappings['filename']}.{message_mappings['file_suffix']}"
-            + f".{transaction_type}-resp",
-            message_mappings["bundle_type"],
-            message_json=response.json(),
-        )
-    except ResourceExistsError:
-        logging.warning(
-            "Attempted to store preexisting resource: "
-            + f"{message_mappings['filename']}.{message_mappings['file_suffix']}"
-            + f".{transaction_type}-resp"
         )
 
 
