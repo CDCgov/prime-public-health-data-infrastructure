@@ -358,7 +358,9 @@ def log_fhir_server_error(status_code: int, batch_entry_index: int = None) -> No
 
     batch_decorator = ""
     if batch_entry_index is not None:
-        batch_decorator = f"in entry number {batch_entry_index} of batch "
+        batch_decorator = (
+            f"in zero-based message index {batch_entry_index} of FHIR batch "
+        )
 
     if status_code == 401:
         logging.error(

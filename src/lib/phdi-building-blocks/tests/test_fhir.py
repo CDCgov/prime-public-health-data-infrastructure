@@ -549,16 +549,18 @@ def test_log_fhir_server_error_batch(patched_logger):
     assert ~patched_logger.error.called
 
     error_status_codes = {
-        401: "FHIR SERVER ERROR in entry number 0 of batch - "
+        401: "FHIR SERVER ERROR in zero-based message index 0 of FHIR batch - "
         + "Status Code 401: Failed to authenticate.",
-        403: "FHIR SERVER ERROR in entry number 1 of batch - "
+        403: "FHIR SERVER ERROR in zero-based message index 1 of FHIR batch - "
         + "Status Code 403: User does not have permission to make that request.",
-        404: "FHIR SERVER ERROR in entry number 2 of batch - "
+        404: "FHIR SERVER ERROR in zero-based message index 2 of FHIR batch - "
         + "Status Code 404: Server or requested data not found.",
-        410: "FHIR SERVER ERROR in entry number 3 of batch - "
+        410: "FHIR SERVER ERROR in zero-based message index 3 of FHIR batch - "
         + "Status Code 410: Server has deleted this cached data.",
-        499: "FHIR SERVER ERROR in entry number 4 of batch - Status code 499",
-        599: "FHIR SERVER ERROR in entry number 5 of batch - Status code 599",
+        499: "FHIR SERVER ERROR in zero-based message index 4 of FHIR batch - "
+        + "Status code 499",
+        599: "FHIR SERVER ERROR in zero-based message index 5 of FHIR batch - "
+        + "Status code 599",
     }
 
     for batch_index, (status_code, error_message) in enumerate(
