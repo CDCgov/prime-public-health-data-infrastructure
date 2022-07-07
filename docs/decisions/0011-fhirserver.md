@@ -38,7 +38,7 @@ A FHIR Server assists in bringing together data from various systems into one co
 
 **Time to market** - Working with a solution that accelerates our time to market 
 
-**Performance** - Performance in terms of availability, speed, reliability must be considered to pick a solution. 
+**Performance** - Performance in terms of availability, speed, reliability must be considered to develop a solution. 
 
 ## Considered Options
 
