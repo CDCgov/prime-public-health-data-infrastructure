@@ -18,7 +18,7 @@ jobs:
       - name: Login to Azure and Terraform
         uses: ./.github/actions/az-tf
         with:
-          sp-creds: ${{ secrets.SERVICE_PRINCIPAL_CREDS }}
+          sp-creds: ${{ secrets.SERVICE_PRINCIPAL_DEPLOY_CREDS }}
 
       - name: Allow GitHub runner access
         run: |
