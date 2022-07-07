@@ -21,21 +21,27 @@ For data storage, the team required an initial data format to support as the sol
 ## Considered Options
 
 ### Parquet
-Apache parquet is a free and open source storage format for fast analytical querying. It is described as 2x faster to unload and consumes 6x less storage. It is a columnar oriented storage format instead of row format with the format being:
+Apache parquet is a free and open source storage binary format for fast analytical querying. Because of the binary storage format, it is easier to compress the file and therefore, less costly to store. It is a columnar oriented storage format instead of row format with the format being:
 
-```
-1 2 3
-n1 n2 n3
-20 35 62
-```
+| 1  | 2  | 3  |
+|----|----|----|
+| n1 | n2 | n3 |
+| 20 | 35 | 62 | 
+
+The equivalent row format would be 
+
+| 1  | n1 | 20 |
+|----|----|----|
+| 2  | n2 | 35 |
+| 3  | n3 | 62 |
+
 
 Pros: 
 - Good for storing big data of any kind
 - Saves on cloud storage space by using highly efficient column-wise compression, and flexible encoding schemes for columns with different data types.
-- Cheaper to store. At times it can be 99% less storage than other formats. 
+- Cheaper to store
 
 Cons:
-- Reading a whole record is not as easy. Parquet attempts to solve this with metadata and row groups
 - Readability without transformation is not as straightforward compared to a row-based format like CSV
 - Changing a schema over time is not as simple compared to CSV.
 
@@ -52,6 +58,16 @@ Cons:
 - Costly to store. Because one row has multiple data types, it is harder to compress the files for storage
 - Slower to read. Because of disk space needed to read the file, it is slower to read through the CSV file.  
 
+### Fully-Managed DB
+A fully managed DB would circumvent the need to export data into a file format before querying the data. With RDBMS support, analysts could query data using SQL from our DB without having to manage files on their own. The export process would create an export function to create tables and write to tables in postgresql
+
+Pros: 
+- Direct querying our data without extra steps for analytics
+- More control for consumers to get the exact data that they need. 
+
+Cons:
+- High infrastructure costs by needing devleops to stand up the resources and maintain it
+- Likely a more complex initial setup for security for STLTs to access the data they want. 
 
 ## Decision Outcome
 
