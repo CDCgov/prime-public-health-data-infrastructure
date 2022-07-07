@@ -38,11 +38,43 @@ A FHIR Server assists in bringing together data from various systems into one co
 
 **Time to market** - Working with a solution that accelerates our time to market 
 
+**Performance** - Performance in terms of availability, speed, reliability must be considered to pick a solution. 
+
 ## Considered Options
 
 ### FHIR Server vs. Custom Solution
 
+Instead of using FHIR and FHIR Server, the team could develop a custom solution with a RDBMS or NoSQL option. Many FHIR services in the cloud are PaaS which would reduce the maintenence burden on the team because the software upgrades, server maintenence would be up to the service. 
 
+#### FHIR Server Pros and Cons
+
+Pros:
+- Less need for software/infrasturcutre developer resources will be needed 
+- Standardized FHIR data structure for all STLTs and the CDC to use
+  
+Cons:
+- FHIR data needs to be read all at once in order to filter data. So for example, if you all vax records in the FHIR server, you would need to pull all the json data, then filter. 
+- Because of the slower performance, additional considerations are needed to ensure consuming data is not slow.
+
+
+#### Custom Solution Pros and Cons
+
+Pros:
+- With a RDBMS solution, data can be accessed via queries quickly, there is no need to manipulate data further for analytics purpose
+- The team will have full control of how the server works and can have more customized solutions
+
+Cons:
+- Resource cost for the developers will be high due to the infrastructure needed to create this service
+- Resource cost for the public health departments to understand how our data is structured because it is not standard
+- Using a non-standardized data structure may cause a lot of headaches when the product is used by multiple public health departments
+
+### Data Streams via Message Queues
+
+As a way to improve our solution to fit different use cases, we could use a messaging queue system such as AWS EventBridge to use the appropritate resource to process the request. For example, if a STLT would like to use FHIR, they can request that their data be processed in our FHIR server. If a different STLT does not mind using a non-standard solution, and wants quicker analytics, they can go to a RDBMS solution. 
+
+The way to achieve this is a messaging-queue system that sorts messages into different process pipelines so that one system can support decoupled solutions. Eventbridge is serverless so there is less maintenence required to stand up and maintain the resource. 
+
+[AWS EventBridge](https://aws.amazon.com/eventbridge/)
 
 ### Which FHIR Server?
 
