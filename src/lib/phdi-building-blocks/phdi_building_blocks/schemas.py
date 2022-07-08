@@ -7,6 +7,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 import random
 import yaml
+import tqdm
 
 from functools import cache
 from pathlib import Path
@@ -191,8 +192,9 @@ def make_schema_tables(
     """
 
     schema = load_schema(schema_path)
-
-    for table in schema.keys():
+    progress_bar = tqdm(schema.keys())
+    for table in progress_bar:
+        progress_bar.set_description(f"Generting the {table} table")
         output_path = base_output_path / table
         make_table(schema[table], output_path, output_format, fhir_url, cred_manager)
 
