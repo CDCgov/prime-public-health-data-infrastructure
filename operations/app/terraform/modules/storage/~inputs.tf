@@ -8,6 +8,10 @@ variable "app_subnet_ids" {
   description = "IDs of app subnets in the CDC vnet"
 }
 
+variable "databricks_subnet_ids" {
+  description = "IDs of subnets in the Databricks vnet"
+}
+
 variable "cdc_service_subnet_id" {
   description = "ID of service subnet in the CDC vnet"
 }
@@ -51,16 +55,6 @@ variable "use_cdc_managed_vnet" {
 variable "resource_group_id" {
   type        = string
   description = "Resource Group resource id"
-}
-
-variable "data_access_group" {
-  type        = string
-  description = "AD group to grant data access"
-}
-
-variable "data_access_sp" {
-  type        = string
-  description = "Service principal to grant data access"
 }
 
 variable "adf_uuid" {
