@@ -47,7 +47,7 @@ def test_clean_message():
         + "NK1|1||BRO^BROTHER^HL70063^^^^^|^^NEW GLARUS^WI^^^^^^^|\n"
         + "PV1||R||||||||||||||||||\n"
         + "RXA|0|999|20180809|20180809|08^HepB pediatric^CVX^90744^HepB pediatric^CPT"
-        + "|1.0|||01^^^^^~38193939^WIR immunization id^IMM_ID^^^|||||||||||CP\n"
+        + "|1.0|||01^^^^^~38193939^WIR immunization id^IMM_ID^^^|\n"
     )
     assert (
         clean_message(message_2)
@@ -64,41 +64,31 @@ def test_clean_message():
 
 
 def test_default_hl7_value():
-    message_default_empty_field: hl7.Message = hl7.parse(
-        open(pathlib.Path(__file__).parent / "assets" / "FileSingleMessageSimple.hl7")
-        .read()
-        .replace("\n", "\r")
-    )
+    message_default_empty_field = open(
+        pathlib.Path(__file__).parent / "assets" / "FileSingleMessageSimple.hl7"
+    ).read()
 
-    message_default_missing_field: hl7.Message = hl7.parse(
-        open(pathlib.Path(__file__).parent / "assets" / "FileSingleMessageSimple.hl7")
-        .read()
-        .replace("\n", "\r")
-    )
+    message_default_missing_field = open(
+        pathlib.Path(__file__).parent / "assets" / "FileSingleMessageSimple.hl7"
+    ).read()
 
-    message_default_populated_field: hl7.Message = hl7.parse(
-        open(pathlib.Path(__file__).parent / "assets" / "FileSingleMessageSimple.hl7")
-        .read()
-        .replace("\n", "\r")
-    )
+    message_default_populated_field = open(
+        pathlib.Path(__file__).parent / "assets" / "FileSingleMessageSimple.hl7"
+    ).read()
 
-    previous_populated_value = message_default_populated_field.extract_field(
-        segment="PID", field_num=5
-    )
-
-    default_hl7_value(
+    message_default_empty_field = default_hl7_value(
         message=message_default_empty_field,
         segment_id="PID",
         field_num=1,
         default_value="some-default-value-empty",
     )
-    default_hl7_value(
+    message_default_missing_field = default_hl7_value(
         message=message_default_missing_field,
         segment_id="PID",
         field_num=30,
         default_value="some-default-value-missing",
     )
-    default_hl7_value(
+    message_default_populated_field = default_hl7_value(
         message=message_default_populated_field,
         segment_id="PID",
         field_num=5,
@@ -106,16 +96,29 @@ def test_default_hl7_value():
     )
 
     assert (
-        message_default_empty_field.extract_field(segment="PID", field_num=1)
-        == "some-default-value-empty"
+        message_default_empty_field
+        == "MSH|^~\&|WIR11.3.2^^|WIR^^||WIRPH^^|2020051401000000||ADT^A31"
+        + "|2020051411020600|P^|2.4^^|||ER\n"
+        + "PID|some-default-value-empty||3054790^^^^SR^~^^^^PI^||ZTEST^PEDIARIX^^^^^^"
+        + "|HEPB^DTAP^^^^^^"
+        + "|2018080800000000000|M|||||||||||||||||||||\n"
+        + "PD1|||||||||||02^^^^^|Y||||A\n"
     )
     assert (
-        message_default_missing_field.extract_field(segment="PID", field_num=30)
-        == "some-default-value-missing"
+        message_default_missing_field
+        == "MSH|^~\&|WIR11.3.2^^|WIR^^||WIRPH^^|2020051401000000||ADT^A31"
+        + "|2020051411020600|P^|2.4^^|||ER\n"
+        + "PID|||3054790^^^^SR^~^^^^PI^||ZTEST^PEDIARIX^^^^^^|HEPB^DTAP^^^^^^"
+        + "|2018080800000000000|M||||||||||||||||||||||some-default-value-missing\n"
+        + "PD1|||||||||||02^^^^^|Y||||A\n"
     )
     assert (
-        message_default_missing_field.extract_field(segment="PID", field_num=5)
-        == previous_populated_value
+        message_default_populated_field
+        == "MSH|^~\&|WIR11.3.2^^|WIR^^||WIRPH^^|2020051401000000||ADT^A31"
+        + "|2020051411020600|P^|2.4^^|||ER\n"
+        + "PID|||3054790^^^^SR^~^^^^PI^||ZTEST^PEDIARIX^^^^^^|HEPB^DTAP^^^^^^"
+        + "|2018080800000000000|M|||||||||||||||||||||\n"
+        + "PD1|||||||||||02^^^^^|Y||||A\n"
     )
 
 

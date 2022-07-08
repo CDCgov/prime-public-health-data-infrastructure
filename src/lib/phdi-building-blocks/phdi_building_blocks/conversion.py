@@ -74,22 +74,6 @@ def clean_message(message: str) -> str:
         # RXA-22 System entry date/time
         normalize_hl7_datetime_segment(parsed_message, "RXA", [3, 4, 16, 22])
 
-        # Default fields
-        # RXA-20 Completion status - default to "Complete/CP"
-        if (
-            parsed_message.extract_field(segment="MSH", field_num=9) == "VXU"
-            and parsed_message.extract_field(
-                segment="MSH", field_num=9, component_num=2
-            )
-            == "V04"
-        ):
-            default_hl7_value(
-                message=parsed_message,
-                segment_id="RXA",
-                field_num=20,
-                default_value="CP",
-            )
-
     except Exception:
         logging.exception(
             "Exception occurred while cleaning message.  "
@@ -102,28 +86,45 @@ def clean_message(message: str) -> str:
 
 
 def default_hl7_value(
-    message: hl7.Message, segment_id: str, field_num: int, default_value: str
+    message: str, segment_id: str, field_num: int, default_value: str
 ):
     """
     Default a field value in an HL7 message.
 
-    :param message: HL7 message use to modify a value
+    :param message: String representing the HL7 message use to modify a value
     :param segment_id: Segment type (MSH, PID, etc)
     :param field_num: Field to replace in the HL7 message
     :param default_value: If the selected field is blank, set the field's value to this
     """
-    segment: hl7.Segment = None
-    try:
-        segment = message.segment(segment_id=segment_id)
-    except KeyError:
-        # If the segment is not found, there is nothing to do
-        return
 
-    if (
-        segment.extract_field(field_num=field_num) is None
-        or segment.extract_field(field_num=field_num) == ""
-    ):
-        segment.assign_field(value=default_value, field_num=field_num)
+    parsed_message: hl7.Message = None
+    try:
+        # Conversion from \n to \r EOL characters is needed for hl7
+        # module, and doesn't impact conversion ability
+        parsed_message = hl7.parse(message.replace("\n", "\r"))
+
+        segment: hl7.Segment = None
+        try:
+            segment = parsed_message.segment(segment_id=segment_id)
+        except KeyError:
+            # If the segment is not found, there is nothing to do
+            return message
+
+        if (
+            segment.extract_field(field_num=field_num) is None
+            or segment.extract_field(field_num=field_num) == ""
+        ):
+            segment.assign_field(value=default_value, field_num=field_num)
+
+    except Exception:
+        logging.exception(
+            "Exception occurred while cleaning message.  "
+            + "Passing through original message."
+        )
+
+        return message
+
+    return str(parsed_message).replace("\r", "\n")
 
 
 def normalize_hl7_datetime_segment(
