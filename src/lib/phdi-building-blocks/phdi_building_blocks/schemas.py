@@ -7,7 +7,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 import random
 import yaml
-import tqdm
+from tqdm import tqdm
 
 from functools import cache
 from pathlib import Path
