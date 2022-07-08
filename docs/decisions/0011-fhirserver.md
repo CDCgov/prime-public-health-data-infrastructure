@@ -28,7 +28,11 @@ A FHIR Server assists in bringing together data from various systems into one co
 
 **Integration with Existing Systems** - The CDC has an existing cloud environment (Azure) so being able to work well with their existing system helps the development process. The team is working to get the first version into production so ease of maintainability and integration are important. 
 
-**Flexiblility** - While the team is developing the solution, flexibility is important as requirements are being discovered. 
+**Flexiblility** - The platform should support flexibility in at least two respects:
+
+- Data model: the data model should be extensible to account for special needs of STLTs. 
+- Functional features: the architecture should support a variety of data storage platforms to allow for optimal performance in a variety of use cases.
+
 
 **Support for a broad and complex data model** -  The solution needs to capture all relevant data in a structured way. Healthcare data can be complex due to the different sources of healthcare data being reported differently. 
 
@@ -42,11 +46,9 @@ A FHIR Server assists in bringing together data from various systems into one co
 
 ## Considered Options
 
-### FHIR Server vs. Custom Solution
-
-Instead of using FHIR and FHIR Server, the team could develop a custom solution with a RDBMS or NoSQL option. Many FHIR services in the cloud are PaaS which would reduce the maintenence burden on the team because the software upgrades, server maintenence would be up to the service. 
-
-#### FHIR Server Pros and Cons
+### FHIR Server
+ 
+Many FHIR services in the cloud are PaaS which would reduce the maintenence burden on the team because the software upgrades, server maintenence would be up to the service. 
 
 Pros:
 - Less need for software/infrasturcutre developer resources will be needed 
@@ -56,8 +58,9 @@ Cons:
 - FHIR data needs to be read all at once in order to filter data. So for example, if you all vax records in the FHIR server, you would need to pull all the json data, then filter. 
 - Because of the slower performance, additional considerations are needed to ensure consuming data is not slow.
 
+### RDBMS or Big Data solution
 
-#### Custom Solution Pros and Cons
+Instead of using FHIR and FHIR Server, the team could develop a custom solution with a RDBMS or NoSQL option. The team would fully manage the infrastructure and architecture and communicate with STLTs how to use our custom data model
 
 Pros:
 - With a RDBMS solution, data can be accessed via queries quickly, there is no need to manipulate data further for analytics purpose
@@ -74,11 +77,13 @@ As a way to improve our solution to fit different use cases, we could use a mess
 
 The way to achieve this is a messaging-queue system that sorts messages into different process pipelines so that one system can support decoupled solutions. Eventbridge is serverless so there is less maintenence required to stand up and maintain the resource. 
 
-[AWS EventBridge](https://aws.amazon.com/eventbridge/)
+[AWS EventBridge Info](https://aws.amazon.com/eventbridge/)
 
-### Which FHIR Server?
+## Cloud Providers' FHIR Server
 
-#### Google Cloud FHIR Server
+Many cloud providers have their own FHIR Server solution. While our solution is cloud provider agnostic, we researched how each cloud provider FHIR Server measured up with each other.
+
+### Google Cloud FHIR Server
 
 Google Cloud FHIR service has tight integration with other GCP products such as BigQuery, Storage, Pub/Sub Integration
 
@@ -90,7 +95,7 @@ Pros:
 Cons:
 - More expensive for storage and API calls
 
-#### AWS FHIR Works
+### AWS FHIR Works
 
 AWS FHIRWorks is Amazon's FHIR Server product that integrates with AWS services such as DynamoDB, Elasticsearch, Lambda, etc.
 
@@ -101,7 +106,7 @@ Pros:
 Cons:
 - Does not support certain key features such as patch calls, bundles, or conditionals
 
-#### Mircrosoft Azure FHIR Server
+### Mircrosoft Azure FHIR Server
 
 Azure FHIR server is Azure's FHIR server product that allows developers to create FHIR applications using Azure products.
 
@@ -116,6 +121,16 @@ Cons:
 
 
 ## Decision Outcome
+
+### Architecture
+
+FHIR Server
+
+For now, the team will be using FHIR Server to develop the solution. The standardization of the FHIR data as well as public health department's familiarity with the standards will help lessen resources needed to integrate the solution. 
+
+Should we learn of new requirements and the FHIR server is insufficient for performance for consumers using it for analytics, developing a data stream using messaging queues will help our solution be more flexible. 
+
+### FHIR Server Implementation
 
 Microsoft Azure FHIR Server
 
