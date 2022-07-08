@@ -16,6 +16,8 @@ For data storage, the team required an initial data format to support as the sol
 
 **Quick-to-implement** - Having a file format that can be easy to work with will help the development of the solution be quicker. 
 
+**Infrastructure requirements** - Due to limited resources on the team, a solution that requires less infrastructure resources to maintain will help speed up the development process.
+
 **Cost-effective** - With any cloud environment, storage cost considerations are necessary to scale up an application without incurring too much cost. 
 
 ## Considered Options
@@ -37,9 +39,9 @@ The equivalent row format would be
 
 
 Pros: 
-- Good for storing big data of any kind
+- Generally speaking, good for storing large amounts data
 - Saves on cloud storage space by using highly efficient column-wise compression, and flexible encoding schemes for columns with different data types.
-- Cheaper to store
+- Well-supported file format from analytics tools
 
 Cons:
 - Readability without transformation is not as straightforward compared to a row-based format like CSV
@@ -81,3 +83,4 @@ In future iterations, we will support exports to CSV in addition parquet.
 
 [CSV vs Parquet](https://towardsdatascience.com/csv-files-for-storage-no-thanks-theres-a-better-option-72c78a414d1d)
 [Pros and cons of parquet](https://stackoverflow.com/questions/36822224/what-are-the-pros-and-cons-of-parquet-format-compared-to-other-formats)
+[Internal Document on Parquet](https://docs.google.com/spreadsheets/d/1IPAElrM3RoPPFDHtjU3JSImBCXfMIO_NvwgzmKYkUHM/edit#gid=0)
