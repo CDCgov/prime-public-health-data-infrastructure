@@ -60,7 +60,7 @@ Cons:
 
 ### RDBMS or Big Data solution
 
-Instead of using FHIR and FHIR Server, the team could develop a custom solution with a RDBMS or NoSQL option. The team would fully manage the infrastructure and architecture and communicate with STLTs how to use our custom data model
+Instead of using FHIR and FHIR Server, the team could develop a custom solution with a RDBMS or NoSQL option. The team would fully manage the infrastructure and architecture and communicate with STLTs how to use our custom data model.
 
 Pros:
 - With a RDBMS solution, data can be accessed via queries quickly, there is no need to manipulate data further for analytics purpose
