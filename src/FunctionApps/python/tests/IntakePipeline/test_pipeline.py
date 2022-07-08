@@ -516,13 +516,13 @@ def test_pipeline_partial_failed_upload(
 
 def test_default_fields():
     message = (
-        "MSH|^~\&|Hello World\n"
+        "MSH|^~\\&|Hello World\n"
         + "PID||some-id||some-name\n"
         + "RXA|mostly-empty-segment\n"
     )
 
     defaulted_message = (
-        "MSH|^~\&|Hello World\n"
+        "MSH|^~\\&|Hello World\n"
         + "PID||some-id||some-name\n"
         + "RXA|mostly-empty-segment|||||||||||||||||||CP\n"
     )

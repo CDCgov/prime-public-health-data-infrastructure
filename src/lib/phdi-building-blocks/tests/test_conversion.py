@@ -97,7 +97,7 @@ def test_default_hl7_value():
 
     assert (
         message_default_empty_field
-        == "MSH|^~\&|WIR11.3.2^^|WIR^^||WIRPH^^|2020051401000000||ADT^A31"
+        == "MSH|^~\\&|WIR11.3.2^^|WIR^^||WIRPH^^|2020051401000000||ADT^A31"
         + "|2020051411020600|P^|2.4^^|||ER\n"
         + "PID|some-default-value-empty||3054790^^^^SR^~^^^^PI^||ZTEST^PEDIARIX^^^^^^"
         + "|HEPB^DTAP^^^^^^"
@@ -106,7 +106,7 @@ def test_default_hl7_value():
     )
     assert (
         message_default_missing_field
-        == "MSH|^~\&|WIR11.3.2^^|WIR^^||WIRPH^^|2020051401000000||ADT^A31"
+        == "MSH|^~\\&|WIR11.3.2^^|WIR^^||WIRPH^^|2020051401000000||ADT^A31"
         + "|2020051411020600|P^|2.4^^|||ER\n"
         + "PID|||3054790^^^^SR^~^^^^PI^||ZTEST^PEDIARIX^^^^^^|HEPB^DTAP^^^^^^"
         + "|2018080800000000000|M||||||||||||||||||||||some-default-value-missing\n"
@@ -114,7 +114,7 @@ def test_default_hl7_value():
     )
     assert (
         message_default_populated_field
-        == "MSH|^~\&|WIR11.3.2^^|WIR^^||WIRPH^^|2020051401000000||ADT^A31"
+        == "MSH|^~\\&|WIR11.3.2^^|WIR^^||WIRPH^^|2020051401000000||ADT^A31"
         + "|2020051411020600|P^|2.4^^|||ER\n"
         + "PID|||3054790^^^^SR^~^^^^PI^||ZTEST^PEDIARIX^^^^^^|HEPB^DTAP^^^^^^"
         + "|2018080800000000000|M|||||||||||||||||||||\n"
