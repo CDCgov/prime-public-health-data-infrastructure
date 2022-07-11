@@ -259,7 +259,7 @@ def print_schema_summary(
                 if display_head is True:
                     parquet_table = pq.read_table(Path(directory_path) / file_name)
                     df = parquet_table.to_pandas()
-                    print(tabulate(df.head(), headers = "keys", tablefmt='psql'))
+                    df.head()
                     print(df.info())
             if file_name.endswith("csv"):
                 with open(file_name, "r") as csv_file:
