@@ -14,7 +14,7 @@ locals {
       fhir_url                             = null,
       AzureWebJobs_convertToFhir_Disabled  = 0,
       always_on                            = true,
-      WEBSITE_RUN_FROM_PACKAGE             = null,
+      WEBSITE_RUN_FROM_PACKAGE             = 1,
       AzureWebJobs_IntakePipeline_Disabled = 0,
       AzureWebJobsStorage__accountName     = "${var.resource_prefix}datasa",
       AzureWebJobsStorage__blobServiceUri  = "https://${var.resource_prefix}datasa.blob.core.windows.net",
@@ -24,6 +24,7 @@ locals {
       VALID_OUTPUT_CONTAINER_PATH          = "blob-trigger-out/valid-messages",
       CSV_INPUT_PREFIX                     = "blob-trigger-out/valid-messages/",
       CSV_OUTPUT_PREFIX                    = "csvs"
+      functions_path                       = "../../../../../src/FunctionApps/python"
     }
   }
 }

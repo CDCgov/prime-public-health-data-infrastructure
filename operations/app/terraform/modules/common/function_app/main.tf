@@ -87,3 +87,50 @@ resource "azurerm_function_app_slot" "blue" {
     ]
   }
 }
+
+resource "time_sleep" "wait_pdi_function_app" {
+  create_duration = "2m"
+
+  depends_on = [azurerm_function_app.pdi]
+  triggers = {
+    function_app = azurerm_function_app.pdi.identity.0.principal_id
+  }
+}
+
+locals {
+  pdi_publish_command = <<EOF
+      az functionapp deployment source config-zip --resource-group ${var.primary.resource_group_name} \
+      --name ${azurerm_function_app.pdi.name} --src ${data.archive_file.pdi_function_app.output_path} \
+      --build-remote false --timeout 600
+    EOF
+}
+
+data "archive_file" "pdi_function_app" {
+  type        = "zip"
+  source_dir  = var.primary.functions_path
+  output_path = "function-app-pdi.zip"
+
+  excludes = [
+    ".venv",
+    ".vscode",
+    "local.settings.json",
+    "getting_started.md",
+    "README.md",
+    ".gitignore"
+  ]
+}
+
+resource "null_resource" "pdi_function_app_publish" {
+  provisioner "local-exec" {
+    command = local.pdi_publish_command
+  }
+  depends_on = [
+    local.pdi_publish_command,
+    azurerm_function_app.pdi,
+    time_sleep.wait_pdi_function_app
+  ]
+  triggers = {
+    input_json           = filemd5(data.archive_file.pdi_function_app.output_path)
+    publish_code_command = local.pdi_publish_command
+  }
+}

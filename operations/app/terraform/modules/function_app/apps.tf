@@ -14,6 +14,7 @@ module "pdi_function_app" {
     application_key_vault_id   = var.application_key_vault_id
     version                    = each.value.version
     always_on                  = each.value.always_on
+    functions_path             = each.value.functions_path
   }
 
   app_settings = {
