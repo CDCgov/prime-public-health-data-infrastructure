@@ -259,8 +259,8 @@ def print_schema_summary(
                 if display_head is True:
                     parquet_table = pq.read_table(Path(directory_path) / file_name)
                     df = parquet_table.to_pandas()
-                    df.head()
-                    print(df.info())
+                    print(tabulate(df.head(), headers = "keys", tablefmt='psql'))
+                    #print(df.info())
             if file_name.endswith("csv"):
                 with open(file_name, "r") as csv_file:
                     reader = csv.reader(csv_file, dialect="excel")
