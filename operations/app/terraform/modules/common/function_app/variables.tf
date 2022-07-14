@@ -11,7 +11,6 @@ variable "primary" {
     application_key_vault_id   = string
     version                    = string
     always_on                  = bool
-    functions_path             = string
   })
 }
 

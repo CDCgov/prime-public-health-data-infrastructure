@@ -1,0 +1,21 @@
+# action.yml
+name: "Function App Deploy"
+description: "Deploy function apps to Azure"
+inputs:
+  env:
+    description: "Environment to deploy to"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Archive code
+      run: |
+        zip -r function-app-pdi ./src/FunctionApps/python -x .venv -x .vscode -x local.settings.json -x getting_started.md -x README.md -x .gitignore
+      shell: bash
+    - name: Deploy
+      run: |
+        az functionapp deployment source config-zip --resource-group prime-ingestion-${{ inputs.env }} \
+        --name pi${{ inputs.env }}-python-functionapp --src function-app-pdi.zip \
+        --build-remote false --timeout 600
+      shell: bash

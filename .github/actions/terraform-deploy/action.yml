@@ -1,0 +1,13 @@
+# action.yml
+name: "Terraform Deploy"
+description: "Run terraform apply"
+
+runs:
+  using: "composite"
+  steps:
+    - name: terraform init
+      run: terraform init
+      shell: bash
+    - name: terraform apply
+      run: terraform apply -auto-approve -lock-timeout=30m
+      shell: bash
