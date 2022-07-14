@@ -29,6 +29,8 @@ jobs:
 
       - name: Terraform deploy
         uses: ./.github/actions/terraform-deploy
+        with:
+          env: test
 
       - name: Deploy function app
         uses: ./.github/actions/function-app-deploy
