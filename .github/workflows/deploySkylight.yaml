@@ -27,10 +27,10 @@ jobs:
           az storage account network-rule add -n piskylightdatasa1 --ip-address "$RUNNER_IP" >/dev/null
           echo "runner_ip=$RUNNER_IP" >> $GITHUB_ENV
 
-      # - name: Deploy
-      #   uses: ./.github/actions/terraform-deploy
-      #   with:
-      #     env: skylight
+      - name: Deploy
+        uses: ./.github/actions/terraform-deploy
+        with:
+          env: skylight
 
       - name: Deploy function app
         uses: ./.github/actions/function-app-deploy
