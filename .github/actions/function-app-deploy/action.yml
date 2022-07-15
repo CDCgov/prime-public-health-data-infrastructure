@@ -8,13 +8,21 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Archive code
-      run: |
-        zip -r function-app-pdi ./src/FunctionApps/python -x .venv -x .vscode -x local.settings.json -x getting_started.md -x README.md -x .gitignore
+    - name: Setup Python Environment
+      uses: actions/setup-python@v1
+      with:
+        python-version: "3.9"
+    - name: "Resolve Project Dependencies Using Pip"
       shell: bash
-    - name: Deploy
+      working-directory: src/FunctionApps/python
       run: |
-        az functionapp deployment source config-zip --resource-group prime-ingestion-${{ inputs.env }} \
-        --name pi${{ inputs.env }}-python-functionapp --src function-app-pdi.zip \
-        --build-remote false --timeout 600
-      shell: bash
+        pushd './'
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt --target=".python_packages/lib/site-packages"
+        popd
+    - name: "Run Azure Functions Action"
+      uses: Azure/functions-action@v1
+      id: fa
+      with:
+        app-name: "pi${{ inputs.env }}-python-functionapp"
+        package: src/FunctionApps/python
