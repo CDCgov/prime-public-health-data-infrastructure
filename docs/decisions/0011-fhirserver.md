@@ -110,7 +110,7 @@ Pros:
 Cons:
 - If using CosmoDB, users must manage partitioning and set number of request units
 - Pay-for-what-you-might-use model. Currently Azure is running on a prepaid system which may be worse for unpredictable demand.
-- Certain search and API features are missing in Azure that is supported by GCP
+- Certain search and API features are missing in Azure, but are supported by GCP
 
 
 ## Decision Outcome
