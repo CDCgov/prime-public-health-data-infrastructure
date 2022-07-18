@@ -10,9 +10,9 @@ Accepted
 
 In healthcare, data is gathered from many different sources. Hospitals, prisons, schools, pharmacies, and more all gather healthcare data that state and local territories (STLTs) need to gather to report public health data accurately. In order to ingest data from these different reporting sites, there needed to be a way to standardize the data across all departments of health. 
 
-Previously, HL7 standards were the solution to this issue, but the problems of HL7 was that it was hard to use with modern internet architecture as well as being humanly unreadable. FHIR was created to solve both of these issues. 
+Previously, HL7 standards were the solution to this issue, but the problems of HL7 is that it is hard to use with modern internet architecture as well as being humanly unreadable. FHIR was created to solve both of these issues. 
 
-The FHIR (Fast Healthcare Interoperability Resources 1 ) standard defines how healthcare
+The FHIR (Fast Healthcare Interoperability Resources) standard defines how healthcare
 information can be exchanged between different computer systems regardless of how it is stored in those
 systems. It allows healthcare information, including clinical and administrative data, to be available
 securely to those who have a need to access it, and to those who have the right to do so for the benefit
@@ -21,14 +21,14 @@ collaborative approach to develop and upgrade FHIR.
 
 FHIR is a standardized data format that is used nationally to report health data. 
 
-A FHIR Server assists in bringing together data from various systems into one common, readable dataset. The FHIR Server itself does not do any analytical work, but aims to normalize public health data. In the case of this project, public health data will be reported from a variety of sources such as prisons, pharamacies, schools, and hospitals. A FHIR Server will ingest the records and become a single source of truth for a public health agency's data. 
+A FHIR Server assists in bringing together data from various systems into one common, readable dataset. The FHIR Server itself does not do any analytical work, but aims to normalize public health data. In the case of this project, public health data will be reported from a variety of sources such as prisons, pharmacies, schools, and hospitals. A FHIR Server will ingest the records and become a single source of truth for a public health agency's data. 
 
 
 ## Decision Drivers
 
 **Integration with Existing Systems** - The CDC has an existing cloud environment (Azure) so being able to work well with their existing system helps the development process. The team is working to get the first version into production so ease of maintainability and integration are important. 
 
-**Flexiblility** - The platform should support flexibility in at least two respects:
+**Flexibility** - The platform should support flexibility in at least two respects:
 
 - Data model: the data model should be extensible to account for special needs of STLTs. 
 - Functional features: the architecture should support a variety of data storage platforms to allow for optimal performance in a variety of use cases.
@@ -36,7 +36,7 @@ A FHIR Server assists in bringing together data from various systems into one co
 
 **Support for a broad and complex data model** -  The solution needs to capture all relevant data in a structured way. Healthcare data can be complex due to the different sources of healthcare data being reported differently. 
 
-**Analtyics** -  The platform needs to support epidemiologists' analytical tools.
+**Analytics** -  The platform needs to support epidemiologists' analytical tools.
 
 **History and Logging** - Healthcare data modifications, additions, and deletions need to be tracked over time for historical logging.
 
@@ -48,36 +48,29 @@ A FHIR Server assists in bringing together data from various systems into one co
 
 ### FHIR Server
  
-Many FHIR services in the cloud are PaaS which would reduce the maintenence burden on the team because the software upgrades, server maintenence would be up to the service. 
+Many FHIR services in the cloud are PaaS which would reduce the maintenance  burden on the team because the software upgrades, server maintenance  would be up to the service. 
 
 Pros:
-- Less need for software/infrasturcutre developer resources will be needed 
+- Less need for software/infrastructure developer resources
 - Standardized FHIR data structure for all STLTs and the CDC to use
   
 Cons:
-- FHIR data needs to be read all at once in order to filter data. So for example, if you all vax records in the FHIR server, you would need to pull all the json data, then filter. 
-- Because of the slower performance, additional considerations are needed to ensure consuming data is not slow.
+- Some operations are slower; additional considerations are needed to ensure consuming data is not slow.
 
 ### RDBMS or Big Data solution
 
-Instead of using FHIR and FHIR Server, the team could develop a custom solution with a RDBMS or NoSQL option. The team would fully manage the infrastructure and architecture and communicate with STLTs how to use our custom data model.
+Instead of using FHIR and FHIR Server, the team could develop a custom solution with a RDBMS or NoSQL. The team would fully manage the infrastructure and architecture and communicate with STLTs how to use our custom data model.
 
 Pros:
-- With a RDBMS solution, data can be accessed via queries quickly, there is no need to manipulate data further for analytics purpose
+- With a RDBMS solution, data can be accessed via queries quickly, there is no need to manipulate data further for analytics purpose if schemas are defined properly
 - The team will have full control of how the server works and can have more customized solutions
 
 Cons:
 - Resource cost for the developers will be high due to the infrastructure needed to create this service
+- Resource cost to define the data model
 - Resource cost for the public health departments to understand how our data is structured because it is not standard
 - Using a non-standardized data structure may cause a lot of headaches when the product is used by multiple public health departments
-
-### Data Streams via Message Queues
-
-As a way to improve our solution to fit different use cases, we could use a messaging queue system such as AWS EventBridge to use the appropritate resource to process the request. For example, if a STLT would like to use FHIR, they can request that their data be processed in our FHIR server. If a different STLT does not mind using a non-standard solution, and wants quicker analytics, they can go to a RDBMS solution. 
-
-The way to achieve this is a messaging-queue system that sorts messages into different process pipelines so that one system can support decoupled solutions. Eventbridge is serverless so there is less maintenence required to stand up and maintain the resource. 
-
-[AWS EventBridge Info](https://aws.amazon.com/eventbridge/)
+- You would have to known in advanced what fields to index on to make the solution performant
 
 ## Cloud Providers' FHIR Server
 
