@@ -25,17 +25,44 @@ For data storage, the team required an initial data format to support as the sol
 ### Parquet
 Apache parquet is a free and open source storage binary format for fast analytical querying. Because of the binary storage format, it is easier to compress the file and therefore, less costly to store. It is a columnar oriented storage format instead of row format with the format being:
 
-| 1  | 2  | 3  |
-|----|----|----|
-| n1 | n2 | n3 |
-| 20 | 35 | 62 | 
+<table>
+  <tr>
+    <td>1</td>
+    <td>2</td>
+    <td>3</td>
+  </tr>
+  <tr>
+    <td>n1</td>
+    <td>n2</td>
+    <td>n3</td>
+  </tr>
+  <tr>
+    <td>20</td>
+    <td>35</td>
+    <td>62</td>
+  </tr>
+</table>
 
 The equivalent row format would be 
 
-| 1  | n1 | 20 |
-|----|----|----|
-| 2  | n2 | 35 |
-| 3  | n3 | 62 |
+<table>
+  <tr>
+    <td>1</td>
+    <td>n1</td>
+    <td>20</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td>n2</td>
+    <td>35</td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td>n3</td>
+    <td>62</td>
+  </tr>
+</table>
+
 
 
 Pros: 
@@ -68,7 +95,7 @@ Pros:
 - More control for consumers to get the exact data that they need. 
 
 Cons:
-- High infrastructure costs by needing devleops to stand up the resources and maintain it
+- High infrastructure costs by needing develops to stand up the resources and maintain it
 - Likely a more complex initial setup for security for STLTs to access the data they want. 
 
 ## Decision Outcome
