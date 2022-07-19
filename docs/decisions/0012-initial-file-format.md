@@ -110,4 +110,3 @@ In future iterations, we will support exports to CSV in addition parquet.
 
 [CSV vs Parquet](https://towardsdatascience.com/csv-files-for-storage-no-thanks-theres-a-better-option-72c78a414d1d)
 [Pros and cons of parquet](https://stackoverflow.com/questions/36822224/what-are-the-pros-and-cons-of-parquet-format-compared-to-other-formats)
-[Internal Document on Parquet](https://docs.google.com/spreadsheets/d/1IPAElrM3RoPPFDHtjU3JSImBCXfMIO_NvwgzmKYkUHM/edit#gid=0)
