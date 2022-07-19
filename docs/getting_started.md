@@ -21,6 +21,7 @@ Below is a guide for getting started on development of the PRIME PHDI Data Inges
         - [A Note on Files](#a-note-on-files)
         - [Sensitive Information](#sensitive-information)
   - [Docker Container Development](#docker-container-development)
+  - [Terraform Quickstart](#terraform-quickstart)
 
 ## Architecture
 
@@ -162,7 +163,23 @@ func settings decrypt
 
 You can then further customize this file.
 
-
 ## Docker Container Development
 
 We hope to move toward using Docker for local development shortly. At the moment we are using the folder-based package layout as described above.
+
+## Terraform Quickstart
+
+  1. Init
+      ```bash
+      terraform -chdir=operations/app/terraform/vars/dev init
+      ```
+  2. Plan
+      ```bash
+      terraform -chdir=operations/app/terraform/vars/dev plan
+      ```
+      * `Status=403 Code="Forbidden"`: add your public IP to the key vault
+        * `az keyvault network-rule add --name 'pidev-app-kv' --ip-address 24.163.118.70`
+  3. Apply
+      ```bash
+      terraform -chdir=operations/app/terraform/vars/dev apply
+      ```
