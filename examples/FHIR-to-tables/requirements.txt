@@ -1,7 +1,0 @@
-azure-identity
-pyyaml
-pyarrow
-pandas
-numpy
-pandas
-phdi_building_blocks @ git+https://github.com/CDCgov/prime-public-health-data-infrastructure@main#subdirectory=src/lib/phdi-building-blocks
