@@ -41,7 +41,7 @@ Pros:
 - Open source and actively maintained by Microsoft.
 
 Cons:
-- Installation requires building from source.
+- At this time, we are opting to have users install the converter themselves, which requires building from source.
 - Written in C# with .NET framework making integration with PHDI's primarily Python based work challenging.
 - Non-Windows users must have .NET installed.
 
