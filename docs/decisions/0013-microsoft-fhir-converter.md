@@ -112,6 +112,6 @@ Our need for conversion of both Hl7v2 and C-CDA eliminates all options except th
 - We had success with the Microsoft FHIR Converter during our pilot with Virginia.
 - The 67 provided templates are a valuable assest.
     - These templates have met our needs so far for the conversion of ELR, VXU, and eCR messages.
-    - It is reasonable that one of the 26 templates for Hl7v2 ADT messages will meet our needs in our upcommong pilot with LA Country where we plan to begin ingesting ADT data. If none of the ADT templates are sufficient they will be usefull resources for writting our own. 
+    - It is reasonable that one of the 26 templates for Hl7v2 ADT messages will meet our needs in our upcommong pilot with LA Country, where we plan to begin ingesting ADT data. If none of the ADT templates are sufficient they will be usefull resources for writting our own. 
 - Although non-trivial, the installation process is simpler than the GCP Healthcare Data Harmonization engine and has fewer dependencies.
 - After installation, the CLI makes the tool easy to use.
