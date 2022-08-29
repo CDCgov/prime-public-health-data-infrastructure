@@ -2,7 +2,7 @@
 
 resource "azurerm_storage_account" "pdi_data" {
   resource_group_name       = var.resource_group_name
-  name                      = "${var.resource_prefix}datasa"
+  name                      = "${var.resource_prefix}datasa${var.environment == "skylight" ? "1" : ""}"
   location                  = var.location
   account_kind              = "StorageV2"
   account_tier              = "Standard"
@@ -17,7 +17,7 @@ resource "azurerm_storage_account" "pdi_data" {
     default_action = "Deny"
     bypass         = ["AzureServices"]
 
-    virtual_network_subnet_ids = var.app_subnet_ids
+    virtual_network_subnet_ids = setunion(var.app_subnet_ids, var.databricks_subnet_ids)
   }
 
   blob_properties {
