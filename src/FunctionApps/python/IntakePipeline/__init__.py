@@ -1,35 +1,36 @@
+import azure.functions as func
 import logging
+
+from azure.core.exceptions import ResourceExistsError
+from config import get_required_config
 from typing import Dict
 
-import azure.functions as func
-from azure.core.exceptions import ResourceExistsError
 
-from config import get_required_config
-
-from phdi_building_blocks.azure import (
+from phdi.azure import (
     store_data,
     store_message_and_response,
     AzureFhirServerCredentialManager,
 )
-from phdi_building_blocks.fhir import (
+from phdi.fhir import (
     upload_bundle_to_fhir_server,
     generate_filename,
 )
-from phdi_building_blocks.conversion import (
+from phdi.conversion import (
     convert_batch_messages_to_list,
     convert_message_to_fhir,
     get_file_type_mappings,
+    default_hl7_value,
 )
 
-from phdi_building_blocks.geo import (
+from phdi.geo import (
     get_smartystreets_client,
     geocode_patients,
 )
-from phdi_building_blocks.standardize import (
+from phdi.standardize import (
     standardize_patient_names,
     standardize_all_phones,
 )
-from phdi_building_blocks.linkage import add_patient_identifier
+from phdi.linkage import add_patient_identifier
 
 
 def run_pipeline(
@@ -46,9 +47,9 @@ def run_pipeline(
     incoming message cannot be converted, it is stored to the configured
     invalid blob container and no further processing is done.
 
-    :param message: The raw HL7 message to attempt conversion on
+    :param message: The raw message to attempt conversion on
     :param message_mappings: Dictionary having the appropriate
-        template mapping for the type of HL7 file being processed
+        template mapping for the type of file being processed
     :param fhir_url: The url of the FHIR server to interact with
     :param access_token: The token that allows us to authenticate
         with blob storage and the FHIR server
@@ -63,6 +64,8 @@ def run_pipeline(
     invalid_output_path = get_required_config("INVALID_OUTPUT_CONTAINER_PATH")
 
     # Attempt conversion to FHIR
+    message = _default_fields(message=message, message_mappings=message_mappings)
+
     convert_response = convert_message_to_fhir(
         message=message,
         filename=message_mappings["filename"],
@@ -183,3 +186,24 @@ def main(blob: func.InputStream) -> None:
             run_pipeline(message, message_mappings, fhir_url, cred_manager)
     except Exception:
         logging.exception("Exception occurred during IntakePipeline processing.")
+
+
+def _default_fields(message: str, message_mappings: Dict[str, str]) -> str:
+    """
+    Implementation-specific field value defaulting
+
+    :param message: The raw message
+    :param message_mappings: Dictionary having the appropriate
+        template mapping for the type of file being processed
+    """
+
+    # Default fields
+    # RXA-20 Completion status - default to "Complete/CP"
+    if message_mappings.get("root_template") == "VXU_V04":
+        return default_hl7_value(
+            message=message,
+            segment_id="RXA",
+            field_num=20,
+            default_value="CP",
+        )
+    return message
